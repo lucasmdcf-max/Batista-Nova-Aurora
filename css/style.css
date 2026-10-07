@@ -1,0 +1,142 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
+}
+
+html, body {
+  width: 100%;
+  height: 100%;
+  background: #020408;
+  overflow: hidden;
+  scrollbar-width: none !important;
+  -ms-overflow-style: none !important;
+}
+
+html::-webkit-scrollbar, body::-webkit-scrollbar {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
+}
+
+/* Moldura vertical de celular (estática) */
+.mobile-frame {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 100vw;
+  height: 100vh;
+  height: 100dvh;
+  max-width: 480px;
+  overflow: hidden;
+  background: #060b18;
+  box-shadow: 0 0 70px rgba(0, 0, 0, 0.95);
+}
+
+@media (min-width: 500px) {
+  .mobile-frame {
+    height: 92vh;
+    max-height: 900px;
+    border-radius: 36px;
+    border: 3px solid rgba(255, 255, 255, 0.14);
+  }
+}
+
+/* Viewport fixo do Parallax */
+.parallax-viewport {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.parallax-stage {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+/* Camadas maiores que a tela (175%) para permitir rolagem e revelação progressiva */
+.parallax-layer {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  width: auto;
+  height: 175%;
+  aspect-ratio: 941 / 1671;
+  transform: translate3d(-50%, 0, 0);
+  transform-origin: center top;
+  will-change: transform;
+  pointer-events: none;
+}
+
+.parallax-layer img {
+  width: 100%;
+  height: 100%;
+  object-fit: fill;
+  display: block;
+  user-select: none;
+  -webkit-user-drag: none;
+}
+
+.layer-base { z-index: 1; }
+.layer-04   { z-index: 2; }
+.layer-03   { z-index: 3; }
+.layer-02   { z-index: 4; }
+.layer-01   { z-index: 5; }
+
+/* Nome da Congregação fixado no topo da tela com efeito fade-in */
+.congregation-header-brand {
+  position: absolute;
+  top: max(24px, env(safe-area-inset-top, 24px));
+  left: 50%;
+  transform: translate(-50%, -10px);
+  width: 78%;
+  max-width: 290px;
+  z-index: 15;
+  pointer-events: none;
+  opacity: 0;
+  will-change: opacity, transform;
+  filter: drop-shadow(0 4px 14px rgba(0, 0, 0, 0.85));
+  transition: opacity 0.4s ease-out, transform 0.4s ease-out;
+}
+
+.congregation-header-brand img {
+  width: 100%;
+  height: auto;
+  display: block;
+  user-select: none;
+  -webkit-user-drag: none;
+}
+
+/* Container de Rolagem Transparente */
+.scroll-container {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow-y: scroll;
+  overflow-x: hidden;
+  z-index: 20;
+  scrollbar-width: none !important;
+  -ms-overflow-style: none !important;
+}
+
+.scroll-container::-webkit-scrollbar {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
+}
+
+.scroll-spacer {
+  width: 100%;
+  height: 300vh;
+  pointer-events: none;
+}

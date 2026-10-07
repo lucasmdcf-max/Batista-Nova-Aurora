@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>Nova Aurora</title>
+
+  <meta name="theme-color" content="#060a17">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <link rel="manifest" href="manifest.json">
+
+  <link rel="stylesheet" href="css/lenis.css">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+  <!-- Moldura de celular vertical -->
+  <div class="mobile-frame" id="mobileFrame">
+    
+    <!-- Nome da congregação no topo (revelado em fade-in no nível mais baixo do scroll) -->
+    <div class="congregation-header-brand" id="congregationBrand">
+      <img src="FUNDO APP/nome-trimmed.png?v=3" alt="Congregação Nova Aurora">
+    </div>
+
+    <!-- Viewport estático: Fica 100% travado dentro da tela -->
+    <div class="parallax-viewport">
+      <div class="parallax-stage" id="parallaxStage">
+        <!-- Fundo integral de segurança contra qualquer transparência -->
+        <div class="parallax-layer layer-base" id="layerBase">
+          <img src="FUNDO APP/referência.png?v=3" alt="Base">
+        </div>
+
+        <!-- Camada 04: Céu, montanha dourada e Cruz -->
+        <div class="parallax-layer layer-04" id="layer04">
+          <img src="FUNDO APP/04.png?v=3" alt="Camada 04">
+        </div>
+
+        <!-- Camada 03: Colinas -->
+        <div class="parallax-layer layer-03" id="layer03">
+          <img src="FUNDO APP/03.png?v=3" alt="Camada 03">
+        </div>
+
+        <!-- Camada 02: Cidade (atualizada) -->
+        <div class="parallax-layer layer-02" id="layer02">
+          <img src="FUNDO APP/02.png?v=3" alt="Camada 02">
+        </div>
+
+        <!-- Camada 01: Rua de paralelepípedos e casas -->
+        <div class="parallax-layer layer-01" id="layer01">
+          <img src="FUNDO APP/01.png?v=3" alt="Camada 01">
+        </div>
+      </div>
+    </div>
+
+    <!-- Container de Rolagem Transparente: capta mouse, roda e touch -->
+    <div class="scroll-container" id="scrollContainer">
+      <div class="scroll-spacer"></div>
+    </div>
+
+  </div>
+
+  <script src="js/lenis.min.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>

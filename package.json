@@ -1,0 +1,22 @@
+{
+  "name": "nova-aurora",
+  "version": "1.0.0",
+  "description": "PWA para a Congregação Nova Aurora com fundo em parallax 4 camadas",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js"
+  },
+  "keywords": [
+    "pwa",
+    "parallax",
+    "nova-aurora",
+    "congregacao"
+  ],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "lenis": "^1.3.26",
+    "sharp": "^0.34.5"
+  }
+}
