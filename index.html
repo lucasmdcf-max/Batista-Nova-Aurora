@@ -1,8 +1,10 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
+
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="viewport"
+    content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <title>Nova Aurora</title>
 
   <meta name="theme-color" content="#060a17">
@@ -11,14 +13,20 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <link rel="manifest" href="manifest.json">
 
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400&family=Questrial&display=swap"
+    rel="stylesheet">
+
   <link rel="stylesheet" href="css/lenis.css">
-  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/style.css?v=10">
 </head>
+
 <body>
 
   <!-- Moldura de celular vertical -->
   <div class="mobile-frame" id="mobileFrame">
-    
+
     <!-- Nome da congregação no topo (revelado em fade-in no nível mais baixo do scroll) -->
     <div class="congregation-header-brand" id="congregationBrand">
       <img src="FUNDO APP/nome-trimmed.png?v=3" alt="Congregação Nova Aurora">
@@ -59,9 +67,152 @@
       <div class="scroll-spacer"></div>
     </div>
 
+    <!-- Menu Inicial em Lista Vertical (Centralizado) -->
+    <nav class="home-menu" id="homeMenu" aria-label="Menu Principal">
+      <ul class="home-menu-list" id="homeMenuList">
+        <li class="home-menu-item"><a href="#quem-somos" class="home-menu-link">QUEM SOMOS</a></li>
+        <li class="home-menu-item"><a href="#programacoes" class="home-menu-link">PROGRAMAÇÕES</a></li>
+        <li class="home-menu-item"><a href="#pedidos-oracao" class="home-menu-link">PEDIDOS DE ORAÇÃO</a></li>
+        <li class="home-menu-item"><a href="#solicitar-visita" class="home-menu-link">SOLICITAR VISITA</a></li>
+        <li class="home-menu-item"><a href="#registrar-visita" class="home-menu-link">REGISTRAR VISITA</a></li>
+        <li class="home-menu-item"><a href="#membros" class="home-menu-link">MEMBROS</a></li>
+        <li class="home-menu-item"><a href="#infantil" class="home-menu-link">INFANTIL</a></li>
+      </ul>
+    </nav>
+
+    <!-- Botão de Voltar ao Início / Menu Inicial -->
+    <button type="button" class="btn-home" id="btnHome" aria-label="Voltar ao menu inicial">
+      <img src="FUNDO APP/Logo branca - Nova Aurora_transparente.png?v=7" alt="Logo Nova Aurora" class="btn-home-img">
+    </button>
+
+    <!-- Tela / Painel de Pedidos de Oração -->
+    <section class="sub-screen" id="prayerScreen" aria-hidden="true">
+      <div class="sub-screen-header">
+        <button type="button" class="btn-sub-back" id="btnPrayerBack" aria-label="Voltar">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2.2"
+            stroke-linecap="round" stroke-linejoin="round">
+            <line x1="19" y1="12" x2="5" y2="12"></line>
+            <polyline points="12 19 5 12 12 5"></polyline>
+          </svg>
+        </button>
+        <div class="sub-screen-title-wrap">
+          <h2 class="sub-screen-title">PEDIDOS DE ORAÇÃO</h2>
+          <div class="prayer-counters" id="prayerCounters">
+            <span class="counter-item counter-pending">Em oração: <strong id="countPending">0</strong></span>
+            <span class="counter-divider">•</span>
+            <span class="counter-item counter-answered">Respondidos: <strong id="countAnswered">0</strong></span>
+          </div>
+        </div>
+        <button type="button" class="btn-add-prayer" id="btnAddPrayer" aria-label="Novo pedido de oração">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2.5"
+            stroke-linecap="round" stroke-linejoin="round">
+            <line x1="12" y1="5" x2="12" y2="19"></line>
+            <line x1="5" y1="12" x2="19" y2="12"></line>
+          </svg>
+        </button>
+      </div>
+
+      <div class="sub-screen-body" id="prayerListContainer">
+        <!-- Itens inseridos dinamicamente via JS -->
+      </div>
+    </section>
+
+    <!-- Modal Novo Pedido de Oração -->
+    <div class="app-modal" id="modalNewPrayer" aria-hidden="true">
+      <div class="app-modal-overlay" id="overlayNewPrayer"></div>
+      <div class="app-modal-card">
+        <div class="app-modal-header">
+          <h3>Novo Pedido</h3>
+          <button type="button" class="btn-modal-close" id="btnCloseNewPrayer" aria-label="Fechar">✕</button>
+        </div>
+        <form id="formNewPrayer" class="app-form">
+          <div class="form-group">
+            <label for="prayerName">Nome</label>
+            <input type="text" id="prayerName" placeholder="Seu nome ou de quem precisa de oração" required
+              autocomplete="name">
+          </div>
+          <div class="form-group">
+            <label for="prayerText">Pedido</label>
+            <textarea id="prayerText" rows="4" placeholder="Descreva aqui o pedido de oração..." required></textarea>
+          </div>
+          <div class="form-actions">
+            <button type="button" class="btn-form-cancel" id="btnCancelNewPrayer">Cancelar</button>
+            <button type="submit" class="btn-form-save" id="btnSaveNewPrayer">Salvar</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Modal Leitura / Edição do Pedido -->
+    <div class="app-modal" id="modalViewPrayer" aria-hidden="true">
+      <div class="app-modal-overlay" id="overlayViewPrayer"></div>
+      <div class="app-modal-card modal-view-card">
+        <div class="app-modal-header">
+          <h3 id="viewPrayerAuthor">Pedido de Oração</h3>
+          <button type="button" class="btn-modal-close" id="btnCloseViewPrayer" aria-label="Fechar">✕</button>
+        </div>
+
+        <div class="view-prayer-meta">
+          <span id="viewPrayerDate" class="prayer-meta-date"></span>
+          <span id="viewPrayerStatusBadge" class="prayer-status-text"></span>
+        </div>
+
+        <!-- Visualização do Texto do Pedido -->
+        <div class="view-prayer-body" id="viewPrayerContent"></div>
+
+        <!-- Seção de Edição do Pedido (ativada ao clicar no lápis) -->
+        <div class="prayer-edit-section" id="prayerEditSection" style="display: none;">
+          <label for="editPrayerText" class="prayer-section-label">Editar texto do pedido:</label>
+          <textarea id="editPrayerText" rows="3" class="app-input-textarea"></textarea>
+          <div class="prayer-inline-actions">
+            <button type="button" class="btn-sm-cancel" id="btnCancelEditPrayer">Cancelar</button>
+            <button type="button" class="btn-sm-save" id="btnSaveEditPrayer">Salvar Pedido</button>
+          </div>
+        </div>
+
+        <!-- Exibição da Resposta em Dourado -->
+        <div class="prayer-gold-answer" id="prayerGoldAnswer" style="display: none;">
+          <div class="prayer-gold-label">Resposta da Oração:</div>
+          <div class="prayer-gold-text" id="prayerGoldText"></div>
+        </div>
+
+        <!-- Campo para Escrever Resposta ao Ativar o Swipe -->
+        <div class="prayer-answer-input-box" id="prayerAnswerInputBox" style="display: none;">
+          <label for="prayerAnswerField" class="prayer-section-label">Escreva a resposta da oração:</label>
+          <textarea id="prayerAnswerField" rows="3" placeholder="Descreva aqui o testemunho ou resposta..."
+            class="app-input-textarea"></textarea>
+          <div class="prayer-inline-actions">
+            <button type="button" class="btn-sm-save btn-save-answer" id="btnSaveAnswer">Salvar Resposta</button>
+          </div>
+        </div>
+
+        <!-- Rodapé do Modal: Botão Swipe Laranja + Lápis de Edição -->
+        <div class="modal-view-footer">
+          <div class="swipe-toggle-wrap">
+            <span class="swipe-toggle-label" id="swipeLabel">Respondido</span>
+            <label class="swipe-switch" for="swipeAnswered">
+              <input type="checkbox" id="swipeAnswered" class="swipe-checkbox">
+              <span class="swipe-slider"></span>
+            </label>
+          </div>
+
+          <button type="button" class="btn-modal-pencil" id="btnOpenEditPrayer" aria-label="Editar texto do pedido"
+            title="Editar texto do pedido">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2.2"
+              stroke-linecap="round" stroke-linejoin="round">
+              <path d="M12 20h9"></path>
+              <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path>
+            </svg>
+          </button>
+        </div>
+
+      </div>
+    </div>
+
   </div>
 
   <script src="js/lenis.min.js"></script>
-  <script src="js/app.js"></script>
+  <script type="module" src="js/app.js?v=10"></script>
 </body>
+
 </html>

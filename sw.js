@@ -2,32 +2,37 @@
  * Service Worker — Congregação Nova Aurora PWA
  */
 
-const CACHE_NAME = 'nova-aurora-v1';
+const CACHE_NAME = 'nova-aurora-v9';
 const ASSETS_TO_CACHE = [
   './',
   './index.html',
-  './css/style.css',
+  './css/style.css?v=10',
   './css/lenis.css',
   './js/lenis.min.js',
-  './js/app.js',
+  './js/app.js?v=10',
+  './js/prayers.js?v=10',
+  './js/firebase-config.js',
   './manifest.json',
-  './FUNDO APP/01.png',
-  './FUNDO APP/02.png',
-  './FUNDO APP/03.png',
-  './FUNDO APP/04.png',
+  './FUNDO APP/01.png?v=3',
+  './FUNDO APP/02.png?v=3',
+  './FUNDO APP/03.png?v=3',
+  './FUNDO APP/04.png?v=3',
+  './FUNDO APP/referência.png?v=3',
+  './FUNDO APP/nome-trimmed.png?v=3',
+  './FUNDO APP/Logo branca - Nova Aurora_transparente.png?v=7',
   './icons/icon-192.png',
   './icons/icon-512.png',
   './icons/favicon-32x32.png'
 ];
 
 self.addEventListener('install', (event) => {
+  self.skipWaiting();
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
       console.log('[Service Worker] Cache inicial dos arquivos concluído');
-      return cache.addAll(ASSETS_TO_CACHE);
+      return cache.addAll(ASSETS_TO_CACHE).catch(() => {});
     })
   );
-  self.skipWaiting();
 });
 
 self.addEventListener('activate', (event) => {
@@ -47,40 +52,38 @@ self.addEventListener('activate', (event) => {
 });
 
 self.addEventListener('fetch', (event) => {
-  // Ignora requisições de outros esquemas (como chrome-extension)
   if (!event.request.url.startsWith('http')) return;
 
+  // Para navegação HTML (index.html), usa Network-First para sempre pegar versão mais recente
+  if (event.request.mode === 'navigate' || event.request.destination === 'document') {
+    event.respondWith(
+      fetch(event.request)
+        .then((networkResponse) => {
+          if (networkResponse && networkResponse.status === 200) {
+            const responseClone = networkResponse.clone();
+            caches.open(CACHE_NAME).then((cache) => cache.put(event.request, responseClone));
+          }
+          return networkResponse;
+        })
+        .catch(() => caches.match(event.request))
+    );
+    return;
+  }
+
+  // Demais arquivos (imagens, scripts, css): Stale-While-Revalidate
   event.respondWith(
     caches.match(event.request).then((cachedResponse) => {
-      if (cachedResponse) {
-        // Retorna do cache e atualiza em segundo plano (Stale-While-Revalidate)
-        fetch(event.request)
-          .then((networkResponse) => {
-            if (networkResponse && networkResponse.status === 200) {
-              caches.open(CACHE_NAME).then((cache) => {
-                cache.put(event.request, networkResponse);
-              });
-            }
-          })
-          .catch(() => {
-            // Em caso de falha na rede, já respondemos com o cache
-          });
-        return cachedResponse;
-      }
-
-      // Se não estiver no cache, busca na rede
-      return fetch(event.request).then((networkResponse) => {
-        if (!networkResponse || networkResponse.status !== 200 || networkResponse.type !== 'basic') {
+      const fetchPromise = fetch(event.request)
+        .then((networkResponse) => {
+          if (networkResponse && networkResponse.status === 200) {
+            const responseClone = networkResponse.clone();
+            caches.open(CACHE_NAME).then((cache) => cache.put(event.request, responseClone));
+          }
           return networkResponse;
-        }
+        })
+        .catch(() => {});
 
-        const responseToCache = networkResponse.clone();
-        caches.open(CACHE_NAME).then((cache) => {
-          cache.put(event.request, responseToCache);
-        });
-
-        return networkResponse;
-      });
+      return cachedResponse || fetchPromise;
     })
   );
 });

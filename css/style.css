@@ -140,3 +140,798 @@ html::-webkit-scrollbar, body::-webkit-scrollbar {
   height: 300vh;
   pointer-events: none;
 }
+
+/* Botão Início / Menu (Apenas o logotipo limpo, sem círculo de fundo) */
+.btn-home {
+  position: absolute;
+  bottom: max(20px, env(safe-area-inset-bottom, 20px));
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 99 !important;
+  width: 66px;
+  height: 66px;
+  background: transparent;
+  border: none;
+  border-radius: 0;
+  box-shadow: none;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  display: flex !important;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  padding: 0;
+  outline: none;
+  transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+  user-select: none;
+  touch-action: manipulation;
+}
+
+.btn-home-img {
+  width: 66px;
+  height: 66px;
+  object-fit: contain;
+  filter: drop-shadow(0 4px 14px rgba(0, 0, 0, 0.85)) drop-shadow(0 1px 4px rgba(0, 0, 0, 0.95));
+  user-select: none;
+  -webkit-user-drag: none;
+  pointer-events: none;
+  display: block;
+  transition: transform 0.25s ease, filter 0.25s ease;
+}
+
+.btn-home:hover {
+  transform: translateX(-50%) scale(1.1);
+}
+
+.btn-home:hover .btn-home-img {
+  filter: drop-shadow(0 0 16px rgba(255, 255, 255, 0.75)) drop-shadow(0 4px 14px rgba(0, 0, 0, 0.9));
+}
+
+.btn-home:active {
+  transform: translateX(-50%) scale(0.92);
+}
+
+/* Menu Inicial - Lista Vertical Centralizada */
+.home-menu {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -46%);
+  width: 90%;
+  max-width: 380px;
+  z-index: 25;
+  pointer-events: none;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.home-menu-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  width: 100%;
+}
+
+.home-menu-item {
+  margin: 0;
+  padding: 0;
+  display: flex;
+  justify-content: center;
+  width: 100%;
+  opacity: 0;
+  transform: translateX(-50px);
+  will-change: transform, opacity;
+  pointer-events: none;
+}
+
+.home-menu-link {
+  font-family: 'Century Gothic Light', 'Century Gothic', CenturyGothic, 'Questrial', 'Montserrat', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-weight: 300;
+  font-size: 1.05rem;
+  line-height: 1.25;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: #ffffff;
+  text-decoration: none;
+  background: transparent !important;
+  border: none !important;
+  outline: none;
+  box-shadow: none !important;
+  padding: 5px 14px;
+  cursor: pointer;
+  pointer-events: auto;
+  text-align: center;
+  white-space: nowrap;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+  text-shadow: 
+    0 0 8px rgba(255, 255, 255, 0.9),
+    0 0 18px rgba(255, 255, 255, 0.6),
+    0 0 32px rgba(255, 255, 255, 0.4),
+    0 2px 10px rgba(0, 0, 0, 0.95);
+  transition: color 0.2s ease, text-shadow 0.2s ease, transform 0.2s ease, letter-spacing 0.2s ease;
+}
+
+.home-menu-link:hover,
+.home-menu-link:focus-visible {
+  color: #ffffff;
+  letter-spacing: 0.20em;
+  text-shadow: 
+    0 0 12px rgba(255, 255, 255, 1),
+    0 0 24px rgba(255, 255, 255, 0.85),
+    0 0 42px rgba(255, 255, 255, 0.65),
+    0 2px 10px rgba(0, 0, 0, 0.95);
+  transform: scale(1.05);
+}
+
+.home-menu-link:active,
+.home-menu-link.is-pressed {
+  color: #ffffff;
+  transform: scale(0.96);
+  text-shadow: 
+    0 0 8px #ffaa33,
+    0 0 18px #ff7700,
+    0 0 32px #ff5500,
+    0 0 50px #ff3700,
+    0 2px 10px rgba(0, 0, 0, 0.95);
+  transition: text-shadow 0.08s ease, transform 0.08s ease;
+}
+
+@media (max-height: 700px) {
+  .home-menu {
+    transform: translate(-50%, -45%);
+  }
+  .home-menu-list {
+    gap: 11px;
+  }
+  .home-menu-link {
+    font-size: 0.92rem;
+    letter-spacing: 0.15em;
+    padding: 3px 8px;
+  }
+}
+
+/* ========================================================
+   Tela de Sub-Páginas / Pedidos de Oração
+   ======================================================== */
+.sub-screen {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 40;
+  background: rgba(6, 11, 24, 0.95);
+  backdrop-filter: blur(22px);
+  -webkit-backdrop-filter: blur(22px);
+  display: flex;
+  flex-direction: column;
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(24px) scale(0.98);
+  transition: opacity 0.32s cubic-bezier(0.16, 1, 0.3, 1), transform 0.32s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.sub-screen.is-active {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateY(0) scale(1);
+}
+
+.sub-screen-header {
+  position: sticky;
+  top: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: max(18px, env(safe-area-inset-top, 18px)) 16px 12px;
+  background: rgba(6, 11, 24, 0.92);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  z-index: 5;
+}
+
+.sub-screen-title-wrap {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 0 8px;
+}
+
+.sub-screen-title {
+  font-family: 'Century Gothic Light', 'Century Gothic', CenturyGothic, 'Questrial', 'Montserrat', sans-serif;
+  font-weight: 300;
+  font-size: 1.05rem;
+  letter-spacing: 0.2em;
+  color: #ffffff;
+  text-shadow: 0 0 10px rgba(255, 255, 255, 0.8), 0 2px 10px rgba(0, 0, 0, 0.95);
+  text-transform: uppercase;
+  margin: 0;
+  line-height: 1.2;
+}
+
+.prayer-counters {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 5px;
+  font-size: 0.78rem;
+  font-family: 'Century Gothic Light', 'Century Gothic', CenturyGothic, 'Questrial', 'Montserrat', sans-serif;
+  letter-spacing: 0.08em;
+}
+
+.counter-item {
+  color: #94a3b8;
+}
+
+.counter-pending strong {
+  color: #f1f5f9;
+}
+
+.counter-divider {
+  color: rgba(255, 255, 255, 0.25);
+}
+
+.counter-answered {
+  color: #ff9933;
+}
+
+.counter-answered strong {
+  color: #ff7700;
+  text-shadow: 0 0 8px rgba(255, 119, 0, 0.5);
+}
+
+.btn-sub-back,
+.btn-add-prayer {
+  background: transparent;
+  border: none;
+  color: #ffffff;
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  outline: none;
+  padding: 0;
+  transition: transform 0.2s ease, filter 0.2s ease;
+  flex-shrink: 0;
+}
+
+.btn-sub-back:hover,
+.btn-add-prayer:hover {
+  transform: scale(1.12);
+  filter: drop-shadow(0 0 8px rgba(255, 255, 255, 0.8));
+}
+
+.btn-add-prayer {
+  border: 1.5px solid rgba(255, 255, 255, 0.45);
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.sub-screen-body {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 16px 16px 90px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  scrollbar-width: none;
+}
+
+.sub-screen-body::-webkit-scrollbar {
+  display: none;
+}
+
+/* Linha do Pedido (Caixa de largura total com clique para abrir) */
+.prayer-row-item {
+  width: 100%;
+  display: flex;
+}
+
+.prayer-card-box {
+  width: 100%;
+  background: rgba(15, 23, 42, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 14px;
+  padding: 14px 16px;
+  cursor: pointer;
+  transition: background 0.2s ease, border-color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+  user-select: none;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.45);
+  text-align: left;
+}
+
+.prayer-card-box:hover {
+  background: rgba(26, 38, 66, 0.85);
+  border-color: rgba(255, 255, 255, 0.38);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.65);
+}
+
+.prayer-card-box:active {
+  transform: scale(0.98);
+}
+
+.prayer-first-line {
+  font-family: 'Century Gothic Light', 'Century Gothic', CenturyGothic, 'Questrial', 'Montserrat', sans-serif;
+  font-size: 0.98rem;
+  font-weight: 400;
+  color: #f8fafc;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin-bottom: 7px;
+  line-height: 1.3;
+}
+
+.prayer-sub-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 0.78rem;
+  color: #94a3b8;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+}
+
+.prayer-author {
+  color: #e2e8f0;
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 50%;
+}
+
+.prayer-date-status-wrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  white-space: nowrap;
+}
+
+.prayer-date {
+  color: #94a3b8;
+}
+
+.prayer-status-text {
+  font-weight: 600;
+  font-size: 0.78rem;
+}
+
+/* Status Respondido em LARANJA (conforme solicitado) */
+.prayer-status-text.status-answered {
+  color: #ff7700 !important;
+  text-shadow: 0 0 10px rgba(255, 119, 0, 0.5);
+}
+
+.prayer-status-text.status-pending {
+  color: #94a3b8;
+}
+
+.prayer-empty-state {
+  text-align: center;
+  padding: 40px 20px;
+  color: #94a3b8;
+  font-family: 'Century Gothic Light', 'Century Gothic', CenturyGothic, sans-serif;
+}
+
+.prayer-empty-sub {
+  font-size: 0.85rem;
+  margin-top: 8px;
+  color: #cbd5e1;
+}
+
+/* ========================================================
+   Modais Genéricos (Novo Pedido, Leitura, Status)
+   ======================================================== */
+.app-modal {
+  position: absolute;
+  inset: 0;
+  z-index: 60;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.25s ease;
+}
+
+.app-modal.is-open {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.app-modal-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.78);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+.app-modal-card {
+  position: relative;
+  z-index: 2;
+  width: 100%;
+  max-width: 380px;
+  background: #0b1329;
+  border: 1.5px solid rgba(255, 255, 255, 0.22);
+  border-radius: 20px;
+  padding: 22px 20px;
+  box-shadow: 0 16px 42px rgba(0, 0, 0, 0.9);
+  transform: scale(0.92);
+  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.app-modal.is-open .app-modal-card {
+  transform: scale(1);
+}
+
+.app-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+
+.app-modal-header h3 {
+  font-family: 'Century Gothic Light', 'Century Gothic', CenturyGothic, sans-serif;
+  font-weight: 300;
+  font-size: 1.15rem;
+  color: #ffffff;
+  letter-spacing: 0.1em;
+  margin: 0;
+}
+
+.btn-modal-close {
+  background: transparent;
+  border: none;
+  color: #94a3b8;
+  font-size: 1.3rem;
+  line-height: 1;
+  cursor: pointer;
+  padding: 4px;
+  transition: color 0.2s ease, transform 0.2s ease;
+}
+
+.btn-modal-close:hover {
+  color: #ffffff;
+  transform: scale(1.15);
+}
+
+.app-form {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  text-align: left;
+}
+
+.form-group label {
+  font-size: 0.82rem;
+  letter-spacing: 0.08em;
+  color: #cbd5e1;
+  text-transform: uppercase;
+  font-family: 'Century Gothic Light', 'Century Gothic', CenturyGothic, sans-serif;
+}
+
+.form-group input,
+.form-group textarea {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 10px;
+  padding: 10px 12px;
+  color: #ffffff;
+  font-size: 0.95rem;
+  font-family: inherit;
+  outline: none;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.form-group input:focus,
+.form-group textarea:focus {
+  border-color: #ff9900;
+  box-shadow: 0 0 10px rgba(255, 153, 0, 0.35);
+}
+
+.form-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+  margin-top: 6px;
+}
+
+.btn-form-cancel,
+.btn-form-save {
+  padding: 9px 18px;
+  border-radius: 10px;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: transform 0.2s ease, background 0.2s ease;
+}
+
+.btn-form-cancel {
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: #cbd5e1;
+}
+
+.btn-form-cancel:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: #ffffff;
+}
+
+.btn-form-save {
+  background: linear-gradient(135deg, #f59e0b, #d97706);
+  border: none;
+  color: #ffffff;
+  font-weight: 500;
+  box-shadow: 0 4px 14px rgba(245, 158, 11, 0.4);
+}
+
+.btn-form-save:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 18px rgba(245, 158, 11, 0.6);
+}
+
+/* Modal Leitura & Interações */
+.modal-view-card {
+  max-height: 88vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.view-prayer-meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.82rem;
+  color: #94a3b8;
+  margin-bottom: 12px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.view-prayer-body {
+  font-size: 0.98rem;
+  line-height: 1.55;
+  color: #f1f5f9;
+  white-space: pre-wrap;
+  max-height: 200px;
+  overflow-y: auto;
+  text-align: left;
+  margin-bottom: 10px;
+  padding-right: 4px;
+}
+
+/* Resposta em Dourado */
+.prayer-gold-answer {
+  margin-top: 10px;
+  padding: 12px 14px;
+  background: rgba(245, 158, 11, 0.08);
+  border: 1px solid rgba(245, 158, 11, 0.35);
+  border-radius: 12px;
+  text-align: left;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.35);
+  max-height: 160px;
+  overflow-y: auto;
+}
+
+.prayer-gold-label {
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: #ffd700;
+  font-family: 'Century Gothic Light', 'Century Gothic', CenturyGothic, sans-serif;
+  font-weight: 600;
+  margin-bottom: 6px;
+  text-shadow: 0 0 10px rgba(255, 215, 0, 0.4);
+}
+
+.prayer-gold-text {
+  font-size: 0.95rem;
+  line-height: 1.5;
+  color: #fbbf24;
+  text-shadow: 0 0 8px rgba(251, 191, 36, 0.35);
+  white-space: pre-wrap;
+}
+
+/* Campos de Edição / Inserção de Resposta */
+.prayer-answer-input-box,
+.prayer-edit-section {
+  margin-top: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  text-align: left;
+}
+
+.prayer-section-label {
+  font-size: 0.78rem;
+  color: #cbd5e1;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-family: 'Century Gothic Light', 'Century Gothic', CenturyGothic, sans-serif;
+}
+
+.app-input-textarea {
+  width: 100%;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  border-radius: 10px;
+  padding: 10px 12px;
+  color: #ffffff;
+  font-size: 0.92rem;
+  font-family: inherit;
+  outline: none;
+  resize: vertical;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.app-input-textarea:focus {
+  border-color: #ff7700;
+  box-shadow: 0 0 10px rgba(255, 119, 0, 0.35);
+}
+
+.prayer-inline-actions {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+}
+
+.btn-sm-cancel,
+.btn-sm-save {
+  padding: 7px 14px;
+  border-radius: 8px;
+  font-size: 0.82rem;
+  cursor: pointer;
+  transition: transform 0.2s ease, background 0.2s ease;
+}
+
+.btn-sm-cancel {
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: #cbd5e1;
+}
+
+.btn-sm-cancel:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: #ffffff;
+}
+
+.btn-sm-save {
+  background: linear-gradient(135deg, #f59e0b, #d97706);
+  border: none;
+  color: #ffffff;
+  font-weight: 600;
+  box-shadow: 0 2px 10px rgba(245, 158, 11, 0.35);
+}
+
+.btn-save-answer {
+  background: linear-gradient(135deg, #ff7700, #ea580c);
+  box-shadow: 0 2px 12px rgba(255, 119, 0, 0.45);
+}
+
+/* Rodapé do Modal com Swipe Laranja e Lápis */
+.modal-view-footer {
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px solid rgba(255, 255, 255, 0.12);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.swipe-toggle-wrap {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.swipe-toggle-label {
+  font-size: 0.88rem;
+  font-family: 'Century Gothic Light', 'Century Gothic', CenturyGothic, 'Questrial', 'Montserrat', sans-serif;
+  letter-spacing: 0.08em;
+  color: #e2e8f0;
+  font-weight: 400;
+  text-transform: uppercase;
+}
+
+.swipe-switch {
+  position: relative;
+  display: inline-block;
+  width: 48px;
+  height: 26px;
+  cursor: pointer;
+  user-select: none;
+}
+
+.swipe-checkbox {
+  opacity: 0;
+  width: 0;
+  height: 0;
+  position: absolute;
+}
+
+.swipe-slider {
+  position: absolute;
+  inset: 0;
+  background: rgba(255, 255, 255, 0.18);
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  border-radius: 26px;
+  transition: background-color 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
+}
+
+.swipe-slider::before {
+  content: "";
+  position: absolute;
+  height: 20px;
+  width: 20px;
+  left: 2px;
+  bottom: 2px;
+  background-color: #ffffff;
+  border-radius: 50%;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.45);
+  transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* Swipe Ativado fica LARANJA (conforme solicitado) */
+.swipe-checkbox:checked + .swipe-slider {
+  background-color: #ff7700 !important;
+  border-color: #ff9933;
+  box-shadow: 0 0 14px rgba(255, 119, 0, 0.65);
+}
+
+.swipe-checkbox:checked + .swipe-slider::before {
+  transform: translateX(22px);
+}
+
+.btn-modal-pencil {
+  background: transparent !important;
+  border: none !important;
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  outline: none;
+  padding: 0;
+  transition: transform 0.2s ease, filter 0.2s ease;
+  flex-shrink: 0;
+}
+
+.btn-modal-pencil svg {
+  stroke: #ffffff;
+  filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 0.7));
+}
+
+.btn-modal-pencil:hover {
+  transform: scale(1.18);
+  filter: drop-shadow(0 0 8px rgba(255, 255, 255, 0.8));
+}
+
+.btn-modal-pencil:active {
+  transform: scale(0.92);
+}

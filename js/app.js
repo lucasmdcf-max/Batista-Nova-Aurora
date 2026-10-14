@@ -5,6 +5,8 @@
  * Nome da Congregação: Fade-in suave no topo quando atinge o nível mais baixo
  */
 
+import { initPrayers, openPrayerScreen, closePrayerScreen } from './prayers.js';
+
 (function () {
   'use strict';
 
@@ -16,6 +18,8 @@
   const layer03 = document.getElementById('layer03');
   const layer02 = document.getElementById('layer02');
   const layer01 = document.getElementById('layer01');
+  const btnHome = document.getElementById('btnHome');
+  const homeMenuItems = Array.from(document.querySelectorAll('.home-menu-item'));
 
   function renderParallax(progress) {
     const H = mobileFrame.clientHeight || window.innerHeight;
@@ -48,6 +52,31 @@
       const fade = Math.max(0, Math.min(1, (p - fadeStart) / (1 - fadeStart)));
       congregationBrand.style.opacity = fade.toFixed(3);
       congregationBrand.style.transform = `translate(-50%, ${(1 - fade) * -12}px)`;
+    }
+
+    // Menu Inicial em Cascata:
+    // Desliza da esquerda para a direita de cima para baixo sucessivamente
+    // Quando topar o scroll na parte inferior (p = 1.0), o último item ("INFANTIL") aparece completamente.
+    if (homeMenuItems.length > 0) {
+      const cascadeStart = 0.65;
+      const totalItems = homeMenuItems.length;
+      const itemWindow = 0.14;
+      const step = (1.0 - cascadeStart - itemWindow) / Math.max(1, totalItems - 1);
+
+      for (let i = 0; i < totalItems; i++) {
+        const item = homeMenuItems[i];
+        const itemStart = cascadeStart + i * step;
+        const itemEnd = itemStart + itemWindow;
+        const itemProg = Math.min(1, Math.max(0, (p - itemStart) / (itemEnd - itemStart)));
+
+        // Easing suave cúbico
+        const eased = 1 - Math.pow(1 - itemProg, 3);
+        const offsetX = (1 - eased) * -45;
+
+        item.style.opacity = eased.toFixed(3);
+        item.style.transform = `translateX(${offsetX.toFixed(1)}px)`;
+        item.style.pointerEvents = eased > 0.4 ? 'auto' : 'none';
+      }
     }
   }
 
@@ -101,10 +130,65 @@
     }
   });
 
+  // Retorna para o menu inicial (limite inferior do scroll onde o nome da congregação é exibido)
+  function scrollToHome() {
+    if (!scrollContainer) return;
+    const maxScroll = scrollContainer.scrollHeight - scrollContainer.clientHeight;
+    if (lenis && typeof lenis.scrollTo === 'function') {
+      lenis.scrollTo(maxScroll, {
+        duration: 1.3,
+        easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t))
+      });
+    } else {
+      scrollContainer.scrollTo({
+        top: maxScroll,
+        behavior: 'smooth'
+      });
+    }
+  }
+
+  if (btnHome) {
+    btnHome.addEventListener('click', (e) => {
+      e.preventDefault();
+      closePrayerScreen();
+      scrollToHome();
+    });
+  }
+
+  // Interação de toque/clique para garantir o brilho laranja ao pressionar em qualquer dispositivo
+  homeMenuItems.forEach((item) => {
+    const link = item.querySelector('.home-menu-link');
+    if (link) {
+      const activateOrange = () => link.classList.add('is-pressed');
+      const deactivateOrange = () => link.classList.remove('is-pressed');
+
+      link.addEventListener('pointerdown', activateOrange);
+      link.addEventListener('pointerup', deactivateOrange);
+      link.addEventListener('pointercancel', deactivateOrange);
+      link.addEventListener('pointerleave', deactivateOrange);
+      link.addEventListener('click', (e) => {
+        // feedback tátil curto
+        activateOrange();
+        setTimeout(deactivateOrange, 180);
+
+        const href = link.getAttribute('href');
+        if (href === '#pedidos-oracao') {
+          e.preventDefault();
+          openPrayerScreen();
+        }
+      });
+    }
+  });
+
+  // Inicializa o sistema de orações
+  initPrayers();
+
   // PWA Service Worker
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
-      navigator.serviceWorker.register('./sw.js').catch(() => {});
+      navigator.serviceWorker.register('./sw.js').then((reg) => {
+        reg.update().catch(() => {});
+      }).catch(() => {});
     });
   }
 })();
