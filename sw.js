@@ -2,16 +2,16 @@
  * Service Worker — Congregação Nova Aurora PWA
  */
 
-const CACHE_NAME = 'nova-aurora-v17';
+const CACHE_NAME = 'nova-aurora-v18';
 const ASSETS_TO_CACHE = [
   './',
   './index.html',
-  './css/style.css?v=17',
+  './css/style.css?v=18',
   './css/lenis.css',
   './js/lenis.min.js',
-  './js/app.js?v=17',
-  './js/prayers.js?v=17',
-  './js/visitors.js?v=17',
+  './js/app.js?v=18',
+  './js/prayers.js?v=18',
+  './js/visitors.js?v=18',
   './js/firebase-config.js',
   './manifest.json',
   './FUNDO APP/01.png?v=3',
@@ -29,7 +29,7 @@ const ASSETS_TO_CACHE = [
 self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
-      console.log('[Service Worker] Cache inicial dos arquivos concluído (v17)');
+      console.log('[Service Worker] Cache inicial dos arquivos concluído (v18)');
       return cache.addAll(ASSETS_TO_CACHE).catch(() => {});
     })
   );

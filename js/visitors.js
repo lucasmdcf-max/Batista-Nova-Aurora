@@ -21,7 +21,7 @@ import {
   serverTimestamp
 } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
 
-const STORAGE_KEY = 'nova_aurora_visitantes_v1';
+const STORAGE_KEY = 'nova_aurora_visitantes_v2';
 const MEMBER_PASSWORD = 'bemvindo';
 
 // Fallback inicial offline
@@ -70,11 +70,24 @@ let btnDeleteVisitor = null;
 
 function loadLocalCache() {
   try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (raw !== null) {
+    let raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) {
+      // Migração suave do v1 descartando dados de demonstração antigos
+      const oldRaw = localStorage.getItem('nova_aurora_visitantes_v1');
+      if (oldRaw) {
+        const parsedOld = JSON.parse(oldRaw);
+        if (Array.isArray(parsedOld)) {
+          const validOld = parsedOld.filter((item) => !String(item.id).startsWith('demo-'));
+          if (validOld.length > 0) {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(validOld));
+            return validOld;
+          }
+        }
+      }
+    } else {
       const parsed = JSON.parse(raw);
       if (Array.isArray(parsed)) {
-        return parsed;
+        return parsed.filter((item) => !String(item.id).startsWith('demo-'));
       }
     }
   } catch (e) {
@@ -362,13 +375,16 @@ async function handleNewVisitorSubmit(e) {
   // Alterna suavemente para a lista para ver o visitante cadastrado
   switchTab('list');
 
-  // Persiste no Firestore
+  // Persiste no Firestore com campos explícitos e tratamento de erro robusto
   try {
     const docRef = await addDoc(collection(db, 'visitantes'), {
-      ...newVisitor,
+      nome: newVisitor.nome,
+      telefone: newVisitor.telefone,
+      visitas: Number(newVisitor.visitas),
+      data: newVisitor.data,
       timestamp: serverTimestamp()
     });
-    // Atualiza id temporário
+    // Atualiza id temporário local com id real do Firestore
     const item = visitorList.find((v) => v.id === tempId);
     if (item) item.id = docRef.id;
     saveLocalCache(visitorList);
@@ -499,10 +515,31 @@ function setEditVisits(num) {
 /**
  * Sincronização em Tempo Real via Firestore
  */
+async function syncPendingLocalVisitors() {
+  const pending = visitorList.filter((item) => String(item.id).startsWith('temp-'));
+  if (pending.length === 0) return;
+
+  for (const item of pending) {
+    try {
+      const docRef = await addDoc(collection(db, 'visitantes'), {
+        nome: item.nome,
+        telefone: item.telefone,
+        visitas: Number(item.visitas) || 1,
+        data: item.data || formatLocalDate(new Date()),
+        timestamp: serverTimestamp()
+      });
+      item.id = docRef.id;
+    } catch (err) {
+      console.warn('Erro ao sincronizar visitante pendente:', err);
+    }
+  }
+}
+
 function subscribeToFirestore() {
   try {
-    const q = query(collection(db, 'visitantes'), orderBy('timestamp', 'desc'));
-    onSnapshot(q, (snapshot) => {
+    // Consulta direta na coleção sem cláusula orderBy no servidor para evitar falha por ausência de índice
+    const colRef = collection(db, 'visitantes');
+    onSnapshot(colRef, (snapshot) => {
       const remoteList = [];
       snapshot.forEach((d) => {
         const data = d.data();
@@ -510,26 +547,40 @@ function subscribeToFirestore() {
         if (!formattedDate && data.timestamp && typeof data.timestamp.toDate === 'function') {
           formattedDate = formatLocalDate(data.timestamp.toDate());
         }
+        let ts = Date.now();
+        if (data.timestamp) {
+          if (typeof data.timestamp.toMillis === 'function') {
+            ts = data.timestamp.toMillis();
+          } else if (typeof data.timestamp.toDate === 'function') {
+            ts = data.timestamp.toDate().getTime();
+          } else if (typeof data.timestamp === 'number') {
+            ts = data.timestamp;
+          }
+        }
         remoteList.push({
           id: d.id,
           nome: data.nome || '',
           telefone: data.telefone || '',
           visitas: Number(data.visitas) || 1,
-          data: formattedDate,
-          timestamp: data.timestamp ? (data.timestamp.toMillis ? data.timestamp.toMillis() : Date.now()) : Date.now()
+          data: formattedDate || formatLocalDate(new Date()),
+          timestamp: ts
         });
       });
 
-      // Sincronização Total: O Firestore é a fonte da verdade em todos os dispositivos
-      // Preserva apenas cadastros temporários locais que ainda estão aguardando confirmação
-      const pendingTemps = visitorList.filter((item) => String(item.id).startsWith('temp-'));
-      visitorList = [...pendingTemps, ...remoteList];
+      // Ordena por data/timestamp mais recente em memória (100% seguro em todos os navegadores)
+      remoteList.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
+
+      // Sincronização Total: O Firestore é a autoridade central em todos os dispositivos
+      visitorList = remoteList;
       saveLocalCache(visitorList);
 
       if (countVisitorsBadge) {
         countVisitorsBadge.textContent = visitorList.length;
       }
       renderVisitorList();
+
+      // Sincroniza qualquer item local pendente que ainda não tenha subido
+      syncPendingLocalVisitors();
     }, (err) => {
       console.warn('Firestore offline ou restrito. Mantendo cache local de visitantes:', err);
     });
