@@ -374,7 +374,7 @@ html::-webkit-scrollbar, body::-webkit-scrollbar {
   width: 100%;
   height: 100%;
   z-index: 40;
-  background: rgba(6, 11, 24, 0.95);
+  background: linear-gradient(180deg, #004888 0%, #013a72 52%, #012d5a 100%);
   backdrop-filter: blur(22px);
   -webkit-backdrop-filter: blur(22px);
   display: flex;
@@ -397,9 +397,22 @@ html::-webkit-scrollbar, body::-webkit-scrollbar {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: max(18px, env(safe-area-inset-top, 18px)) 16px 12px;
-  background: rgba(6, 11, 24, 0.92);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  min-height: 112px;
+  padding: max(20px, env(safe-area-inset-top, 20px)) 16px 16px;
+  background-color: #004888;
+  background-image:
+    linear-gradient(
+      180deg,
+      rgba(0, 42, 84, 0.18) 0%,
+      rgba(0, 56, 108, 0.42) 68%,
+      rgba(0, 72, 136, 0.94) 100%
+    ),
+    url('../FUNDO APP/topo-menus.jpg?v=20');
+  background-size: cover;
+  background-position: center center;
+  background-repeat: no-repeat;
+  border-bottom: 1px solid rgba(145, 210, 255, 0.25);
+  box-shadow: 0 6px 20px rgba(0, 22, 50, 0.45);
   z-index: 5;
 }
 
@@ -416,10 +429,10 @@ html::-webkit-scrollbar, body::-webkit-scrollbar {
 .sub-screen-title {
   font-family: 'Century Gothic Light', 'Century Gothic', CenturyGothic, 'Questrial', 'Montserrat', sans-serif;
   font-weight: 300;
-  font-size: 1.05rem;
+  font-size: 1.08rem;
   letter-spacing: 0.2em;
   color: #ffffff;
-  text-shadow: 0 0 10px rgba(255, 255, 255, 0.8), 0 2px 10px rgba(0, 0, 0, 0.95);
+  text-shadow: 0 2px 10px rgba(0, 20, 48, 0.95), 0 0 14px rgba(255, 255, 255, 0.8);
   text-transform: uppercase;
   margin: 0;
   line-height: 1.2;
@@ -430,15 +443,17 @@ html::-webkit-scrollbar, body::-webkit-scrollbar {
   align-items: center;
   justify-content: center;
   gap: 6px;
-  margin-top: 5px;
+  margin-top: 7px;
   font-size: 0.78rem;
   font-family: 'Century Gothic Light', 'Century Gothic', CenturyGothic, 'Questrial', 'Montserrat', sans-serif;
   letter-spacing: 0.08em;
 }
 
 .counter-tab {
-  background: transparent;
-  border: 1px solid transparent;
+  background: rgba(0, 38, 77, 0.45);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
   border-radius: 16px;
   padding: 3px 10px;
   font-family: inherit;
@@ -454,60 +469,60 @@ html::-webkit-scrollbar, body::-webkit-scrollbar {
 }
 
 .counter-divider {
-  color: rgba(255, 255, 255, 0.25);
+  color: rgba(255, 255, 255, 0.45);
   user-select: none;
 }
 
 .counter-tab.counter-pending {
-  color: #94a3b8;
+  color: #d0e8ff;
 }
 
 .counter-tab.counter-pending:hover {
-  background: rgba(255, 255, 255, 0.07);
-  color: #f1f5f9;
+  background: rgba(255, 255, 255, 0.15);
+  color: #ffffff;
 }
 
 .counter-tab.counter-pending.is-active {
-  background: rgba(255, 255, 255, 0.12);
-  border-color: rgba(255, 255, 255, 0.35);
+  background: rgba(255, 255, 255, 0.22);
+  border-color: rgba(255, 255, 255, 0.55);
   color: #ffffff;
-  box-shadow: 0 0 12px rgba(255, 255, 255, 0.14);
+  box-shadow: 0 0 12px rgba(255, 255, 255, 0.2);
 }
 
 .counter-tab.counter-answered {
-  color: #ffaa55;
-}
-
-.counter-tab.counter-answered:hover {
-  background: rgba(255, 119, 0, 0.1);
   color: #ffbb66;
 }
 
+.counter-tab.counter-answered:hover {
+  background: rgba(255, 119, 0, 0.2);
+  color: #ffd088;
+}
+
 .counter-tab.counter-answered.is-active {
-  background: rgba(255, 119, 0, 0.16);
-  border-color: rgba(255, 119, 0, 0.55);
+  background: rgba(255, 119, 0, 0.28);
+  border-color: rgba(255, 153, 51, 0.75);
   color: #ffffff;
-  box-shadow: 0 0 14px rgba(255, 119, 0, 0.3);
+  box-shadow: 0 0 14px rgba(255, 119, 0, 0.4);
 }
 
 .counter-badge {
   display: inline-block;
   padding: 1px 7px;
   border-radius: 10px;
-  background: rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.18);
   font-weight: 700;
   font-size: 0.74rem;
   line-height: 1.2;
 }
 
 .counter-tab.counter-pending.is-active .counter-badge {
-  background: rgba(255, 255, 255, 0.25);
+  background: rgba(255, 255, 255, 0.3);
   color: #ffffff;
 }
 
 .counter-tab.counter-answered .counter-badge {
-  background: rgba(255, 119, 0, 0.2);
-  color: #ff7700;
+  background: rgba(255, 119, 0, 0.28);
+  color: #ffaa33;
 }
 
 .counter-tab.counter-answered.is-active .counter-badge {
@@ -518,8 +533,10 @@ html::-webkit-scrollbar, body::-webkit-scrollbar {
 
 .btn-sub-back,
 .btn-add-prayer {
-  background: transparent;
-  border: none;
+  background: rgba(0, 38, 77, 0.48);
+  border: 1px solid rgba(255, 255, 255, 0.32);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
   color: #ffffff;
   width: 38px;
   height: 38px;
@@ -530,19 +547,20 @@ html::-webkit-scrollbar, body::-webkit-scrollbar {
   cursor: pointer;
   outline: none;
   padding: 0;
-  transition: transform 0.2s ease, filter 0.2s ease;
+  transition: transform 0.2s ease, filter 0.2s ease, background 0.2s ease;
   flex-shrink: 0;
 }
 
 .btn-sub-back:hover,
 .btn-add-prayer:hover {
+  background: rgba(0, 56, 108, 0.68);
   transform: scale(1.12);
   filter: drop-shadow(0 0 8px rgba(255, 255, 255, 0.8));
 }
 
 .btn-add-prayer {
-  border: 1.5px solid rgba(255, 255, 255, 0.45);
-  background: rgba(255, 255, 255, 0.08);
+  border: 1.5px solid rgba(255, 255, 255, 0.55);
+  background: rgba(0, 45, 92, 0.55);
 }
 
 .sub-screen-body {
@@ -571,36 +589,36 @@ html::-webkit-scrollbar, body::-webkit-scrollbar {
 .prayer-card-box {
   flex: 1;
   min-width: 0;
-  background: rgba(15, 23, 42, 0.7);
-  border: 1px solid rgba(255, 255, 255, 0.16);
+  background: rgba(0, 45, 92, 0.68);
+  border: 1px solid rgba(145, 210, 255, 0.26);
   border-radius: 14px;
   padding: 14px 16px;
   cursor: pointer;
   transition: background 0.2s ease, border-color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
   user-select: none;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.45);
+  box-shadow: 0 6px 18px rgba(0, 18, 42, 0.42);
   text-align: left;
 }
 
 .btn-delete-prayer {
-  background: rgba(239, 68, 68, 0.12);
-  border: 1px solid rgba(239, 68, 68, 0.35);
+  background: rgba(239, 68, 68, 0.16);
+  border: 1px solid rgba(248, 113, 113, 0.42);
   border-radius: 14px;
   width: 48px;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #f87171;
+  color: #fca5a5;
   cursor: pointer;
   outline: none;
   padding: 0;
   transition: all 0.2s ease;
   flex-shrink: 0;
-  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.4);
+  box-shadow: 0 4px 14px rgba(0, 18, 42, 0.4);
 }
 
 .btn-delete-prayer:hover {
-  background: rgba(239, 68, 68, 0.26);
+  background: rgba(239, 68, 68, 0.32);
   border-color: #ef4444;
   color: #ffffff;
   transform: translateY(-2px);
@@ -612,10 +630,10 @@ html::-webkit-scrollbar, body::-webkit-scrollbar {
 }
 
 .prayer-card-box:hover {
-  background: rgba(26, 38, 66, 0.85);
-  border-color: rgba(255, 255, 255, 0.38);
+  background: rgba(0, 60, 118, 0.84);
+  border-color: rgba(175, 225, 255, 0.5);
   transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.65);
+  box-shadow: 0 8px 22px rgba(0, 18, 42, 0.6);
 }
 
 .prayer-card-box:active {
@@ -626,7 +644,7 @@ html::-webkit-scrollbar, body::-webkit-scrollbar {
   font-family: 'Century Gothic Light', 'Century Gothic', CenturyGothic, 'Questrial', 'Montserrat', sans-serif;
   font-size: 0.98rem;
   font-weight: 400;
-  color: #f8fafc;
+  color: #ffffff;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -640,12 +658,12 @@ html::-webkit-scrollbar, body::-webkit-scrollbar {
   justify-content: space-between;
   gap: 8px;
   font-size: 0.78rem;
-  color: #94a3b8;
+  color: #b8dcff;
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
 }
 
 .prayer-author {
-  color: #e2e8f0;
+  color: #e6f3ff;
   font-weight: 500;
   white-space: nowrap;
   overflow: hidden;
@@ -661,7 +679,7 @@ html::-webkit-scrollbar, body::-webkit-scrollbar {
 }
 
 .prayer-date {
-  color: #94a3b8;
+  color: #b8dcff;
 }
 
 .prayer-status-text {
@@ -671,25 +689,25 @@ html::-webkit-scrollbar, body::-webkit-scrollbar {
 
 /* Status Respondido em LARANJA (conforme solicitado) */
 .prayer-status-text.status-answered {
-  color: #ff7700 !important;
+  color: #ff9933 !important;
   text-shadow: 0 0 10px rgba(255, 119, 0, 0.5);
 }
 
 .prayer-status-text.status-pending {
-  color: #94a3b8;
+  color: #b8dcff;
 }
 
 .prayer-empty-state {
   text-align: center;
   padding: 40px 20px;
-  color: #94a3b8;
+  color: #d0e8ff;
   font-family: 'Century Gothic Light', 'Century Gothic', CenturyGothic, sans-serif;
 }
 
 .prayer-empty-sub {
   font-size: 0.85rem;
   margin-top: 8px;
-  color: #cbd5e1;
+  color: #b8dcff;
 }
 
 /* ========================================================
@@ -716,7 +734,7 @@ html::-webkit-scrollbar, body::-webkit-scrollbar {
 .app-modal-overlay {
   position: absolute;
   inset: 0;
-  background: rgba(0, 0, 0, 0.78);
+  background: rgba(0, 22, 48, 0.78);
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
 }
@@ -726,11 +744,11 @@ html::-webkit-scrollbar, body::-webkit-scrollbar {
   z-index: 2;
   width: 100%;
   max-width: 380px;
-  background: #0b1329;
-  border: 1.5px solid rgba(255, 255, 255, 0.22);
+  background: linear-gradient(165deg, #004888 0%, #013163 100%);
+  border: 1.5px solid rgba(145, 210, 255, 0.32);
   border-radius: 20px;
   padding: 22px 20px;
-  box-shadow: 0 16px 42px rgba(0, 0, 0, 0.9);
+  box-shadow: 0 16px 42px rgba(0, 15, 36, 0.9);
   transform: scale(0.92);
   transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
 }
@@ -1132,7 +1150,8 @@ html::-webkit-scrollbar, body::-webkit-scrollbar {
    Tela de Ofertas & Dízimos (Minimalista, Vidro Fosco)
    ======================================================== */
 #offersScreen .sub-screen-header {
-  padding: max(14px, env(safe-area-inset-top, 14px)) 14px 10px;
+  min-height: 112px;
+  padding: max(20px, env(safe-area-inset-top, 20px)) 16px 16px;
 }
 
 .offers-screen-body {
@@ -1149,22 +1168,23 @@ html::-webkit-scrollbar, body::-webkit-scrollbar {
 }
 
 .offer-card {
-  background: rgba(11, 19, 41, 0.72);
+  background: rgba(0, 45, 92, 0.72);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
-  border: 1px solid rgba(255, 255, 255, 0.16);
+  border: 1px solid rgba(145, 210, 255, 0.26);
   border-radius: 14px;
   padding: 12px 14px;
-  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.5);
+  box-shadow: 0 8px 24px rgba(0, 18, 42, 0.48);
   display: flex;
   flex-direction: column;
   gap: 8px;
   text-align: left;
-  transition: transform 0.25s ease, border-color 0.25s ease;
+  transition: transform 0.25s ease, border-color 0.25s ease, background 0.25s ease;
 }
 
 .offer-card:hover {
-  border-color: rgba(255, 255, 255, 0.28);
+  background: rgba(0, 58, 114, 0.82);
+  border-color: rgba(175, 225, 255, 0.45);
 }
 
 /* Afasta a janela de Ofertas por meia altura (~75px) */
@@ -1198,10 +1218,10 @@ html::-webkit-scrollbar, body::-webkit-scrollbar {
 }
 
 .badge-blue {
-  color: #60a5fa;
-  background: rgba(37, 99, 235, 0.16);
-  border: 1px solid rgba(96, 165, 250, 0.35);
-  box-shadow: 0 0 10px rgba(37, 99, 235, 0.18);
+  color: #7dd3fc;
+  background: rgba(14, 165, 233, 0.2);
+  border: 1px solid rgba(125, 211, 252, 0.45);
+  box-shadow: 0 0 10px rgba(14, 165, 233, 0.22);
 }
 
 .offer-card-title {
@@ -1215,8 +1235,8 @@ html::-webkit-scrollbar, body::-webkit-scrollbar {
 }
 
 .offer-pix-container {
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(0, 32, 68, 0.55);
+  border: 1px solid rgba(145, 210, 255, 0.2);
   border-radius: 10px;
   padding: 7px 11px;
   display: flex;
@@ -1228,7 +1248,7 @@ html::-webkit-scrollbar, body::-webkit-scrollbar {
 .offer-pix-type {
   font-family: 'Century Gothic Light', 'Century Gothic', CenturyGothic, sans-serif;
   font-size: 0.72rem;
-  color: #94a3b8;
+  color: #b8dcff;
   letter-spacing: 0.08em;
   text-transform: uppercase;
   flex-shrink: 0;
@@ -1238,7 +1258,7 @@ html::-webkit-scrollbar, body::-webkit-scrollbar {
   font-family: 'Century Gothic', -apple-system, BlinkMacSystemFont, monospace;
   font-size: 0.94rem;
   font-weight: 600;
-  color: #f8fafc;
+  color: #ffffff;
   letter-spacing: 0.08em;
   user-select: all;
   word-break: break-all;
@@ -1246,8 +1266,8 @@ html::-webkit-scrollbar, body::-webkit-scrollbar {
 }
 
 .offer-instruction-box {
-  background: rgba(255, 119, 0, 0.09);
-  border: 1px solid rgba(255, 119, 0, 0.32);
+  background: rgba(255, 119, 0, 0.12);
+  border: 1px solid rgba(255, 153, 51, 0.38);
   border-radius: 10px;
   padding: 7px 10px;
   display: flex;
@@ -1276,7 +1296,7 @@ html::-webkit-scrollbar, body::-webkit-scrollbar {
 .offer-verse {
   font-family: 'Century Gothic Light', 'Century Gothic', CenturyGothic, 'Montserrat', sans-serif;
   font-size: 0.75rem;
-  color: #94a3b8;
+  color: #cce6ff;
   font-style: italic;
   line-height: 1.35;
   margin: 0;
@@ -1322,17 +1342,17 @@ html::-webkit-scrollbar, body::-webkit-scrollbar {
 }
 
 .btn-glass-blue {
-  background: rgba(37, 99, 235, 0.2);
-  border: 1.5px solid rgba(96, 165, 250, 0.5);
+  background: rgba(14, 165, 233, 0.24);
+  border: 1.5px solid rgba(125, 211, 252, 0.55);
   color: #ffffff;
-  box-shadow: 0 3px 12px rgba(37, 99, 235, 0.2);
+  box-shadow: 0 3px 12px rgba(14, 165, 233, 0.22);
 }
 
 .btn-glass-blue:hover {
-  background: rgba(37, 99, 235, 0.35);
-  border-color: #60a5fa;
+  background: rgba(14, 165, 233, 0.38);
+  border-color: #7dd3fc;
   transform: translateY(-1px);
-  box-shadow: 0 5px 18px rgba(37, 99, 235, 0.4);
+  box-shadow: 0 5px 18px rgba(14, 165, 233, 0.4);
 }
 
 .btn-glass-blue:active {
@@ -1364,13 +1384,13 @@ html::-webkit-scrollbar, body::-webkit-scrollbar {
 }
 
 .visitor-form-card {
-  background: rgba(11, 19, 41, 0.85);
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(0, 45, 92, 0.72);
+  border: 1px solid rgba(145, 210, 255, 0.26);
   border-radius: 16px;
   padding: 20px 18px;
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.45);
+  box-shadow: 0 10px 30px rgba(0, 18, 42, 0.45);
 }
 
 .visitor-form-title-row {
@@ -1398,9 +1418,9 @@ html::-webkit-scrollbar, body::-webkit-scrollbar {
 }
 
 .btn-visit-option {
-  background: rgba(255, 255, 255, 0.06);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  color: #cbd5e1;
+  background: rgba(0, 32, 68, 0.5);
+  border: 1px solid rgba(145, 210, 255, 0.25);
+  color: #d0e8ff;
   font-family: inherit;
   font-size: 0.95rem;
   font-weight: 500;
@@ -1412,8 +1432,8 @@ html::-webkit-scrollbar, body::-webkit-scrollbar {
 }
 
 .btn-visit-option:hover {
-  background: rgba(255, 255, 255, 0.12);
-  border-color: rgba(255, 255, 255, 0.4);
+  background: rgba(255, 255, 255, 0.14);
+  border-color: rgba(255, 255, 255, 0.45);
   color: #ffffff;
 }
 
@@ -1458,8 +1478,8 @@ html::-webkit-scrollbar, body::-webkit-scrollbar {
 }
 
 .visitor-card {
-  background: rgba(11, 19, 41, 0.85);
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(0, 45, 92, 0.72);
+  border: 1px solid rgba(145, 210, 255, 0.26);
   border-radius: 14px;
   padding: 14px 16px;
   display: flex;
@@ -1468,12 +1488,13 @@ html::-webkit-scrollbar, body::-webkit-scrollbar {
   gap: 12px;
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.35);
-  transition: border-color 0.2s ease, transform 0.2s ease;
+  box-shadow: 0 6px 18px rgba(0, 18, 42, 0.42);
+  transition: border-color 0.2s ease, transform 0.2s ease, background 0.2s ease;
 }
 
 .visitor-card:hover {
-  border-color: rgba(255, 255, 255, 0.25);
+  background: rgba(0, 60, 118, 0.84);
+  border-color: rgba(175, 225, 255, 0.48);
   transform: translateY(-1px);
 }
 
@@ -1503,8 +1524,8 @@ html::-webkit-scrollbar, body::-webkit-scrollbar {
 }
 
 .visitor-edit-icon {
-  color: #94a3b8;
-  opacity: 0.7;
+  color: #b8dcff;
+  opacity: 0.8;
   transition: opacity 0.2s ease, color 0.2s ease, transform 0.2s ease;
 }
 
@@ -1523,7 +1544,7 @@ html::-webkit-scrollbar, body::-webkit-scrollbar {
   align-items: center;
   gap: 6px;
   font-size: 0.82rem;
-  color: #94a3b8;
+  color: #b8dcff;
 }
 
 .visitor-card-right {
@@ -1548,9 +1569,9 @@ html::-webkit-scrollbar, body::-webkit-scrollbar {
 }
 
 .visitor-badge.badge-visits {
-  background: rgba(59, 130, 246, 0.16);
-  border: 1px solid rgba(96, 165, 250, 0.4);
-  color: #93c5fd;
+  background: rgba(14, 165, 233, 0.22);
+  border: 1px solid rgba(125, 211, 252, 0.45);
+  color: #bae6fd;
 }
 
 .visitor-badge.badge-group {
@@ -1608,20 +1629,20 @@ html::-webkit-scrollbar, body::-webkit-scrollbar {
   justify-content: center;
   text-align: center;
   padding: 40px 20px;
-  color: #94a3b8;
+  color: #b8dcff;
   gap: 10px;
 }
 
 .visitor-empty-state p {
   font-size: 1rem;
-  color: #e2e8f0;
+  color: #ffffff;
   font-weight: 500;
   margin: 0;
 }
 
 .visitor-empty-state span {
   font-size: 0.85rem;
-  color: #94a3b8;
+  color: #b8dcff;
   max-width: 260px;
 }
 

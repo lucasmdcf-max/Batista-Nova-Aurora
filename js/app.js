@@ -223,8 +223,8 @@ import { initVisitors, requestAccessToVisitors, closeVisitorsScreen } from './vi
   // ==========================================
   // Controle de Versão e Atualização Automática PWA
   // ==========================================
-  const APP_VERSION = '1.1.2';
-  const APP_BUILD = 19;
+  const APP_VERSION = '1.1.3';
+  const APP_BUILD = 20;
   let waitingWorker = null;
   let isUpdating = false;
 
