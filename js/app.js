@@ -147,10 +147,83 @@ import { initPrayers, openPrayerScreen, closePrayerScreen } from './prayers.js';
     }
   }
 
+  const offersScreen = document.getElementById('offersScreen');
+  const btnOffersBack = document.getElementById('btnOffersBack');
+  const btnCopyDizimo = document.getElementById('btnCopyDizimo');
+  const btnCopyOferta = document.getElementById('btnCopyOferta');
+
+  function openOffersScreen() {
+    if (offersScreen) {
+      offersScreen.classList.add('is-active');
+      offersScreen.setAttribute('aria-hidden', 'false');
+    }
+  }
+
+  function closeOffersScreen() {
+    if (offersScreen) {
+      offersScreen.classList.remove('is-active');
+      offersScreen.setAttribute('aria-hidden', 'true');
+    }
+  }
+
+  function copyToClipboard(text, btn) {
+    const doFeedback = () => {
+      const label = btn.querySelector('.copy-label');
+      const originalText = label ? label.textContent : '';
+      if (label) label.textContent = 'Chave Copiada!';
+      btn.classList.add('is-copied');
+      setTimeout(() => {
+        if (label) label.textContent = originalText;
+        btn.classList.remove('is-copied');
+      }, 2200);
+    };
+
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).then(doFeedback).catch(() => {
+        fallbackCopy(text, doFeedback);
+      });
+    } else {
+      fallbackCopy(text, doFeedback);
+    }
+  }
+
+  function fallbackCopy(text, callback) {
+    const textarea = document.createElement('textarea');
+    textarea.value = text;
+    textarea.style.position = 'fixed';
+    textarea.style.opacity = '0';
+    document.body.appendChild(textarea);
+    textarea.select();
+    try {
+      document.execCommand('copy');
+      callback();
+    } catch (e) {
+      console.warn('Erro fallback copy:', e);
+    }
+    document.body.removeChild(textarea);
+  }
+
+  if (btnOffersBack) {
+    btnOffersBack.addEventListener('click', closeOffersScreen);
+  }
+
+  if (btnCopyDizimo) {
+    btnCopyDizimo.addEventListener('click', () => {
+      copyToClipboard('08801276000180', btnCopyDizimo);
+    });
+  }
+
+  if (btnCopyOferta) {
+    btnCopyOferta.addEventListener('click', () => {
+      copyToClipboard('04505471403', btnCopyOferta);
+    });
+  }
+
   if (btnHome) {
     btnHome.addEventListener('click', (e) => {
       e.preventDefault();
       closePrayerScreen();
+      closeOffersScreen();
       scrollToHome();
     });
   }
@@ -175,6 +248,9 @@ import { initPrayers, openPrayerScreen, closePrayerScreen } from './prayers.js';
         if (href === '#pedidos-oracao') {
           e.preventDefault();
           openPrayerScreen();
+        } else if (href === '#ofertas') {
+          e.preventDefault();
+          openOffersScreen();
         }
       });
     }

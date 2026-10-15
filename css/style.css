@@ -1060,3 +1060,205 @@ html::-webkit-scrollbar, body::-webkit-scrollbar {
 .btn-modal-pencil:active {
   transform: scale(0.92);
 }
+
+/* ========================================================
+   Tela de Ofertas & Dízimos (Minimalista, Vidro Fosco)
+   ======================================================== */
+.offers-screen-body {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  padding: 16px 16px 90px;
+}
+
+.offer-card {
+  background: rgba(11, 19, 41, 0.72);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 18px;
+  padding: 20px 18px;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.55);
+  display: flex;
+  flex-direction: column;
+  gap: 13px;
+  text-align: left;
+  transition: transform 0.25s ease, border-color 0.25s ease;
+}
+
+.offer-card:hover {
+  border-color: rgba(255, 255, 255, 0.28);
+}
+
+.offer-badge-wrap {
+  display: flex;
+  align-items: center;
+}
+
+.offer-badge {
+  font-family: 'Century Gothic Light', 'Century Gothic', CenturyGothic, sans-serif;
+  font-size: 0.74rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  padding: 3px 10px;
+  border-radius: 12px;
+  font-weight: 600;
+}
+
+.badge-orange {
+  color: #ff9933;
+  background: rgba(255, 119, 0, 0.14);
+  border: 1px solid rgba(255, 119, 0, 0.35);
+  box-shadow: 0 0 10px rgba(255, 119, 0, 0.18);
+}
+
+.badge-blue {
+  color: #60a5fa;
+  background: rgba(37, 99, 235, 0.16);
+  border: 1px solid rgba(96, 165, 250, 0.35);
+  box-shadow: 0 0 10px rgba(37, 99, 235, 0.18);
+}
+
+.offer-card-title {
+  font-family: 'Century Gothic Light', 'Century Gothic', CenturyGothic, 'Questrial', 'Montserrat', sans-serif;
+  font-weight: 400;
+  font-size: 1.05rem;
+  color: #ffffff;
+  letter-spacing: 0.12em;
+  margin: 0;
+  text-transform: uppercase;
+}
+
+.offer-pix-container {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 12px;
+  padding: 10px 14px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.offer-pix-type {
+  font-family: 'Century Gothic Light', 'Century Gothic', CenturyGothic, sans-serif;
+  font-size: 0.75rem;
+  color: #94a3b8;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  flex-shrink: 0;
+}
+
+.offer-pix-number {
+  font-family: 'Century Gothic', -apple-system, BlinkMacSystemFont, monospace;
+  font-size: 1.02rem;
+  font-weight: 600;
+  color: #f8fafc;
+  letter-spacing: 0.08em;
+  user-select: all;
+  word-break: break-all;
+  text-align: right;
+}
+
+.offer-instruction-box {
+  background: rgba(255, 119, 0, 0.09);
+  border: 1px solid rgba(255, 119, 0, 0.32);
+  border-radius: 12px;
+  padding: 11px 13px;
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.offer-info-icon {
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+.offer-instruction-text {
+  font-family: 'Century Gothic Light', 'Century Gothic', CenturyGothic, 'Montserrat', sans-serif;
+  font-size: 0.83rem;
+  color: #fed7aa;
+  line-height: 1.45;
+  letter-spacing: 0.03em;
+}
+
+.offer-instruction-text strong {
+  color: #ffffff;
+  font-weight: 600;
+}
+
+.offer-verse {
+  font-family: 'Century Gothic Light', 'Century Gothic', CenturyGothic, 'Montserrat', sans-serif;
+  font-size: 0.82rem;
+  color: #94a3b8;
+  font-style: italic;
+  line-height: 1.45;
+  margin: 0;
+  padding: 2px 4px;
+}
+
+/* Botões com Vidro Fosco e Cores da Identidade Visual */
+.btn-copy-pix {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 12px 18px;
+  border-radius: 12px;
+  font-family: 'Century Gothic Light', 'Century Gothic', CenturyGothic, sans-serif;
+  font-size: 0.9rem;
+  letter-spacing: 0.1em;
+  font-weight: 400;
+  cursor: pointer;
+  outline: none;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  user-select: none;
+}
+
+.btn-glass-orange {
+  background: rgba(255, 119, 0, 0.16);
+  border: 1.5px solid rgba(255, 119, 0, 0.5);
+  color: #ffffff;
+  box-shadow: 0 4px 16px rgba(255, 119, 0, 0.22);
+}
+
+.btn-glass-orange:hover {
+  background: rgba(255, 119, 0, 0.3);
+  border-color: #ff9933;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 22px rgba(255, 119, 0, 0.45);
+}
+
+.btn-glass-orange:active {
+  transform: scale(0.97);
+}
+
+.btn-glass-blue {
+  background: rgba(37, 99, 235, 0.2);
+  border: 1.5px solid rgba(96, 165, 250, 0.5);
+  color: #ffffff;
+  box-shadow: 0 4px 16px rgba(37, 99, 235, 0.22);
+}
+
+.btn-glass-blue:hover {
+  background: rgba(37, 99, 235, 0.35);
+  border-color: #60a5fa;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 22px rgba(37, 99, 235, 0.45);
+}
+
+.btn-glass-blue:active {
+  transform: scale(0.97);
+}
+
+/* Estado de Feedback ao Copiar */
+.btn-copy-pix.is-copied {
+  background: rgba(16, 185, 129, 0.26) !important;
+  border-color: #10b981 !important;
+  color: #6ee7b7 !important;
+  box-shadow: 0 0 20px rgba(16, 185, 129, 0.45) !important;
+  transform: scale(1.02);
+}
