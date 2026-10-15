@@ -1,0 +1,92 @@
+[
+ {
+  "t": 5,
+  "frame": 150,
+  "type": "cut",
+  "label": "Ato 1 -> Ato 2 (Menu)"
+ },
+ {
+  "t": 5.0667,
+  "frame": 152,
+  "type": "enter",
+  "label": "#kineticAct2"
+ },
+ {
+  "t": 7.8333,
+  "frame": 235,
+  "type": "exit",
+  "label": "#kineticAct2"
+ },
+ {
+  "t": 11,
+  "frame": 330,
+  "type": "cut",
+  "label": "Ato 2 -> Ato 3 (Oração)"
+ },
+ {
+  "t": 11.2,
+  "frame": 336,
+  "type": "enter",
+  "label": "#kineticAct3"
+ },
+ {
+  "t": 13.2,
+  "frame": 396,
+  "type": "count",
+  "label": "start 12"
+ },
+ {
+  "t": 13.3333,
+  "frame": 400,
+  "type": "count",
+  "label": "land 13"
+ },
+ {
+  "t": 14.6667,
+  "frame": 440,
+  "type": "exit",
+  "label": "#kineticAct3"
+ },
+ {
+  "t": 18,
+  "frame": 540,
+  "type": "cut",
+  "label": "Ato 3 -> Ato 4 (Testemunho Hero)"
+ },
+ {
+  "t": 18.2,
+  "frame": 546,
+  "type": "enter",
+  "label": "#kineticAct4"
+ },
+ {
+  "t": 20.7333,
+  "frame": 622,
+  "type": "count",
+  "label": "start 8"
+ },
+ {
+  "t": 20.8667,
+  "frame": 626,
+  "type": "count",
+  "label": "land 9"
+ },
+ {
+  "t": 22.3333,
+  "frame": 670,
+  "type": "exit",
+  "label": "#kineticAct4"
+ },
+ {
+  "t": 25,
+  "frame": 750,
+  "type": "cut",
+  "label": "Ato 4 -> Ato 5 (Lockup Final)"
+ },
+ {
+  "t": 28.2667,
+  "frame": 848,
+  "type": "enter",
+  "label": "#endCard"
+ }
+]

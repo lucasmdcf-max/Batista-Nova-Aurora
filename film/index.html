@@ -1,0 +1,820 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<title>Nova Aurora — Launch Film (30s)</title>
+<meta name="viewport" content="width=1920, height=1080">
+<link rel="stylesheet" href="./runtime/fonts.css">
+<style>
+:root {
+  --night-deep: #020408;
+  --night-chassis: #060b18;
+  --glass-surface: rgba(6, 11, 24, 0.94);
+  --glass-card: rgba(18, 28, 54, 0.72);
+  --aurora-orange: #ff7700;
+  --aurora-gradient: linear-gradient(135deg, #ffaa33 0%, #ff7700 50%, #ff3700 100%);
+  --gold-glow: #ffd700;
+  --gold-amber: #fbbf24;
+  --gold-surface: rgba(245, 158, 11, 0.12);
+  --ink-pure: #ffffff;
+  --ink-soft: rgba(255, 255, 255, 0.75);
+  --ink-dim: rgba(255, 255, 255, 0.45);
+  --font-serif: "Questrial", "Montserrat", "Inter", sans-serif;
+  --font-body: "Inter", -apple-system, sans-serif;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body {
+  width: 1920px;
+  height: 1080px;
+  overflow: hidden;
+  background: #000000;
+  font-family: var(--font-body);
+  user-select: none;
+}
+
+#main {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 1920px;
+  height: 1080px;
+  overflow: hidden;
+  background: var(--night-deep);
+  color: var(--ink-pure);
+}
+
+/* Background Atmosphere */
+.bg-atmosphere {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(circle 800px at 50% 38%, rgba(255, 119, 0, 0.08) 0%, rgba(255, 119, 0, 0) 70%),
+    radial-gradient(circle 1200px at 50% 85%, rgba(11, 19, 41, 0.95) 0%, rgba(2, 4, 8, 1) 100%);
+  z-index: 1;
+}
+
+#grain {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0.055;
+  mix-blend-mode: screen;
+  pointer-events: none;
+  z-index: 99;
+}
+
+/* Global Camera & World Layer */
+#world {
+  position: absolute;
+  inset: 0;
+  z-index: 10;
+}
+
+/* Kinetic Titles Area (Centered Cinematic Typography - Compliant with Gate G5) */
+.kinetic-title-wrap {
+  position: absolute;
+  left: 0;
+  top: 48px;
+  width: 1920px;
+  text-align: center;
+  z-index: 50;
+  pointer-events: none;
+}
+
+.k-hero {
+  font-family: var(--font-serif);
+  font-size: 46px;
+  line-height: 58px;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  color: #ffffff;
+  text-shadow: 0 0 32px rgba(255, 255, 255, 0.5);
+  text-align: center;
+  display: inline-block;
+}
+.k-gold { color: var(--gold-glow); text-shadow: 0 0 36px rgba(255, 215, 0, 0.7); }
+.k-orange { color: var(--aurora-orange); text-shadow: 0 0 36px rgba(255, 119, 0, 0.7); }
+
+/* Smartphone Chassis */
+#phoneContainer {
+  position: absolute;
+  left: 745px;
+  top: 135px;
+  width: 430px;
+  height: 870px;
+  z-index: 30;
+}
+
+.phone-bezel {
+  position: absolute;
+  inset: 0;
+  background: var(--night-chassis);
+  border-radius: 52px;
+  border: 3px solid rgba(255, 255, 255, 0.16);
+  box-shadow:
+    0 32px 100px rgba(0, 0, 0, 0.95),
+    0 0 80px rgba(255, 119, 0, 0.12),
+    inset 0 0 20px rgba(255, 255, 255, 0.05);
+  overflow: hidden;
+}
+
+/* Speaker Notch & Camera */
+.phone-island {
+  position: absolute;
+  top: 14px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 124px;
+  height: 28px;
+  background: #000000;
+  border-radius: 14px;
+  z-index: 80;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.5);
+}
+
+/* Parallax Canvas inside Phone */
+#parallaxViewport {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  background: #020408;
+}
+
+.parallax-layer {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 175%;
+  pointer-events: none;
+}
+.parallax-layer img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+/* Congregation Brand in Top Bar */
+#brandHeader {
+  position: absolute;
+  top: 56px;
+  left: 0;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  z-index: 52;
+  opacity: 0;
+}
+#brandHeader img {
+  height: 24px;
+  filter: drop-shadow(0 2px 12px rgba(0, 0, 0, 0.8));
+}
+
+/* Menu Items (Act 2) */
+#menuContainer {
+  position: absolute;
+  left: 0;
+  top: 240px;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+  z-index: 50;
+}
+
+.menu-item {
+  width: 320px;
+  height: 52px;
+  background: rgba(6, 11, 24, 0.65);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-serif);
+  font-size: 14px;
+  font-weight: 400;
+  letter-spacing: 0.18em;
+  color: #ffffff;
+  text-transform: uppercase;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
+}
+
+.menu-item.active {
+  background: rgba(255, 119, 0, 0.22);
+  border-color: var(--aurora-orange);
+  box-shadow: 0 0 28px rgba(255, 119, 0, 0.7);
+  color: #ffffff;
+  text-shadow: 0 0 14px rgba(255, 170, 51, 0.9);
+}
+
+/* Touch Pointer Ripple */
+#touchPointer {
+  position: absolute;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(255,255,255,0.9) 0%, rgba(255,119,0,0.8) 50%, rgba(255,119,0,0) 100%);
+  box-shadow: 0 0 24px rgba(255, 119, 0, 0.8);
+  pointer-events: none;
+  z-index: 75;
+  opacity: 0;
+  transform: translate(-50%, -50%);
+}
+
+/* Home Button */
+#btnHome {
+  position: absolute;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 58px;
+  height: 58px;
+  border-radius: 50%;
+  background: rgba(6, 11, 24, 0.85);
+  border: 1.5px solid rgba(255, 255, 255, 0.22);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 70;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6);
+}
+#btnHome img {
+  width: 32px;
+  height: 32px;
+  object-fit: contain;
+}
+
+/* Sub-screen: Pedidos de Oração (Act 3) */
+#prayerScreen {
+  position: absolute;
+  inset: 0;
+  background: var(--glass-surface);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  z-index: 55;
+  padding: 60px 24px 90px;
+  display: flex;
+  flex-direction: column;
+  opacity: 0;
+}
+
+.prayer-screen-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  padding-bottom: 16px;
+  margin-bottom: 20px;
+}
+
+.prayer-screen-title {
+  font-family: var(--font-serif);
+  font-size: 16px;
+  font-weight: 400;
+  letter-spacing: 0.16em;
+  color: #ffffff;
+}
+
+.prayer-counters {
+  font-size: 12px;
+  color: var(--ink-soft);
+  margin-top: 4px;
+}
+.counter-num {
+  font-weight: 700;
+  color: var(--aurora-orange);
+}
+
+.prayer-list {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  overflow: hidden;
+}
+
+.prayer-card {
+  background: var(--glass-card);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 18px;
+  padding: 16px;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.35);
+}
+
+.prayer-card-header {
+  display: flex;
+  justify-content: space-between;
+  font-size: 13px;
+  font-weight: 600;
+  color: #ffffff;
+  margin-bottom: 6px;
+}
+
+.prayer-card-date {
+  font-size: 11px;
+  color: var(--ink-dim);
+}
+
+.prayer-card-text {
+  font-size: 13px;
+  line-height: 18px;
+  color: var(--ink-soft);
+}
+
+/* Modal View Prayer (Act 4 - Hero Beat) */
+#modalViewPrayer {
+  position: absolute;
+  inset: 0;
+  background: rgba(2, 4, 8, 0.8);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  z-index: 65;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  opacity: 0;
+}
+
+.modal-card {
+  width: 100%;
+  background: rgba(11, 18, 38, 0.98);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 26px;
+  padding: 24px;
+  box-shadow: 0 24px 60px rgba(0,0,0,0.85);
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.modal-author {
+  font-family: var(--font-serif);
+  font-size: 18px;
+  font-weight: 500;
+  letter-spacing: 0.1em;
+  color: #ffffff;
+}
+
+.modal-body-text {
+  font-size: 14px;
+  line-height: 21px;
+  color: var(--ink-soft);
+}
+
+/* Gold Answer Card (Expansion) */
+#prayerGoldAnswer {
+  background: var(--gold-surface);
+  border: 1.5px solid var(--gold-glow);
+  border-radius: 16px;
+  padding: 16px;
+  box-shadow: 0 0 32px rgba(255, 215, 0, 0.25);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  opacity: 0;
+  transform-origin: top center;
+}
+
+.gold-label {
+  font-family: var(--font-serif);
+  font-size: 11px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--gold-amber);
+  font-weight: 600;
+}
+
+.gold-content {
+  font-size: 14px;
+  line-height: 20px;
+  color: #ffffff;
+  font-weight: 500;
+  text-shadow: 0 0 12px rgba(255, 215, 0, 0.4);
+}
+
+/* Elastic Switch */
+.swipe-wrap {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-top: 8px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.swipe-label {
+  font-family: var(--font-serif);
+  font-size: 13px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+}
+
+.switch-track {
+  position: relative;
+  width: 80px;
+  height: 38px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 19px;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  transition: none;
+}
+.switch-track.on {
+  background: var(--aurora-orange);
+  box-shadow: 0 0 20px rgba(255, 119, 0, 0.85);
+  border-color: #ffaa33;
+}
+
+#switchThumb {
+  position: absolute;
+  top: 3px;
+  left: 4px;
+  width: 30px;
+  height: 30px;
+  background: #ffffff;
+  border-radius: 50%;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.4);
+}
+
+/* Final End Card (Act 5) */
+#endCard {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  z-index: 90;
+  pointer-events: none;
+  opacity: 0;
+  background: radial-gradient(circle 800px at 50% 50%, rgba(2, 4, 8, 0.94) 0%, rgba(2, 4, 8, 0.65) 100%);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+}
+
+.end-logo-wrap {
+  margin-bottom: 24px;
+}
+.end-logo-wrap img {
+  height: 64px;
+  filter: drop-shadow(0 0 30px rgba(255, 255, 255, 0.6));
+}
+
+.end-title {
+  font-family: var(--font-serif);
+  font-size: 64px;
+  font-weight: 300;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: #ffffff;
+  text-shadow: 0 0 36px rgba(255, 255, 255, 0.7);
+  margin-bottom: 14px;
+  text-align: center;
+}
+
+.end-subtitle {
+  font-family: var(--font-serif);
+  font-size: 22px;
+  font-weight: 300;
+  letter-spacing: 0.16em;
+  color: var(--ink-soft);
+  text-align: center;
+}
+</style>
+</head>
+<body>
+
+<div id="main">
+  <!-- Subtle Aurora Glow Background -->
+  <div class="bg-atmosphere"></div>
+
+  <!-- World Group (Driven by Camera / Drift) -->
+  <div id="world">
+
+    <!-- Kinetic Typography Overlays -->
+    <div id="kineticAct2" class="kinetic-title-wrap" style="opacity:0;">
+      <div class="k-hero k-orange">TODA A SUA COMUNIDADE EM UM SÓ MOVIMENTO</div>
+    </div>
+
+    <div id="kineticAct3" class="kinetic-title-wrap" style="opacity:0;">
+      <div class="k-hero">SINCRONIZAÇÃO EM TEMPO REAL</div>
+    </div>
+
+    <div id="kineticAct4" class="kinetic-title-wrap" style="opacity:0;">
+      <div class="k-hero k-gold">TRANSFORMANDO PEDIDOS EM TESTEMUNHOS</div>
+    </div>
+
+    <!-- Smartphone Container -->
+    <div id="phoneContainer">
+      <div class="phone-bezel">
+        <!-- Island Notch -->
+        <div class="phone-island"></div>
+
+        <!-- Parallax Stage -->
+        <div id="parallaxViewport">
+          <div id="layer04" class="parallax-layer"><img src="./assets/04.png" alt="Céu e Cruz"></div>
+          <div id="layer03" class="parallax-layer"><img src="./assets/03.png" alt="Colinas"></div>
+          <div id="layer02" class="parallax-layer"><img src="./assets/02.png" alt="Cidade"></div>
+          <div id="layer01" class="parallax-layer"><img src="./assets/01.png" alt="Rua"></div>
+        </div>
+
+        <!-- Header Brand (nome-trimmed) -->
+        <div id="brandHeader">
+          <img src="./assets/nome-trimmed.png" alt="Nova Aurora">
+        </div>
+
+        <!-- Menu Principal (Act 2) -->
+        <div id="menuContainer">
+          <div id="mi1" class="menu-item">QUEM SOMOS</div>
+          <div id="mi2" class="menu-item">PROGRAMAÇÕES</div>
+          <div id="mi3" class="menu-item">PEDIDOS DE ORAÇÃO</div>
+          <div id="mi4" class="menu-item">SOLICITAR VISITA</div>
+          <div id="mi5" class="menu-item">REGISTRAR VISITA</div>
+          <div id="mi6" class="menu-item">MEMBROS</div>
+          <div id="mi7" class="menu-item">INFANTIL</div>
+        </div>
+
+        <!-- Touch Pointer Indicator -->
+        <div id="touchPointer"></div>
+
+        <!-- Botão Home -->
+        <div id="btnHome">
+          <img src="./assets/Logo branca - Nova Aurora_transparente.png" alt="Logo">
+        </div>
+
+        <!-- Painel Pedidos de Oração (Act 3) -->
+        <div id="prayerScreen">
+          <div class="prayer-screen-top">
+            <div>
+              <div class="prayer-screen-title">PEDIDOS DE ORAÇÃO</div>
+              <div class="prayer-counters">
+                <span>Em oração: <strong id="countPending" class="counter-num">12</strong></span>
+                <span style="margin: 0 6px;">•</span>
+                <span>Respondidos: <strong id="countAnswered" class="counter-num" style="color:var(--gold-amber);">8</strong></span>
+              </div>
+            </div>
+          </div>
+
+          <div class="prayer-list">
+            <!-- Card Novo Recém-Chegado (Entrada dinâmica) -->
+            <div id="cardNewPrayer" class="prayer-card" style="border-color: rgba(255, 119, 0, 0.4); opacity: 0;">
+              <div class="prayer-card-header">
+                <span>Maria Silva</span>
+                <span class="prayer-card-date">Agora mesmo</span>
+              </div>
+              <div class="prayer-card-text">
+                Recuperação de saúde da minha mãe internada no hospital.
+              </div>
+            </div>
+
+            <!-- Cards Existentes -->
+            <div class="prayer-card">
+              <div class="prayer-card-header">
+                <span>Família Oliveira</span>
+                <span class="prayer-card-date">Há 2 horas</span>
+              </div>
+              <div class="prayer-card-text">
+                Agradecimento pelo livramento e direção no trabalho.
+              </div>
+            </div>
+
+            <div class="prayer-card">
+              <div class="prayer-card-header">
+                <span>João Pedro</span>
+                <span class="prayer-card-date">Ontem</span>
+              </div>
+              <div class="prayer-card-text">
+                Oração pelos jovens do ministério e pelo retiro.
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Modal Visualizar Pedido (Act 4 - Hero Beat) -->
+        <div id="modalViewPrayer">
+          <div class="modal-card">
+            <div class="modal-header">
+              <div class="modal-author">Maria Silva</div>
+              <div style="font-size:11px;color:var(--aurora-orange);font-weight:600;">EM ORAÇÃO</div>
+            </div>
+
+            <div class="modal-body-text">
+              "Peço oração pela recuperação da saúde da minha mãe que estava hospitalizada."
+            </div>
+
+            <!-- Resposta Dourada Revelada após Swipe -->
+            <div id="prayerGoldAnswer">
+              <div class="gold-label">Resposta da Oração:</div>
+              <div class="gold-content">"Graças a Deus ela teve alta hospitalar ontem e já está em casa recuperada!"</div>
+            </div>
+
+            <!-- Swipe Switch Toggle -->
+            <div class="swipe-wrap">
+              <div class="swipe-label" id="swipeText">Marcar Respondido</div>
+              <div id="switchTrack" class="switch-track">
+                <div id="switchThumb"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div><!-- .phone-bezel -->
+    </div><!-- #phoneContainer -->
+
+    <!-- Final End Card (Act 5) -->
+    <div id="endCard">
+      <div class="end-logo-wrap">
+        <img src="./assets/Logo branca - Nova Aurora_transparente.png" alt="Nova Aurora Logo">
+      </div>
+      <div class="end-title">NOVA AURORA</div>
+      <div class="end-subtitle">A presença digital da sua igreja, viva todos os dias.</div>
+    </div>
+
+  </div><!-- #world -->
+
+  <!-- Cinematic Film Grain -->
+  <svg id="grain" viewBox="0 0 1920 1080" preserveAspectRatio="none" aria-hidden="true">
+    <filter id="noiseFilter">
+      <feTurbulence type="fractalNoise" baseFrequency="0.75" numOctaves="2" seed="5"/>
+    </filter>
+    <rect width="100%" height="100%" filter="url(#noiseFilter)"/>
+  </svg>
+</div>
+
+<script src="./runtime/vendor/gsap.min.js"></script>
+<script src="./runtime/motion.js"></script>
+<script>
+/* =========================================================================
+   NOVA AURORA — Launch Film (30 seconds @ 30 fps = 900 frames)
+   Rigorous Seek-Safe Motion Protocol (Motionmaxxing)
+   ========================================================================= */
+
+const M = Motion.film({
+  fps: 30,
+  duration: 30,
+  width: 1920,
+  height: 1080,
+  clock: 'smooth'
+});
+
+// Camera Drift on world: subtle breathing life throughout the 30s
+M.drift('#world', { prop: 'scale', from: 1.0, to: 1.025, start: 0, end: 900 });
+
+/* =========================================================================
+   ATO 1: A CONTEMPLAÇÃO (Frames 0 a 150 | 00:00 – 00:05)
+   ========================================================================= */
+// Parallax scroll on 4 layers from sky down to cobblestones
+M.kf('#layer04', 'y', [[0, 0], [150, -60, 'softLand']]);   // Céu e Cruz (0.50x)
+M.kf('#layer03', 'y', [[0, 0], [150, -110, 'softLand']]);  // Colinas (0.68x)
+M.kf('#layer02', 'y', [[0, 0], [150, -180, 'softLand']]);  // Cidade (0.85x)
+M.kf('#layer01', 'y', [[0, 0], [150, -250, 'softLand']]);  // Rua (1.00x)
+
+// Phone settles gently from scale 1.06 to 1.0
+M.kf('#phoneContainer', 'scale', [[0, 1.06], [150, 1.0, 'glide']]);
+
+// Brand Header appears at scroll depth (frame 80 to 140) and fades when prayer screen opens
+M.kf('#brandHeader', 'opacity', [[0, 0], [80, 0], [130, 1, 'softLand'], [325, 1], [335, 0, 'accelExit']]);
+M.kf('#brandHeader', 'y', [[0, -15], [80, -15], [130, 0, 'softLand']]);
+
+
+/* =========================================================================
+   ATO 2: O DESPERTAR DA PLATAFORMA (Frames 150 a 330 | 00:05 – 00:11)
+   ========================================================================= */
+M.mark(150, 'cut', 'Ato 1 -> Ato 2 (Menu)');
+
+// Kinetic Typography Act 2
+M.enter('#kineticAct2', { at: 152, frames: 16, ease: 'softLand', from: { y: -20, opacity: 0 } });
+M.exit('#kineticAct2', { at: 235, frames: 12, ease: 'accelExit', to: { y: -20, opacity: 0 } });
+
+// Menu Items Cascade entry (cubic curve 1 - (1-t)^3)
+const menuIds = ['#mi1', '#mi2', '#mi3', '#mi4', '#mi5', '#mi6', '#mi7'];
+menuIds.forEach((id, idx) => {
+  const onset = 158 + (idx * 5);
+  M.kf(id, 'x', [[0, -60], [onset, -60], [onset + 14, 0, 'softLand']]);
+  M.kf(id, 'opacity', [[0, 0], [onset, 0], [onset + 12, 1, 'softLand']]);
+});
+
+// Camera macro push into the phone
+M.kf('#phoneContainer', 'scale', [[150, 1.0], [210, 1.0], [260, 1.12, 'softLand']]);
+M.kf('#phoneContainer', 'x', [[150, 0], [260, 0]]);
+
+// Continuous gentle motion during Act 2
+M.drift('#layer04', { prop: 'y', from: -60, to: -78, start: 150, end: 330 });
+
+// Touch pointer appears and taps "PEDIDOS DE ORAÇÃO" (#mi3)
+M.kf('#touchPointer', 'x', [[0, 960], [240, 960], [268, 960, 'softLand']]);
+M.kf('#touchPointer', 'y', [[0, 480], [240, 480], [268, 450, 'softLand']]);
+M.kf('#touchPointer', 'opacity', [[0, 0], [240, 0], [255, 0.9], [278, 0, 'accelExit']]);
+M.kf('#touchPointer', 'scale', [[0, 0.5], [240, 0.5], [268, 1.3, 'crashIn'], [278, 1.8, 'accelExit']]);
+
+// Highlight on #mi3
+M.kf('#mi3', 'scale', [[0, 1], [268, 1], [274, 1.06, 'bounceHard'], [290, 1.0, 'softLand']]);
+// Glow border step
+M.kf('#mi3', 'borderColor', [[0, 'rgba(255,255,255,0.1)'], [268, 'rgba(255,255,255,0.1)'], [270, '#ff7700']]);
+M.kf('#mi3', 'backgroundColor', [[0, 'rgba(6,11,24,0.65)'], [268, 'rgba(6,11,24,0.65)'], [270, 'rgba(255,119,0,0.35)']]);
+
+
+/* =========================================================================
+   ATO 3: CUIDADO EM TEMPO REAL (Frames 330 a 540 | 00:11 – 00:18)
+   ========================================================================= */
+M.mark(330, 'cut', 'Ato 2 -> Ato 3 (Oração)');
+
+// Prayer screen unfolds
+M.kf('#prayerScreen', 'opacity', [[0, 0], [330, 0], [342, 1, 'softLand']]);
+M.kf('#prayerScreen', 'y', [[0, 30], [330, 30], [344, 0, 'softLand']]);
+
+// Kinetic Typography Act 3
+M.enter('#kineticAct3', { at: 336, frames: 16, ease: 'softLand', from: { y: -20, opacity: 0 } });
+M.exit('#kineticAct3', { at: 440, frames: 12, ease: 'accelExit', to: { y: -20, opacity: 0 } });
+
+// Continuous subtle camera drift in Act 3
+M.drift('#prayerScreen', { prop: 'y', from: 0, to: -8, start: 350, end: 540 });
+
+// New prayer card slides in at frame 380 (Real-time Firestore arrival)
+M.kf('#cardNewPrayer', 'opacity', [[0, 0], [380, 0], [394, 1, 'softLand']]);
+M.kf('#cardNewPrayer', 'y', [[0, -25], [380, -25], [396, 0, 'bounceHard']]);
+M.kf('#cardNewPrayer', 'scale', [[0, 0.94], [380, 0.94], [396, 1.0, 'softLand']]);
+
+// Count Pending increments from 12 to 13
+M.kf('#countPending', 'scale', [[0, 1], [394, 1], [402, 1.4, 'bounceHard'], [414, 1.0, 'softLand']]);
+M.kf('#countPending', 'color', [[0, '#ff7700'], [394, '#ff7700'], [398, '#ffd700'], [420, '#ff7700']]);
+M.count('#countPending', { at: 396, from: 12, to: 13, frames: 4 });
+
+
+/* =========================================================================
+   ATO 4: HERO BEAT — DO PEDIDO AO TESTEMUNHO (Frames 540 a 750 | 00:18 – 00:25)
+   ========================================================================= */
+M.mark(540, 'cut', 'Ato 3 -> Ato 4 (Testemunho Hero)');
+
+// Modal View Prayer opens over Maria Silva's request
+M.kf('#modalViewPrayer', 'opacity', [[0, 0], [540, 0], [552, 1, 'softLand']]);
+M.kf('#modalViewPrayer', 'scale', [[0, 0.92], [540, 0.92], [554, 1.0, 'softLand']]);
+
+// Camera pushes closer into the modal
+M.kf('#phoneContainer', 'scale', [[330, 1.12], [540, 1.12], [580, 1.25, 'glide']]);
+M.kf('#phoneContainer', 'y', [[0, 0], [540, 0], [580, -50, 'glide']]);
+
+// Kinetic Typography Act 4
+M.enter('#kineticAct4', { at: 546, frames: 18, ease: 'softLand', from: { y: -20, opacity: 0 } });
+M.exit('#kineticAct4', { at: 670, frames: 12, ease: 'accelExit', to: { y: -20, opacity: 0 } });
+
+// Switch Thumb slides to right with elastic spring (cubic-bezier(0.34, 1.56, 0.64, 1))
+M.kf('#switchThumb', 'x', [[0, 0], [585, 0], [612, 42, 'bounceHard']]);
+// Track lights up in orange glow
+M.kf('#switchTrack', 'backgroundColor', [[0, 'rgba(255,255,255,0.1)'], [585, 'rgba(255,255,255,0.1)'], [605, '#ff7700']]);
+M.kf('#switchTrack', 'boxShadow', [[0, 'none'], [585, 'none'], [605, '0 0 24px rgba(255, 119, 0, 0.95)']]);
+
+// Gold Answer Card expands with golden radiance
+M.kf('#prayerGoldAnswer', 'opacity', [[0, 0], [608, 0], [624, 1, 'softLand']]);
+M.kf('#prayerGoldAnswer', 'scale', [[0, 0.88], [608, 0.88], [626, 1.0, 'bounceHard']]);
+M.kf('#prayerGoldAnswer', 'y', [[0, -15], [608, -15], [624, 0, 'softLand']]);
+
+// Behind in header, countAnswered updates from 8 to 9
+M.kf('#countAnswered', 'scale', [[0, 1], [620, 1], [630, 1.45, 'bounceHard'], [642, 1.0, 'softLand']]);
+M.count('#countAnswered', { at: 622, from: 8, to: 9, frames: 4 });
+
+// Subtle continuous breath in Act 4
+M.drift('#modalViewPrayer', { prop: 'scale', from: 1.0, to: 1.03, start: 630, end: 750 });
+
+
+/* =========================================================================
+   ATO 5: ASSINATURA & CALL TO ACTION (Frames 750 a 900 | 00:25 – 00:30)
+   ========================================================================= */
+M.mark(750, 'cut', 'Ato 4 -> Ato 5 (Lockup Final)');
+
+// Pulse on Home button
+M.kf('#btnHome', 'scale', [[0, 1], [748, 1], [756, 0.92, 'gentleIn'], [764, 1.15, 'bounceHard'], [774, 1.0, 'softLand']]);
+
+// Dismiss modal, prayer screen and menu
+M.kf('#modalViewPrayer', 'opacity', [[552, 1], [755, 1], [765, 0, 'accelExit']]);
+M.kf('#prayerScreen', 'opacity', [[342, 1], [755, 1], [768, 0, 'accelExit']]);
+M.kf('#menuContainer', 'opacity', [[0, 1], [755, 1], [770, 0, 'accelExit']]);
+
+// Camera pulls back to full wide angle, centering phone from frame 750 to 845
+M.kf('#phoneContainer', 'scale', [[580, 1.25], [750, 1.25], [845, 0.74, 'softLand']]);
+M.kf('#phoneContainer', 'x', [[580, 0], [750, 0], [845, 0, 'softLand']]);
+M.kf('#phoneContainer', 'y', [[580, -50], [750, -50], [845, 60, 'softLand']]);
+
+// Final End Card Lockup enters dynamically from frame 848 to 870 (29.0s)
+M.enter('#endCard', { at: 848, frames: 22, ease: 'softLand', from: { scale: 1.14, y: 36, opacity: 0 } });
+
+// End Hold (Gate G3): Exatos 1.00s (30 frames: 870 a 900) de sustentação estável e resolvida (<= 1.4s)
+
+// Seek test integration
+window.__ready = Motion.loaded().then(() => {
+  if (/selftest/.test(location.search)) Motion.selfTest(M, { samples: 24 });
+});
+</script>
+</body>
+</html>

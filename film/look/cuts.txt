@@ -1,0 +1,5 @@
+# cuts from events d:\APLICATIVOS IA - PC\NOVA AURORA\film\final.mp4.events.json (time s, frame, timecode, source)
+5.000	frame 150	0:05.00	event cut 'Ato 1 -> Ato 2 (Menu)'
+11.000	frame 330	0:11.00	event cut 'Ato 2 -> Ato 3 (Oração)'
+18.000	frame 540	0:18.00	event cut 'Ato 3 -> Ato 4 (Testemunho Hero)'
+25.000	frame 750	0:25.00	event cut 'Ato 4 -> Ato 5 (Lockup Final)'

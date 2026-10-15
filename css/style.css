@@ -362,32 +362,91 @@ html::-webkit-scrollbar, body::-webkit-scrollbar {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 8px;
+  gap: 6px;
   margin-top: 5px;
   font-size: 0.78rem;
   font-family: 'Century Gothic Light', 'Century Gothic', CenturyGothic, 'Questrial', 'Montserrat', sans-serif;
   letter-spacing: 0.08em;
 }
 
-.counter-item {
-  color: #94a3b8;
-}
-
-.counter-pending strong {
-  color: #f1f5f9;
+.counter-tab {
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 16px;
+  padding: 3px 10px;
+  font-family: inherit;
+  font-size: inherit;
+  letter-spacing: inherit;
+  cursor: pointer;
+  outline: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.22s ease;
+  user-select: none;
 }
 
 .counter-divider {
   color: rgba(255, 255, 255, 0.25);
+  user-select: none;
 }
 
-.counter-answered {
-  color: #ff9933;
+.counter-tab.counter-pending {
+  color: #94a3b8;
 }
 
-.counter-answered strong {
+.counter-tab.counter-pending:hover {
+  background: rgba(255, 255, 255, 0.07);
+  color: #f1f5f9;
+}
+
+.counter-tab.counter-pending.is-active {
+  background: rgba(255, 255, 255, 0.12);
+  border-color: rgba(255, 255, 255, 0.35);
+  color: #ffffff;
+  box-shadow: 0 0 12px rgba(255, 255, 255, 0.14);
+}
+
+.counter-tab.counter-answered {
+  color: #ffaa55;
+}
+
+.counter-tab.counter-answered:hover {
+  background: rgba(255, 119, 0, 0.1);
+  color: #ffbb66;
+}
+
+.counter-tab.counter-answered.is-active {
+  background: rgba(255, 119, 0, 0.16);
+  border-color: rgba(255, 119, 0, 0.55);
+  color: #ffffff;
+  box-shadow: 0 0 14px rgba(255, 119, 0, 0.3);
+}
+
+.counter-badge {
+  display: inline-block;
+  padding: 1px 7px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.12);
+  font-weight: 700;
+  font-size: 0.74rem;
+  line-height: 1.2;
+}
+
+.counter-tab.counter-pending.is-active .counter-badge {
+  background: rgba(255, 255, 255, 0.25);
+  color: #ffffff;
+}
+
+.counter-tab.counter-answered .counter-badge {
+  background: rgba(255, 119, 0, 0.2);
   color: #ff7700;
-  text-shadow: 0 0 8px rgba(255, 119, 0, 0.5);
+}
+
+.counter-tab.counter-answered.is-active .counter-badge {
+  background: #ff7700;
+  color: #ffffff;
+  box-shadow: 0 0 8px rgba(255, 119, 0, 0.6);
 }
 
 .btn-sub-back,
@@ -434,14 +493,17 @@ html::-webkit-scrollbar, body::-webkit-scrollbar {
   display: none;
 }
 
-/* Linha do Pedido (Caixa de largura total com clique para abrir) */
+/* Linha do Pedido (Caixa com clique para abrir e suporte a botão de exclusão) */
 .prayer-row-item {
   width: 100%;
   display: flex;
+  align-items: stretch;
+  gap: 8px;
 }
 
 .prayer-card-box {
-  width: 100%;
+  flex: 1;
+  min-width: 0;
   background: rgba(15, 23, 42, 0.7);
   border: 1px solid rgba(255, 255, 255, 0.16);
   border-radius: 14px;
@@ -451,6 +513,35 @@ html::-webkit-scrollbar, body::-webkit-scrollbar {
   user-select: none;
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.45);
   text-align: left;
+}
+
+.btn-delete-prayer {
+  background: rgba(239, 68, 68, 0.12);
+  border: 1px solid rgba(239, 68, 68, 0.35);
+  border-radius: 14px;
+  width: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #f87171;
+  cursor: pointer;
+  outline: none;
+  padding: 0;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.4);
+}
+
+.btn-delete-prayer:hover {
+  background: rgba(239, 68, 68, 0.26);
+  border-color: #ef4444;
+  color: #ffffff;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 18px rgba(239, 68, 68, 0.45);
+}
+
+.btn-delete-prayer:active {
+  transform: scale(0.95);
 }
 
 .prayer-card-box:hover {
@@ -691,6 +782,40 @@ html::-webkit-scrollbar, body::-webkit-scrollbar {
 .btn-form-save:hover {
   transform: translateY(-1px);
   box-shadow: 0 6px 18px rgba(245, 158, 11, 0.6);
+}
+
+.delete-warning-text {
+  font-size: 0.88rem;
+  color: #94a3b8;
+  line-height: 1.45;
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+}
+
+.delete-error-msg {
+  font-size: 0.8rem;
+  color: #f87171;
+  margin-top: 6px;
+  display: block;
+}
+
+.btn-delete-confirm {
+  background: #dc2626;
+  border: none;
+  color: #ffffff;
+  padding: 9px 18px;
+  border-radius: 10px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: transform 0.2s ease, background 0.2s ease, box-shadow 0.2s ease;
+  box-shadow: 0 4px 14px rgba(220, 38, 38, 0.45);
+}
+
+.btn-delete-confirm:hover {
+  background: #b91c1c;
+  transform: translateY(-1px);
+  box-shadow: 0 6px 18px rgba(220, 38, 38, 0.65);
 }
 
 /* Modal Leitura & Interações */

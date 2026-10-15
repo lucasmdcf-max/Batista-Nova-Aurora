@@ -19,7 +19,7 @@
     rel="stylesheet">
 
   <link rel="stylesheet" href="css/lenis.css">
-  <link rel="stylesheet" href="css/style.css?v=10">
+  <link rel="stylesheet" href="css/style.css?v=11">
 </head>
 
 <body>
@@ -98,9 +98,13 @@
         <div class="sub-screen-title-wrap">
           <h2 class="sub-screen-title">PEDIDOS DE ORAÇÃO</h2>
           <div class="prayer-counters" id="prayerCounters">
-            <span class="counter-item counter-pending">Em oração: <strong id="countPending">0</strong></span>
+            <button type="button" class="counter-tab counter-pending is-active" id="tabPending">
+              Em oração <span class="counter-badge" id="countPending">0</span>
+            </button>
             <span class="counter-divider">•</span>
-            <span class="counter-item counter-answered">Respondidos: <strong id="countAnswered">0</strong></span>
+            <button type="button" class="counter-tab counter-answered" id="tabAnswered">
+              Respondidos <span class="counter-badge" id="countAnswered">0</span>
+            </button>
           </div>
         </div>
         <button type="button" class="btn-add-prayer" id="btnAddPrayer" aria-label="Novo pedido de oração">
@@ -209,10 +213,33 @@
       </div>
     </div>
 
+    <!-- Modal Confirmação de Exclusão (Admin) -->
+    <div class="app-modal" id="modalDeletePrayer" aria-hidden="true">
+      <div class="app-modal-overlay" id="overlayDeletePrayer"></div>
+      <div class="app-modal-card">
+        <div class="app-modal-header">
+          <h3>Excluir Pedido</h3>
+          <button type="button" class="btn-modal-close" id="btnCloseDeletePrayer" aria-label="Fechar">✕</button>
+        </div>
+        <div class="app-modal-body">
+          <p class="delete-warning-text">Esta ação é permanente e removerá o pedido respondido do sistema.</p>
+          <div class="form-group" style="margin-top: 14px;">
+            <label for="adminDeletePassword">Senha do Administrador</label>
+            <input type="password" id="adminDeletePassword" placeholder="Digite a senha de administrador" autocomplete="current-password">
+            <span class="delete-error-msg" id="deleteErrorMsg" style="display: none;">Senha incorreta. Apenas administradores podem excluir.</span>
+          </div>
+          <div class="form-actions" style="margin-top: 18px;">
+            <button type="button" class="btn-form-cancel" id="btnCancelDeletePrayer">Cancelar</button>
+            <button type="button" class="btn-delete-confirm" id="btnConfirmDeletePrayer">Excluir</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
   </div>
 
   <script src="js/lenis.min.js"></script>
-  <script type="module" src="js/app.js?v=10"></script>
+  <script type="module" src="js/app.js?v=11"></script>
 </body>
 
 </html>

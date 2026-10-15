@@ -11,6 +11,7 @@ import {
   query, 
   orderBy, 
   updateDoc, 
+  deleteDoc,
   doc, 
   serverTimestamp 
 } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
@@ -49,6 +50,9 @@ const initialFallback = [
 
 let prayerList = [];
 let currentViewPrayerId = null;
+let currentTab = 'pending'; // 'pending' | 'answered'
+let currentDeleteTargetId = null;
+const ADMIN_PASSWORD = 'CBNA.adm';
 
 function loadLocalCache() {
   try {
@@ -95,59 +99,107 @@ function getFirstLine(text) {
   return first || text;
 }
 
-// Atualiza os contadores: "Em oração: nº" e "Respondidos: nº"
+// Atualiza os contadores: "Em oração" e "Respondidos" e o estado das abas
 function updateCounters() {
   const countPendingEl = document.getElementById('countPending');
   const countAnsweredEl = document.getElementById('countAnswered');
+  const tabPendingEl = document.getElementById('tabPending');
+  const tabAnsweredEl = document.getElementById('tabAnswered');
 
   const pending = prayerList.filter((p) => p.status !== 'respondido').length;
   const answered = prayerList.filter((p) => p.status === 'respondido').length;
 
   if (countPendingEl) countPendingEl.textContent = pending;
   if (countAnsweredEl) countAnsweredEl.textContent = answered;
+
+  if (tabPendingEl && tabAnsweredEl) {
+    if (currentTab === 'pending') {
+      tabPendingEl.classList.add('is-active');
+      tabAnsweredEl.classList.remove('is-active');
+    } else {
+      tabAnsweredEl.classList.add('is-active');
+      tabPendingEl.classList.remove('is-active');
+    }
+  }
 }
 
-// Renderiza a lista de pedidos na tela (sem botão de editar do lado)
+// Renderiza a lista de pedidos filtrando pela aba atual ('pending' ou 'answered')
 function renderPrayerList() {
   const container = document.getElementById('prayerListContainer');
   if (!container) return;
 
   updateCounters();
 
-  if (prayerList.length === 0) {
-    container.innerHTML = `
-      <div class="prayer-empty-state">
-        <p>Nenhum pedido de oração registrado ainda.</p>
-        <p class="prayer-empty-sub">Clique no botão <strong>+</strong> no topo para registrar o primeiro pedido.</p>
-      </div>
-    `;
+  const isAnsweredTab = currentTab === 'answered';
+  const filtered = prayerList.filter((p) => isAnsweredTab ? p.status === 'respondido' : p.status !== 'respondido');
+
+  if (filtered.length === 0) {
+    if (isAnsweredTab) {
+      container.innerHTML = `
+        <div class="prayer-empty-state">
+          <p>Nenhum pedido respondido ainda.</p>
+          <p class="prayer-empty-sub">Quando uma oração for marcada como respondida, ela será movida para cá como testemunho de fé.</p>
+        </div>
+      `;
+    } else {
+      container.innerHTML = `
+        <div class="prayer-empty-state">
+          <p>Nenhum pedido de oração em andamento.</p>
+          <p class="prayer-empty-sub">Clique no botão <strong>+</strong> no topo para registrar um novo pedido.</p>
+        </div>
+      `;
+    }
     return;
   }
 
   // Ordena os mais recentes primeiro
-  const sorted = [...prayerList].sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
+  const sorted = [...filtered].sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
 
   let html = '';
   sorted.forEach((item) => {
     const firstLine = getFirstLine(item.pedido);
-    const isAnswered = item.status === 'respondido';
-    const statusLabel = isAnswered ? 'Respondido' : 'Em oração';
-    const statusClass = isAnswered ? 'status-answered' : 'status-pending';
 
-    html += `
-      <div class="prayer-row-item" data-id="${item.id}">
-        <div class="prayer-card-box" data-action="view" data-id="${item.id}" role="button" tabindex="0" title="Clique para ler o pedido completo">
-          <div class="prayer-first-line">${escapeHtml(firstLine)}</div>
-          <div class="prayer-sub-row">
-            <span class="prayer-author">${escapeHtml(item.nome)}</span>
-            <div class="prayer-date-status-wrap">
-              <span class="prayer-date">${escapeHtml(item.data)}</span>
-              <span class="prayer-status-text ${statusClass}">${statusLabel}</span>
+    if (isAnsweredTab) {
+      // Lista de respondidos: exibe o botão de excluir ao lado de cada pedido
+      html += `
+        <div class="prayer-row-item" data-id="${item.id}">
+          <div class="prayer-card-box" data-action="view" data-id="${item.id}" role="button" tabindex="0" title="Clique para ler o testemunho completo">
+            <div class="prayer-first-line">${escapeHtml(firstLine)}</div>
+            <div class="prayer-sub-row">
+              <span class="prayer-author">${escapeHtml(item.nome)}</span>
+              <div class="prayer-date-status-wrap">
+                <span class="prayer-date">${escapeHtml(item.data)}</span>
+                <span class="prayer-status-text status-answered">Respondido</span>
+              </div>
+            </div>
+          </div>
+          <button type="button" class="btn-delete-prayer" data-action="delete" data-id="${item.id}" aria-label="Excluir pedido respondido" title="Excluir pedido (Requer senha de administrador)">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="3 6 5 6 21 6"></polyline>
+              <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+              <line x1="10" y1="11" x2="10" y2="17"></line>
+              <line x1="14" y1="11" x2="14" y2="17"></line>
+            </svg>
+          </button>
+        </div>
+      `;
+    } else {
+      // Lista de em andamento: cartão padrão sem botão de exclusão
+      html += `
+        <div class="prayer-row-item" data-id="${item.id}">
+          <div class="prayer-card-box" data-action="view" data-id="${item.id}" role="button" tabindex="0" title="Clique para ler o pedido completo">
+            <div class="prayer-first-line">${escapeHtml(firstLine)}</div>
+            <div class="prayer-sub-row">
+              <span class="prayer-author">${escapeHtml(item.nome)}</span>
+              <div class="prayer-date-status-wrap">
+                <span class="prayer-date">${escapeHtml(item.data)}</span>
+                <span class="prayer-status-text status-pending">Em oração</span>
+              </div>
             </div>
           </div>
         </div>
-      </div>
-    `;
+      `;
+    }
   });
 
   container.innerHTML = html;
@@ -286,6 +338,7 @@ async function handleSavePrayerAnswer() {
     prayerList[idx].status = 'respondido';
     prayerList[idx].resposta = answerText;
     saveLocalCache(prayerList);
+    currentTab = 'answered'; // Alterna para a lista de respondidos
     renderPrayerList();
 
     // Atualiza modal
@@ -348,6 +401,7 @@ async function handleSwipeToggle(e) {
 
     item.status = 'em_oracao';
     saveLocalCache(prayerList);
+    currentTab = 'pending'; // Retorna para a lista de pedidos em andamento
     renderPrayerList();
 
     if (statusEl) {
@@ -392,6 +446,7 @@ async function handleSavePrayer(e) {
 
   prayerList.unshift(localItem);
   saveLocalCache(prayerList);
+  currentTab = 'pending';
   renderPrayerList();
 
   nameInput.value = '';
@@ -414,6 +469,59 @@ async function handleSavePrayer(e) {
     }
   } catch (err) {
     console.warn('Erro ao salvar no Firestore (mantido localmente):', err);
+  }
+}
+
+// Abre modal de exclusão (disponível ao lado dos pedidos respondidos)
+function openDeleteModal(id) {
+  currentDeleteTargetId = id;
+  const pwdInput = document.getElementById('adminDeletePassword');
+  const errEl = document.getElementById('deleteErrorMsg');
+  if (pwdInput) {
+    pwdInput.value = '';
+  }
+  if (errEl) {
+    errEl.style.display = 'none';
+  }
+  openModal('modalDeletePrayer');
+  if (pwdInput) {
+    setTimeout(() => pwdInput.focus(), 80);
+  }
+}
+
+// Confirma exclusão com a senha do administrador ("CBNA.adm")
+async function handleConfirmDelete() {
+  const pwdInput = document.getElementById('adminDeletePassword');
+  const errEl = document.getElementById('deleteErrorMsg');
+  const entered = pwdInput ? pwdInput.value.trim() : '';
+
+  if (entered !== ADMIN_PASSWORD) {
+    if (errEl) errEl.style.display = 'block';
+    if (pwdInput) {
+      pwdInput.focus();
+      pwdInput.select();
+    }
+    return;
+  }
+
+  const idToDelete = currentDeleteTargetId;
+  if (!idToDelete) return;
+
+  // Remove localmente imediatamente
+  prayerList = prayerList.filter((p) => String(p.id) !== String(idToDelete));
+  saveLocalCache(prayerList);
+  renderPrayerList();
+  closeModal('modalDeletePrayer');
+  currentDeleteTargetId = null;
+
+  // Persiste exclusão no Cloud Firestore
+  try {
+    if (db && !String(idToDelete).startsWith('init-') && !String(idToDelete).startsWith('local-')) {
+      const docRef = doc(db, 'pedidos_oracao', String(idToDelete));
+      await deleteDoc(docRef);
+    }
+  } catch (err) {
+    console.warn('Erro ao excluir pedido no Firestore:', err);
   }
 }
 
@@ -467,10 +575,33 @@ export function initPrayers() {
     console.warn('Firestore offline:', err);
   }
 
-  // Clique na lista para abrir leitura do pedido
+  // Alternância entre as abas: "Em oração" e "Respondidos"
+  const tabPending = document.getElementById('tabPending');
+  if (tabPending) {
+    tabPending.addEventListener('click', () => {
+      currentTab = 'pending';
+      renderPrayerList();
+    });
+  }
+
+  const tabAnswered = document.getElementById('tabAnswered');
+  if (tabAnswered) {
+    tabAnswered.addEventListener('click', () => {
+      currentTab = 'answered';
+      renderPrayerList();
+    });
+  }
+
+  // Clique na lista para abrir leitura do pedido ou acionar exclusão
   const listContainer = document.getElementById('prayerListContainer');
   if (listContainer) {
     listContainer.addEventListener('click', (e) => {
+      const delBtn = e.target.closest('[data-action="delete"]');
+      if (delBtn) {
+        e.stopPropagation();
+        openDeleteModal(delBtn.getAttribute('data-id'));
+        return;
+      }
       const card = e.target.closest('[data-action="view"]');
       if (card) {
         openViewModal(card.getAttribute('data-id'));
@@ -552,6 +683,29 @@ export function initPrayers() {
   if (btnCancelEdit) {
     btnCancelEdit.addEventListener('click', () => {
       if (editSection) editSection.style.display = 'none';
+    });
+  }
+
+  // Modal de exclusão com senha de administrador
+  const btnCloseDelete = document.getElementById('btnCloseDeletePrayer');
+  if (btnCloseDelete) btnCloseDelete.addEventListener('click', () => closeModal('modalDeletePrayer'));
+  const btnCancelDelete = document.getElementById('btnCancelDeletePrayer');
+  if (btnCancelDelete) btnCancelDelete.addEventListener('click', () => closeModal('modalDeletePrayer'));
+  const overlayDelete = document.getElementById('overlayDeletePrayer');
+  if (overlayDelete) overlayDelete.addEventListener('click', () => closeModal('modalDeletePrayer'));
+
+  const btnConfirmDelete = document.getElementById('btnConfirmDeletePrayer');
+  if (btnConfirmDelete) {
+    btnConfirmDelete.addEventListener('click', handleConfirmDelete);
+  }
+
+  const adminDeleteInput = document.getElementById('adminDeletePassword');
+  if (adminDeleteInput) {
+    adminDeleteInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        handleConfirmDelete();
+      }
     });
   }
 }
