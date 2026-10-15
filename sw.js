@@ -2,15 +2,15 @@
  * Service Worker — Congregação Nova Aurora PWA
  */
 
-const CACHE_NAME = 'nova-aurora-v11';
+const CACHE_NAME = 'nova-aurora-v12';
 const ASSETS_TO_CACHE = [
   './',
   './index.html',
-  './css/style.css?v=12',
+  './css/style.css?v=13',
   './css/lenis.css',
   './js/lenis.min.js',
-  './js/app.js?v=12',
-  './js/prayers.js?v=12',
+  './js/app.js?v=13',
+  './js/prayers.js?v=13',
   './js/firebase-config.js',
   './manifest.json',
   './FUNDO APP/01.png?v=3',

@@ -1064,11 +1064,21 @@ html::-webkit-scrollbar, body::-webkit-scrollbar {
 /* ========================================================
    Tela de Ofertas & Dízimos (Minimalista, Vidro Fosco)
    ======================================================== */
+#offersScreen .sub-screen-header {
+  padding: max(14px, env(safe-area-inset-top, 14px)) 14px 10px;
+}
+
 .offers-screen-body {
   display: flex;
   flex-direction: column;
-  gap: 18px;
-  padding: 16px 16px 90px;
+  gap: 10px;
+  padding: 8px 14px 92px;
+  overflow-y: auto;
+  scrollbar-width: none;
+}
+
+.offers-screen-body::-webkit-scrollbar {
+  display: none;
 }
 
 .offer-card {
@@ -1076,12 +1086,12 @@ html::-webkit-scrollbar, body::-webkit-scrollbar {
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
   border: 1px solid rgba(255, 255, 255, 0.16);
-  border-radius: 18px;
-  padding: 20px 18px;
-  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.55);
+  border-radius: 14px;
+  padding: 12px 14px;
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.5);
   display: flex;
   flex-direction: column;
-  gap: 13px;
+  gap: 8px;
   text-align: left;
   transition: transform 0.25s ease, border-color 0.25s ease;
 }
@@ -1090,19 +1100,22 @@ html::-webkit-scrollbar, body::-webkit-scrollbar {
   border-color: rgba(255, 255, 255, 0.28);
 }
 
-.offer-badge-wrap {
+.offer-card-top-row {
   display: flex;
   align-items: center;
+  gap: 10px;
+  width: 100%;
 }
 
 .offer-badge {
   font-family: 'Century Gothic Light', 'Century Gothic', CenturyGothic, sans-serif;
-  font-size: 0.74rem;
-  letter-spacing: 0.14em;
+  font-size: 0.7rem;
+  letter-spacing: 0.12em;
   text-transform: uppercase;
-  padding: 3px 10px;
-  border-radius: 12px;
+  padding: 2px 8px;
+  border-radius: 10px;
   font-weight: 600;
+  flex-shrink: 0;
 }
 
 .badge-orange {
@@ -1122,9 +1135,9 @@ html::-webkit-scrollbar, body::-webkit-scrollbar {
 .offer-card-title {
   font-family: 'Century Gothic Light', 'Century Gothic', CenturyGothic, 'Questrial', 'Montserrat', sans-serif;
   font-weight: 400;
-  font-size: 1.05rem;
+  font-size: 0.92rem;
   color: #ffffff;
-  letter-spacing: 0.12em;
+  letter-spacing: 0.1em;
   margin: 0;
   text-transform: uppercase;
 }
@@ -1132,26 +1145,26 @@ html::-webkit-scrollbar, body::-webkit-scrollbar {
 .offer-pix-container {
   background: rgba(255, 255, 255, 0.05);
   border: 1px solid rgba(255, 255, 255, 0.12);
-  border-radius: 12px;
-  padding: 10px 14px;
+  border-radius: 10px;
+  padding: 7px 11px;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 12px;
+  gap: 10px;
 }
 
 .offer-pix-type {
   font-family: 'Century Gothic Light', 'Century Gothic', CenturyGothic, sans-serif;
-  font-size: 0.75rem;
+  font-size: 0.72rem;
   color: #94a3b8;
-  letter-spacing: 0.1em;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
   flex-shrink: 0;
 }
 
 .offer-pix-number {
   font-family: 'Century Gothic', -apple-system, BlinkMacSystemFont, monospace;
-  font-size: 1.02rem;
+  font-size: 0.94rem;
   font-weight: 600;
   color: #f8fafc;
   letter-spacing: 0.08em;
@@ -1163,11 +1176,11 @@ html::-webkit-scrollbar, body::-webkit-scrollbar {
 .offer-instruction-box {
   background: rgba(255, 119, 0, 0.09);
   border: 1px solid rgba(255, 119, 0, 0.32);
-  border-radius: 12px;
-  padding: 11px 13px;
+  border-radius: 10px;
+  padding: 7px 10px;
   display: flex;
   align-items: flex-start;
-  gap: 10px;
+  gap: 8px;
 }
 
 .offer-info-icon {
@@ -1177,10 +1190,10 @@ html::-webkit-scrollbar, body::-webkit-scrollbar {
 
 .offer-instruction-text {
   font-family: 'Century Gothic Light', 'Century Gothic', CenturyGothic, 'Montserrat', sans-serif;
-  font-size: 0.83rem;
+  font-size: 0.76rem;
   color: #fed7aa;
-  line-height: 1.45;
-  letter-spacing: 0.03em;
+  line-height: 1.35;
+  letter-spacing: 0.02em;
 }
 
 .offer-instruction-text strong {
@@ -1190,12 +1203,12 @@ html::-webkit-scrollbar, body::-webkit-scrollbar {
 
 .offer-verse {
   font-family: 'Century Gothic Light', 'Century Gothic', CenturyGothic, 'Montserrat', sans-serif;
-  font-size: 0.82rem;
+  font-size: 0.75rem;
   color: #94a3b8;
   font-style: italic;
-  line-height: 1.45;
+  line-height: 1.35;
   margin: 0;
-  padding: 2px 4px;
+  padding: 1px 2px;
 }
 
 /* Botões com Vidro Fosco e Cores da Identidade Visual */
@@ -1203,16 +1216,16 @@ html::-webkit-scrollbar, body::-webkit-scrollbar {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 8px;
-  padding: 12px 18px;
-  border-radius: 12px;
+  gap: 7px;
+  padding: 8px 14px;
+  border-radius: 10px;
   font-family: 'Century Gothic Light', 'Century Gothic', CenturyGothic, sans-serif;
-  font-size: 0.9rem;
-  letter-spacing: 0.1em;
+  font-size: 0.82rem;
+  letter-spacing: 0.08em;
   font-weight: 400;
   cursor: pointer;
   outline: none;
-  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
   backdrop-filter: blur(14px);
   -webkit-backdrop-filter: blur(14px);
   user-select: none;
@@ -1222,14 +1235,14 @@ html::-webkit-scrollbar, body::-webkit-scrollbar {
   background: rgba(255, 119, 0, 0.16);
   border: 1.5px solid rgba(255, 119, 0, 0.5);
   color: #ffffff;
-  box-shadow: 0 4px 16px rgba(255, 119, 0, 0.22);
+  box-shadow: 0 3px 12px rgba(255, 119, 0, 0.2);
 }
 
 .btn-glass-orange:hover {
   background: rgba(255, 119, 0, 0.3);
   border-color: #ff9933;
-  transform: translateY(-2px);
-  box-shadow: 0 6px 22px rgba(255, 119, 0, 0.45);
+  transform: translateY(-1px);
+  box-shadow: 0 5px 18px rgba(255, 119, 0, 0.4);
 }
 
 .btn-glass-orange:active {
@@ -1240,14 +1253,14 @@ html::-webkit-scrollbar, body::-webkit-scrollbar {
   background: rgba(37, 99, 235, 0.2);
   border: 1.5px solid rgba(96, 165, 250, 0.5);
   color: #ffffff;
-  box-shadow: 0 4px 16px rgba(37, 99, 235, 0.22);
+  box-shadow: 0 3px 12px rgba(37, 99, 235, 0.2);
 }
 
 .btn-glass-blue:hover {
   background: rgba(37, 99, 235, 0.35);
   border-color: #60a5fa;
-  transform: translateY(-2px);
-  box-shadow: 0 6px 22px rgba(37, 99, 235, 0.45);
+  transform: translateY(-1px);
+  box-shadow: 0 5px 18px rgba(37, 99, 235, 0.4);
 }
 
 .btn-glass-blue:active {
@@ -1259,6 +1272,6 @@ html::-webkit-scrollbar, body::-webkit-scrollbar {
   background: rgba(16, 185, 129, 0.26) !important;
   border-color: #10b981 !important;
   color: #6ee7b7 !important;
-  box-shadow: 0 0 20px rgba(16, 185, 129, 0.45) !important;
+  box-shadow: 0 0 16px rgba(16, 185, 129, 0.4) !important;
   transform: scale(1.02);
 }
