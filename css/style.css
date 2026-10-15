@@ -464,6 +464,7 @@ html::-webkit-scrollbar, body::-webkit-scrollbar {
   display: inline-flex;
   align-items: center;
   gap: 6px;
+  white-space: nowrap;
   transition: all 0.22s ease;
   user-select: none;
 }
@@ -1833,21 +1834,23 @@ html::-webkit-scrollbar, body::-webkit-scrollbar {
 
 .visit-calendar-legend {
   display: flex;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   align-items: center;
   justify-content: center;
-  gap: 12px;
+  gap: 10px;
   margin-top: 10px;
   padding-top: 8px;
   border-top: 1px solid rgba(255, 255, 255, 0.1);
   font-size: 0.72rem;
   color: #cbd5e1;
+  white-space: nowrap;
 }
 
 .cal-legend-item {
   display: inline-flex;
   align-items: center;
-  gap: 5px;
+  gap: 4px;
+  white-space: nowrap;
 }
 
 .cal-legend-dot {

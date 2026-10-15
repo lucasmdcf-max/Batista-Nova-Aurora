@@ -19,7 +19,7 @@
     rel="stylesheet">
 
   <link rel="stylesheet" href="css/lenis.css">
-  <link rel="stylesheet" href="css/style.css?v=21">
+  <link rel="stylesheet" href="css/style.css?v=22">
 </head>
 
 <body>
@@ -326,18 +326,7 @@
               </div>
 
               <div class="form-group">
-                <label for="visitRequestDateDisplay">Data da Visita (Marque no Calendário)</label>
-                <div class="visit-date-selected-row">
-                  <input type="text" id="visitRequestDateDisplay" placeholder="Toque em um dia livre no calendário abaixo" readonly required>
-                  <span class="visit-date-cal-icon" aria-hidden="true">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                      <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
-                      <line x1="16" y1="2" x2="16" y2="6"></line>
-                      <line x1="8" y1="2" x2="8" y2="6"></line>
-                      <line x1="3" y1="10" x2="21" y2="10"></line>
-                    </svg>
-                  </span>
-                </div>
+                <label>Data (Marque no Calendário)</label>
 
                 <!-- Calendário Interativo com bloqueio de dias com eventos ou visitas agendadas -->
                 <div class="visit-calendar-box" id="visitCalendarBox">
@@ -372,7 +361,7 @@
                   <div class="visit-calendar-legend">
                     <span class="cal-legend-item"><i class="cal-legend-dot dot-free"></i> Livre</span>
                     <span class="cal-legend-item"><i class="cal-legend-dot dot-selected"></i> Selecionado</span>
-                    <span class="cal-legend-item"><i class="cal-legend-dot dot-occupied"></i> Indisponível (Evento/Visita)</span>
+                    <span class="cal-legend-item"><i class="cal-legend-dot dot-occupied"></i> Indisponível</span>
                   </div>
                 </div>
 
@@ -585,7 +574,7 @@
   </div>
 
   <script src="js/lenis.min.js"></script>
-  <script type="module" src="js/app.js?v=21"></script>
+  <script type="module" src="js/app.js?v=22"></script>
 </body>
 
 </html>
