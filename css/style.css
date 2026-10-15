@@ -1280,3 +1280,292 @@ html::-webkit-scrollbar, body::-webkit-scrollbar {
   box-shadow: 0 0 16px rgba(16, 185, 129, 0.4) !important;
   transform: scale(1.02);
 }
+
+/* =========================================================
+   MÓDULO DE REGISTRAR VISITANTE
+   ========================================================= */
+
+.visitors-screen-body {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 16px 16px 95px;
+}
+
+.visitor-view-container {
+  width: 100%;
+}
+
+.visitor-form-card {
+  background: rgba(11, 19, 41, 0.85);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 16px;
+  padding: 20px 18px;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.45);
+}
+
+.visitor-form-title-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+.visitor-card-heading {
+  font-family: 'Century Gothic Light', 'Century Gothic', CenturyGothic, sans-serif;
+  font-weight: 300;
+  font-size: 1rem;
+  letter-spacing: 0.12em;
+  color: #ffffff;
+  margin: 0;
+}
+
+/* Seletor de Visitas (1ª, 2ª, 3ª) */
+.visit-count-selector {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  margin-top: 4px;
+}
+
+.btn-visit-option {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: #cbd5e1;
+  font-family: inherit;
+  font-size: 0.95rem;
+  font-weight: 500;
+  padding: 10px 0;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.22s ease;
+  text-align: center;
+}
+
+.btn-visit-option:hover {
+  background: rgba(255, 255, 255, 0.12);
+  border-color: rgba(255, 255, 255, 0.4);
+  color: #ffffff;
+}
+
+.btn-visit-option.is-selected {
+  background: linear-gradient(135deg, rgba(255, 119, 0, 0.35), rgba(255, 153, 0, 0.2));
+  border-color: #ffaa33;
+  color: #ffffff;
+  box-shadow: 0 0 12px rgba(255, 119, 0, 0.4);
+  font-weight: 600;
+}
+
+/* Botão Primário Largo */
+.btn-primary-wide {
+  width: 100%;
+  background: linear-gradient(135deg, #ff7700, #ff9900);
+  border: none;
+  color: #ffffff;
+  font-weight: 600;
+  font-size: 0.95rem;
+  letter-spacing: 0.05em;
+  padding: 12px 20px;
+  border-radius: 10px;
+  cursor: pointer;
+  box-shadow: 0 4px 16px rgba(255, 119, 0, 0.35);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.btn-primary-wide:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 20px rgba(255, 119, 0, 0.5);
+}
+
+.btn-primary-wide:active {
+  transform: scale(0.98);
+}
+
+/* Lista de Visitantes */
+.visitor-cards-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.visitor-card {
+  background: rgba(11, 19, 41, 0.85);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 14px;
+  padding: 14px 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.35);
+  transition: border-color 0.2s ease, transform 0.2s ease;
+}
+
+.visitor-card:hover {
+  border-color: rgba(255, 255, 255, 0.25);
+  transform: translateY(-1px);
+}
+
+.visitor-card-left {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.visitor-name-clickable {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  width: fit-content;
+}
+
+.visitor-name {
+  font-family: inherit;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #ffffff;
+  letter-spacing: 0.02em;
+  transition: color 0.2s ease;
+}
+
+.visitor-edit-icon {
+  color: #94a3b8;
+  opacity: 0.7;
+  transition: opacity 0.2s ease, color 0.2s ease, transform 0.2s ease;
+}
+
+.visitor-name-clickable:hover .visitor-name {
+  color: #ffaa33;
+}
+
+.visitor-name-clickable:hover .visitor-edit-icon {
+  color: #ffaa33;
+  opacity: 1;
+  transform: scale(1.15);
+}
+
+.visitor-phone-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.82rem;
+  color: #94a3b8;
+}
+
+.visitor-card-right {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+/* Badges de Visita e Tag Adicionar ao Grupo */
+.visitor-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 9px;
+  border-radius: 12px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: lowercase;
+}
+
+.visitor-badge.badge-visits {
+  background: rgba(59, 130, 246, 0.16);
+  border: 1px solid rgba(96, 165, 250, 0.4);
+  color: #93c5fd;
+}
+
+.visitor-badge.badge-group {
+  background: rgba(16, 185, 129, 0.22);
+  border: 1px solid #10b981;
+  color: #34d399;
+  box-shadow: 0 0 10px rgba(16, 185, 129, 0.35);
+  font-weight: 700;
+  text-transform: none;
+  animation: pulseGroupBadge 2.4s infinite ease-in-out;
+}
+
+@keyframes pulseGroupBadge {
+  0%, 100% {
+    box-shadow: 0 0 8px rgba(16, 185, 129, 0.3);
+  }
+  50% {
+    box-shadow: 0 0 14px rgba(16, 185, 129, 0.65);
+    border-color: #34d399;
+  }
+}
+
+/* Botão WhatsApp Direto */
+.btn-whatsapp-direct {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: #25D366;
+  color: #ffffff;
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  text-decoration: none;
+  box-shadow: 0 3px 10px rgba(37, 211, 102, 0.35);
+  transition: transform 0.2s ease, background 0.2s ease, box-shadow 0.2s ease;
+}
+
+.btn-whatsapp-direct:hover {
+  background: #22c05b;
+  transform: translateY(-1px);
+  box-shadow: 0 5px 14px rgba(37, 211, 102, 0.5);
+  color: #ffffff;
+}
+
+.btn-whatsapp-direct:active {
+  transform: scale(0.96);
+}
+
+/* Estado Vazio */
+.visitor-empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 40px 20px;
+  color: #94a3b8;
+  gap: 10px;
+}
+
+.visitor-empty-state p {
+  font-size: 1rem;
+  color: #e2e8f0;
+  font-weight: 500;
+  margin: 0;
+}
+
+.visitor-empty-state span {
+  font-size: 0.85rem;
+  color: #94a3b8;
+  max-width: 260px;
+}
+
+.input-error-shake {
+  animation: shakeInput 0.35s ease-in-out;
+  border-color: #ef4444 !important;
+}
+
+@keyframes shakeInput {
+  0%, 100% { transform: translateX(0); }
+  20%, 60% { transform: translateX(-6px); }
+  40%, 80% { transform: translateX(6px); }
+}
+

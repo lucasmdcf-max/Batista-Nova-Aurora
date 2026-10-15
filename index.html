@@ -19,7 +19,7 @@
     rel="stylesheet">
 
   <link rel="stylesheet" href="css/lenis.css">
-  <link rel="stylesheet" href="css/style.css?v=14">
+  <link rel="stylesheet" href="css/style.css?v=15">
 </head>
 
 <body>
@@ -74,7 +74,7 @@
         <li class="home-menu-item"><a href="#programacoes" class="home-menu-link">PROGRAMAÇÕES</a></li>
         <li class="home-menu-item"><a href="#pedidos-oracao" class="home-menu-link">PEDIDOS DE ORAÇÃO</a></li>
         <li class="home-menu-item"><a href="#solicitar-visita" class="home-menu-link">SOLICITAR VISITA</a></li>
-        <li class="home-menu-item"><a href="#registrar-visita" class="home-menu-link">REGISTRAR VISITA</a></li>
+        <li class="home-menu-item"><a href="#registrar-visitante" class="home-menu-link">REGISTRAR VISITANTE</a></li>
         <li class="home-menu-item"><a href="#membros" class="home-menu-link">MEMBROS</a></li>
         <li class="home-menu-item"><a href="#infantil" class="home-menu-link">INFANTIL</a></li>
         <li class="home-menu-item"><a href="#ofertas" class="home-menu-link">OFERTAS</a></li>
@@ -200,6 +200,78 @@
       </div>
     </section>
 
+    <!-- Tela / Painel de Registrar Visitante -->
+    <section class="sub-screen" id="visitorsScreen" aria-hidden="true">
+      <div class="sub-screen-header">
+        <button type="button" class="btn-sub-back" id="btnVisitorsBack" aria-label="Voltar">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2.2"
+            stroke-linecap="round" stroke-linejoin="round">
+            <line x1="19" y1="12" x2="5" y2="12"></line>
+            <polyline points="12 19 5 12 12 5"></polyline>
+          </svg>
+        </button>
+        <div class="sub-screen-title-wrap">
+          <h2 class="sub-screen-title">REGISTRAR VISITANTE</h2>
+          <div class="prayer-counters visitor-nav-tabs" id="visitorTabs">
+            <button type="button" class="counter-tab counter-pending is-active" id="tabNewVisitor">
+              Novo Cadastro
+            </button>
+            <span class="counter-divider">•</span>
+            <button type="button" class="counter-tab counter-answered" id="tabVisitorList">
+              Lista de Visitantes <span class="counter-badge" id="countVisitors">0</span>
+            </button>
+          </div>
+        </div>
+        <div style="width: 38px;"></div>
+      </div>
+
+      <div class="sub-screen-body visitors-screen-body">
+        
+        <!-- Vista: Formulário de Novo Cadastro -->
+        <div class="visitor-view-container" id="visitorFormView">
+          <div class="visitor-form-card">
+            <div class="visitor-form-title-row">
+              <span class="offer-badge badge-orange">Cadastro</span>
+              <h3 class="visitor-card-heading">DADOS DO VISITANTE</h3>
+            </div>
+            
+            <form id="formNewVisitor" class="app-form">
+              <div class="form-group">
+                <label for="visitorName">Nome</label>
+                <input type="text" id="visitorName" placeholder="Nome completo do visitante" required autocomplete="name">
+              </div>
+
+              <div class="form-group">
+                <label for="visitorPhone">Telefone (WhatsApp)</label>
+                <input type="tel" id="visitorPhone" placeholder="(XX) XXXXX-XXXX" required inputmode="numeric">
+              </div>
+
+              <div class="form-group">
+                <label>Quantas vezes visitou</label>
+                <div class="visit-count-selector" id="visitCountSelector">
+                  <button type="button" class="btn-visit-option is-selected" data-visits="1">1ª</button>
+                  <button type="button" class="btn-visit-option" data-visits="2">2ª</button>
+                  <button type="button" class="btn-visit-option" data-visits="3">3ª</button>
+                </div>
+              </div>
+
+              <div class="form-actions" style="margin-top: 10px;">
+                <button type="submit" class="btn-form-save btn-primary-wide">Cadastrar Visitante</button>
+              </div>
+            </form>
+          </div>
+        </div>
+
+        <!-- Vista: Lista de Visitantes -->
+        <div class="visitor-view-container" id="visitorListView" style="display: none; width: 100%;">
+          <div class="visitor-cards-list" id="visitorCardsContainer">
+            <!-- Cards gerados dinamicamente via JS -->
+          </div>
+        </div>
+
+      </div>
+    </section>
+
     <!-- Modal Novo Pedido de Oração -->
     <div class="app-modal" id="modalNewPrayer" aria-hidden="true">
       <div class="app-modal-overlay" id="overlayNewPrayer"></div>
@@ -315,10 +387,76 @@
       </div>
     </div>
 
+    <!-- Modal Senha de Membro (Acesso ao Registro de Visitante) -->
+    <div class="app-modal" id="modalMemberAuth" aria-hidden="true">
+      <div class="app-modal-overlay" id="overlayMemberAuth"></div>
+      <div class="app-modal-card">
+        <div class="app-modal-header">
+          <h3>Acesso de Membro</h3>
+          <button type="button" class="btn-modal-close" id="btnCloseMemberAuth" aria-label="Fechar">✕</button>
+        </div>
+        <div class="app-modal-body">
+          <p class="delete-warning-text" style="color: #cbd5e1;">Área reservada aos membros da congregação. Digite a senha para continuar:</p>
+          <form id="formMemberAuth" class="app-form" style="margin-top: 14px;">
+            <div class="form-group">
+              <label for="memberPassword">Senha de Membro</label>
+              <input type="password" id="memberPassword" placeholder="Digite a senha de membro" autocomplete="current-password" required>
+              <span class="delete-error-msg" id="memberAuthErrorMsg" style="display: none;">Senha incorreta. Apenas membros podem acessar.</span>
+            </div>
+            <div class="form-actions" style="margin-top: 16px;">
+              <button type="button" class="btn-form-cancel" id="btnCancelMemberAuth">Cancelar</button>
+              <button type="submit" class="btn-form-save" id="btnSubmitMemberAuth">Entrar</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal Edição do Visitante -->
+    <div class="app-modal" id="modalEditVisitor" aria-hidden="true">
+      <div class="app-modal-overlay" id="overlayEditVisitor"></div>
+      <div class="app-modal-card">
+        <div class="app-modal-header">
+          <h3>Editar Visitante</h3>
+          <button type="button" class="btn-modal-close" id="btnCloseEditVisitor" aria-label="Fechar">✕</button>
+        </div>
+        <div class="app-modal-body">
+          <form id="formEditVisitor" class="app-form">
+            <div class="form-group">
+              <label for="editVisitorName">Nome</label>
+              <input type="text" id="editVisitorName" placeholder="Nome completo" required autocomplete="name">
+            </div>
+
+            <div class="form-group">
+              <label for="editVisitorPhone">Telefone (WhatsApp)</label>
+              <input type="tel" id="editVisitorPhone" placeholder="(XX) XXXXX-XXXX" required inputmode="numeric">
+            </div>
+
+            <div class="form-group">
+              <label>Quantas vezes visitou</label>
+              <div class="visit-count-selector" id="editVisitCountSelector">
+                <button type="button" class="btn-visit-option" data-visits="1">1ª</button>
+                <button type="button" class="btn-visit-option" data-visits="2">2ª</button>
+                <button type="button" class="btn-visit-option" data-visits="3">3ª</button>
+              </div>
+            </div>
+
+            <div class="form-actions" style="margin-top: 14px; justify-content: space-between;">
+              <button type="button" class="btn-delete-confirm" id="btnDeleteVisitor" style="background: rgba(239, 68, 68, 0.15); border: 1px solid rgba(239, 68, 68, 0.4); color: #f87171; padding: 8px 14px; border-radius: 10px; cursor: pointer;">Excluir</button>
+              <div style="display: flex; gap: 8px;">
+                <button type="button" class="btn-form-cancel" id="btnCancelEditVisitor">Cancelar</button>
+                <button type="submit" class="btn-form-save" id="btnSaveEditVisitor">Salvar</button>
+              </div>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+
   </div>
 
   <script src="js/lenis.min.js"></script>
-  <script type="module" src="js/app.js?v=14"></script>
+  <script type="module" src="js/app.js?v=15"></script>
 </body>
 
 </html>

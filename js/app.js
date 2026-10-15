@@ -6,6 +6,7 @@
  */
 
 import { initPrayers, openPrayerScreen, closePrayerScreen } from './prayers.js';
+import { initVisitors, requestAccessToVisitors, closeVisitorsScreen } from './visitors.js';
 
 (function () {
   'use strict';
@@ -224,6 +225,7 @@ import { initPrayers, openPrayerScreen, closePrayerScreen } from './prayers.js';
       e.preventDefault();
       closePrayerScreen();
       closeOffersScreen();
+      closeVisitorsScreen();
       scrollToHome();
     });
   }
@@ -251,13 +253,17 @@ import { initPrayers, openPrayerScreen, closePrayerScreen } from './prayers.js';
         } else if (href === '#ofertas') {
           e.preventDefault();
           openOffersScreen();
+        } else if (href === '#registrar-visitante' || href === '#registrar-visita') {
+          e.preventDefault();
+          requestAccessToVisitors();
         }
       });
     }
   });
 
-  // Inicializa o sistema de orações
+  // Inicializa o sistema de orações e o de visitantes
   initPrayers();
+  initVisitors();
 
   // PWA Service Worker
   if ('serviceWorker' in navigator) {
