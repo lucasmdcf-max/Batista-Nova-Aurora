@@ -223,8 +223,8 @@ import { initVisitors, requestAccessToVisitors, closeVisitorsScreen } from './vi
   // ==========================================
   // Controle de Versão e Atualização Automática PWA
   // ==========================================
-  const APP_VERSION = '1.1.1';
-  const APP_BUILD = 18;
+  const APP_VERSION = '1.1.2';
+  const APP_BUILD = 19;
   let waitingWorker = null;
   let isUpdating = false;
 
@@ -389,8 +389,10 @@ import { initVisitors, requestAccessToVisitors, closeVisitorsScreen } from './vi
       window.addEventListener('focus', checkVersionFile);
     });
 
+    let refreshing = false;
     navigator.serviceWorker.addEventListener('controllerchange', () => {
-      if (isUpdating) {
+      if (!refreshing) {
+        refreshing = true;
         const targetUrl = new URL(window.location.href);
         targetUrl.searchParams.set('v_sync', Date.now().toString());
         window.location.replace(targetUrl.toString());
