@@ -19,7 +19,7 @@
     rel="stylesheet">
 
   <link rel="stylesheet" href="css/lenis.css">
-  <link rel="stylesheet" href="css/style.css?v=16">
+  <link rel="stylesheet" href="css/style.css?v=17">
 </head>
 
 <body>
@@ -83,6 +83,18 @@
 
     <!-- Botão de Voltar ao Início / Menu Inicial -->
     <button type="button" class="btn-home" id="btnHome" aria-label="Voltar ao menu inicial">
+      <div class="btn-home-update-badge" id="btnHomeUpdateBadge" aria-hidden="true">
+        <svg viewBox="0 0 140 70" class="btn-home-arc-svg" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <path id="btnHomeArcPath" d="M 18,62 A 52,52 0 0,1 122,62" fill="none" />
+          </defs>
+          <text class="btn-home-arc-text">
+            <textPath id="btnHomeArcTextPath" href="#btnHomeArcPath" xlink:href="#btnHomeArcPath" startOffset="50%" text-anchor="middle">
+              Atualizar aplicativo!
+            </textPath>
+          </text>
+        </svg>
+      </div>
       <img src="FUNDO APP/Logo branca - Nova Aurora_transparente.png?v=7" alt="Logo Nova Aurora" class="btn-home-img">
     </button>
 
@@ -456,7 +468,7 @@
   </div>
 
   <script src="js/lenis.min.js"></script>
-  <script type="module" src="js/app.js?v=16"></script>
+  <script type="module" src="js/app.js?v=17"></script>
 </body>
 
 </html>

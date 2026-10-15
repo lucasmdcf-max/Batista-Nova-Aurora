@@ -2,16 +2,16 @@
  * Service Worker — Congregação Nova Aurora PWA
  */
 
-const CACHE_NAME = 'nova-aurora-v16';
+const CACHE_NAME = 'nova-aurora-v17';
 const ASSETS_TO_CACHE = [
   './',
   './index.html',
-  './css/style.css?v=16',
+  './css/style.css?v=17',
   './css/lenis.css',
   './js/lenis.min.js',
-  './js/app.js?v=16',
-  './js/prayers.js?v=16',
-  './js/visitors.js?v=16',
+  './js/app.js?v=17',
+  './js/prayers.js?v=17',
+  './js/visitors.js?v=17',
   './js/firebase-config.js',
   './manifest.json',
   './FUNDO APP/01.png?v=3',
@@ -27,13 +27,18 @@ const ASSETS_TO_CACHE = [
 ];
 
 self.addEventListener('install', (event) => {
-  self.skipWaiting();
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
-      console.log('[Service Worker] Cache inicial dos arquivos concluído');
+      console.log('[Service Worker] Cache inicial dos arquivos concluído (v17)');
       return cache.addAll(ASSETS_TO_CACHE).catch(() => {});
     })
   );
+});
+
+self.addEventListener('message', (event) => {
+  if (event.data && event.data.type === 'SKIP_WAITING') {
+    self.skipWaiting();
+  }
 });
 
 self.addEventListener('activate', (event) => {
@@ -54,6 +59,14 @@ self.addEventListener('activate', (event) => {
 
 self.addEventListener('fetch', (event) => {
   if (!event.request.url.startsWith('http')) return;
+
+  // Nunca cacheia version.json para permitir detecção em tempo real de novas versões
+  if (event.request.url.includes('version.json')) {
+    event.respondWith(
+      fetch(event.request, { cache: 'no-store' }).catch(() => caches.match(event.request))
+    );
+    return;
+  }
 
   // Para navegação HTML (index.html), usa Network-First para sempre pegar versão mais recente
   if (event.request.mode === 'navigate' || event.request.destination === 'document') {

@@ -220,9 +220,100 @@ import { initVisitors, requestAccessToVisitors, closeVisitorsScreen } from './vi
     });
   }
 
+  // ==========================================
+  // Controle de Versão e Atualização Automática PWA
+  // ==========================================
+  const APP_VERSION = '1.1.0';
+  const APP_BUILD = 17;
+  let waitingWorker = null;
+  let isUpdating = false;
+
+  // Se veio de um reload forçado de atualização, limpa query param da URL
+  if (window.location.search.includes('v_sync')) {
+    try {
+      const cleanUrl = window.location.pathname + window.location.hash;
+      window.history.replaceState({}, document.title, cleanUrl);
+    } catch (_) {}
+  }
+
+  function setAppUpdateAvailable(available, worker = null) {
+    if (worker) waitingWorker = worker;
+    if (!btnHome) return;
+
+    if (available) {
+      btnHome.classList.add('has-update');
+      btnHome.setAttribute('aria-label', 'Nova versão disponível! Toque para atualizar');
+      btnHome.setAttribute('title', 'Nova versão disponível! Toque para atualizar o aplicativo');
+    } else {
+      btnHome.classList.remove('has-update');
+      btnHome.setAttribute('aria-label', 'Voltar ao menu inicial');
+      btnHome.removeAttribute('title');
+    }
+  }
+
+  async function checkVersionFile() {
+    try {
+      const res = await fetch(`./version.json?_nocache=${Date.now()}`, {
+        cache: 'no-store',
+        headers: { 'Cache-Control': 'no-cache, no-store, must-revalidate' }
+      });
+      if (!res.ok) return;
+      const data = await res.json();
+      if (data && data.build && Number(data.build) > APP_BUILD) {
+        setAppUpdateAvailable(true);
+      }
+    } catch (_) {}
+  }
+
+  async function applyAppUpdate() {
+    if (isUpdating) return;
+    isUpdating = true;
+
+    // Feedback visual no arco ao iniciar atualização
+    const arcText = document.getElementById('btnHomeArcTextPath');
+    if (arcText) {
+      arcText.textContent = 'Atualizando...';
+    }
+
+    try {
+      // 1. Notifica Service Worker para assumir controle imediato
+      if (waitingWorker) {
+        waitingWorker.postMessage({ type: 'SKIP_WAITING' });
+      }
+
+      // 2. Limpa caches antigos do navegador para evitar persistência de versão anterior
+      if ('caches' in window) {
+        const cacheKeys = await caches.keys();
+        await Promise.all(cacheKeys.map((key) => caches.delete(key)));
+      }
+
+      // 3. Atualiza os registros do Service Worker
+      if ('serviceWorker' in navigator) {
+        const registrations = await navigator.serviceWorker.getRegistrations();
+        for (const reg of registrations) {
+          await reg.update().catch(() => {});
+        }
+      }
+    } catch (err) {
+      console.warn('[App Update] Erro durante renovação de cache:', err);
+    }
+
+    // 4. Força reload com timestamp limpo garantindo arquivos novos do servidor/github
+    setTimeout(() => {
+      const targetUrl = new URL(window.location.href);
+      targetUrl.searchParams.set('v_sync', Date.now().toString());
+      window.location.replace(targetUrl.toString());
+    }, 250);
+  }
+
   if (btnHome) {
     btnHome.addEventListener('click', (e) => {
       e.preventDefault();
+      // Se houver nova versão disponível, tocar no botão adota a versão mais atual
+      if (btnHome.classList.contains('has-update')) {
+        applyAppUpdate();
+        return;
+      }
       closePrayerScreen();
       closeOffersScreen();
       closeVisitorsScreen();
@@ -265,12 +356,45 @@ import { initVisitors, requestAccessToVisitors, closeVisitorsScreen } from './vi
   initPrayers();
   initVisitors();
 
-  // PWA Service Worker
+  // PWA Service Worker com detecção em tempo real e atualização transparente
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
-      navigator.serviceWorker.register('./sw.js').then((reg) => {
+      navigator.serviceWorker.register('./sw.js', { updateViaCache: 'none' }).then((reg) => {
+        if (reg.waiting) {
+          setAppUpdateAvailable(true, reg.waiting);
+        }
+
+        reg.addEventListener('updatefound', () => {
+          const newWorker = reg.installing;
+          if (newWorker) {
+            newWorker.addEventListener('statechange', () => {
+              if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                setAppUpdateAvailable(true, newWorker);
+              }
+            });
+          }
+        });
+
         reg.update().catch(() => {});
       }).catch(() => {});
+
+      // Checagem proativa de versão via version.json
+      checkVersionFile();
+      setInterval(checkVersionFile, 60000);
+      document.addEventListener('visibilitychange', () => {
+        if (document.visibilityState === 'visible') {
+          checkVersionFile();
+        }
+      });
+      window.addEventListener('focus', checkVersionFile);
+    });
+
+    navigator.serviceWorker.addEventListener('controllerchange', () => {
+      if (isUpdating) {
+        const targetUrl = new URL(window.location.href);
+        targetUrl.searchParams.set('v_sync', Date.now().toString());
+        window.location.replace(targetUrl.toString());
+      }
     });
   }
 })();
