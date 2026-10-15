@@ -1072,7 +1072,7 @@ html::-webkit-scrollbar, body::-webkit-scrollbar {
   display: flex;
   flex-direction: column;
   gap: 10px;
-  padding: 8px 14px 92px;
+  padding: 16px 14px 92px;
   overflow-y: auto;
   scrollbar-width: none;
 }
@@ -1098,6 +1098,11 @@ html::-webkit-scrollbar, body::-webkit-scrollbar {
 
 .offer-card:hover {
   border-color: rgba(255, 255, 255, 0.28);
+}
+
+/* Afasta a janela de Ofertas por meia altura (~75px) */
+.offer-card-oferta {
+  margin-top: clamp(48px, 9vh, 76px);
 }
 
 .offer-card-top-row {
