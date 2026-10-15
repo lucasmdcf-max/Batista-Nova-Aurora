@@ -25,24 +25,7 @@ const STORAGE_KEY = 'nova_aurora_visitantes_v1';
 const MEMBER_PASSWORD = 'bemvindo';
 
 // Fallback inicial offline
-const initialFallbackVisitors = [
-  {
-    id: 'demo-1',
-    nome: 'Gabriel Santos',
-    telefone: '(11) 98765-4321',
-    visitas: 1,
-    data: '12/10/2026',
-    timestamp: Date.now() - 86400000
-  },
-  {
-    id: 'demo-2',
-    nome: 'Mariana Oliveira',
-    telefone: '(11) 97654-3210',
-    visitas: 3,
-    data: '10/10/2026',
-    timestamp: Date.now() - 172800000
-  }
-];
+const initialFallbackVisitors = [];
 
 let visitorList = [];
 let selectedNewVisits = 1;
@@ -88,16 +71,16 @@ let btnDeleteVisitor = null;
 function loadLocalCache() {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
-    if (raw) {
+    if (raw !== null) {
       const parsed = JSON.parse(raw);
-      if (Array.isArray(parsed) && parsed.length > 0) {
+      if (Array.isArray(parsed)) {
         return parsed;
       }
     }
   } catch (e) {
     console.warn('Erro ao ler cache de visitantes:', e);
   }
-  return initialFallbackVisitors;
+  return [];
 }
 
 function saveLocalCache(list) {
@@ -461,22 +444,27 @@ async function handleEditVisitorSubmit(e) {
 
 async function handleDeleteVisitor() {
   if (!currentEditingVisitorId) return;
-  const visitor = visitorList.find((v) => v.id === currentEditingVisitorId);
+  const targetId = currentEditingVisitorId;
+  const visitor = visitorList.find((v) => String(v.id) === String(targetId));
   const confirmMsg = `Deseja realmente remover o visitante "${visitor ? visitor.nome : ''}"?`;
   if (!confirm(confirmMsg)) return;
 
-  const targetId = currentEditingVisitorId;
-  visitorList = visitorList.filter((v) => v.id !== targetId);
+  // Remove localmente no dispositivo que solicitou a exclusão
+  visitorList = visitorList.filter((v) => String(v.id) !== String(targetId));
   saveLocalCache(visitorList);
+  if (countVisitorsBadge) {
+    countVisitorsBadge.textContent = visitorList.length;
+  }
   renderVisitorList();
   closeEditVisitorModal();
 
-  if (!targetId.startsWith('temp-') && !targetId.startsWith('demo-')) {
+  // Remove no Cloud Firestore para propagar instantaneamente a todos os demais dispositivos
+  if (!String(targetId).startsWith('temp-')) {
     try {
-      const docRef = doc(db, 'visitantes', targetId);
+      const docRef = doc(db, 'visitantes', String(targetId));
       await deleteDoc(docRef);
     } catch (err) {
-      console.warn('Erro ao deletar visitante no Firestore:', err);
+      console.error('Erro ao deletar visitante no Firestore:', err);
     }
   }
 }
@@ -532,15 +520,16 @@ function subscribeToFirestore() {
         });
       });
 
-      if (remoteList.length > 0) {
-        visitorList = remoteList;
-        saveLocalCache(visitorList);
-        if (currentTab === 'list') {
-          renderVisitorList();
-        } else if (countVisitorsBadge) {
-          countVisitorsBadge.textContent = visitorList.length;
-        }
+      // Sincronização Total: O Firestore é a fonte da verdade em todos os dispositivos
+      // Preserva apenas cadastros temporários locais que ainda estão aguardando confirmação
+      const pendingTemps = visitorList.filter((item) => String(item.id).startsWith('temp-'));
+      visitorList = [...pendingTemps, ...remoteList];
+      saveLocalCache(visitorList);
+
+      if (countVisitorsBadge) {
+        countVisitorsBadge.textContent = visitorList.length;
       }
+      renderVisitorList();
     }, (err) => {
       console.warn('Firestore offline ou restrito. Mantendo cache local de visitantes:', err);
     });

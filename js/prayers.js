@@ -57,9 +57,9 @@ const ADMIN_PASSWORD = 'CBNA.adm';
 function loadLocalCache() {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
-    if (raw) {
+    if (raw !== null) {
       const parsed = JSON.parse(raw);
-      if (Array.isArray(parsed) && parsed.length > 0) {
+      if (Array.isArray(parsed)) {
         return parsed;
       }
     }
@@ -516,7 +516,7 @@ async function handleConfirmDelete() {
 
   // Persiste exclusão no Cloud Firestore
   try {
-    if (db && !String(idToDelete).startsWith('init-') && !String(idToDelete).startsWith('local-')) {
+    if (db && !String(idToDelete).startsWith('local-')) {
       const docRef = doc(db, 'pedidos_oracao', String(idToDelete));
       await deleteDoc(docRef);
     }
@@ -535,38 +535,36 @@ export function initPrayers() {
     if (db) {
       const q = query(collection(db, 'pedidos_oracao'), orderBy('timestamp', 'desc'));
       onSnapshot(q, (snapshot) => {
-        if (!snapshot.empty) {
-          const cloudItems = [];
-          snapshot.forEach((d) => {
-            const data = d.data();
-            let dateStr = data.data;
-            let ts = Date.now();
-            if (data.timestamp) {
-              if (typeof data.timestamp.toDate === 'function') {
-                const dateObj = data.timestamp.toDate();
-                ts = dateObj.getTime();
-                if (!dateStr) dateStr = formatLocalDate(dateObj);
-              } else if (typeof data.timestamp === 'number') {
-                ts = data.timestamp;
-              }
+        const cloudItems = [];
+        snapshot.forEach((d) => {
+          const data = d.data();
+          let dateStr = data.data;
+          let ts = Date.now();
+          if (data.timestamp) {
+            if (typeof data.timestamp.toDate === 'function') {
+              const dateObj = data.timestamp.toDate();
+              ts = dateObj.getTime();
+              if (!dateStr) dateStr = formatLocalDate(dateObj);
+            } else if (typeof data.timestamp === 'number') {
+              ts = data.timestamp;
             }
-            cloudItems.push({
-              id: d.id,
-              nome: data.nome || 'Anônimo',
-              pedido: data.pedido || '',
-              status: data.status || 'em_oracao',
-              resposta: data.resposta || '',
-              data: dateStr || formatLocalDate(new Date()),
-              timestamp: ts
-            });
-          });
-
-          if (cloudItems.length > 0) {
-            prayerList = cloudItems;
-            saveLocalCache(prayerList);
-            renderPrayerList();
           }
-        }
+          cloudItems.push({
+            id: d.id,
+            nome: data.nome || 'Anônimo',
+            pedido: data.pedido || '',
+            status: data.status || 'em_oracao',
+            resposta: data.resposta || '',
+            data: dateStr || formatLocalDate(new Date()),
+            timestamp: ts
+          });
+        });
+
+        // Sincronização Total: O Firestore é a fonte de verdade em todos os dispositivos
+        const pendingLocals = prayerList.filter((item) => String(item.id).startsWith('local-'));
+        prayerList = [...pendingLocals, ...cloudItems];
+        saveLocalCache(prayerList);
+        renderPrayerList();
       }, (error) => {
         console.warn('Aviso no Firestore snapshot:', error);
       });
