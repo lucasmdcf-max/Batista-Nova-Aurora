@@ -19,7 +19,7 @@
     rel="stylesheet">
 
   <link rel="stylesheet" href="css/lenis.css">
-  <link rel="stylesheet" href="css/style.css?v=20">
+  <link rel="stylesheet" href="css/style.css?v=21">
 </head>
 
 <body>
@@ -284,6 +284,123 @@
       </div>
     </section>
 
+    <!-- Tela / Painel de Solicitar Visita -->
+    <section class="sub-screen" id="visitsScreen" aria-hidden="true">
+      <div class="sub-screen-header">
+        <button type="button" class="btn-sub-back" id="btnVisitsBack" aria-label="Voltar">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2.2"
+            stroke-linecap="round" stroke-linejoin="round">
+            <line x1="19" y1="12" x2="5" y2="12"></line>
+            <polyline points="12 19 5 12 12 5"></polyline>
+          </svg>
+        </button>
+        <div class="sub-screen-title-wrap">
+          <h2 class="sub-screen-title">SOLICITAR VISITA</h2>
+          <div class="prayer-counters visitor-nav-tabs" id="visitTabs">
+            <button type="button" class="counter-tab counter-pending is-active" id="tabVisitForm">
+              Agendar Visita
+            </button>
+            <span class="counter-divider">•</span>
+            <button type="button" class="counter-tab counter-answered" id="tabVisitList">
+              Agendadas <span class="counter-badge" id="countScheduledVisits">0</span>
+            </button>
+          </div>
+        </div>
+        <div style="width: 38px;"></div>
+      </div>
+
+      <div class="sub-screen-body visitors-screen-body">
+
+        <!-- Vista: Formulário de Solicitar Visita -->
+        <div class="visitor-view-container" id="visitFormView">
+          <div class="visitor-form-card">
+            <div class="visitor-form-title-row">
+              <span class="offer-badge badge-orange">Cadastro</span>
+              <h3 class="visitor-card-heading">AGENDAR VISITA</h3>
+            </div>
+
+            <form id="formVisitRequest" class="app-form">
+              <div class="form-group">
+                <label for="visitRequestName">Nome</label>
+                <input type="text" id="visitRequestName" placeholder="Digite o seu nome completo" required autocomplete="name">
+              </div>
+
+              <div class="form-group">
+                <label for="visitRequestDateDisplay">Data da Visita (Marque no Calendário)</label>
+                <div class="visit-date-selected-row">
+                  <input type="text" id="visitRequestDateDisplay" placeholder="Toque em um dia livre no calendário abaixo" readonly required>
+                  <span class="visit-date-cal-icon" aria-hidden="true">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                      <line x1="16" y1="2" x2="16" y2="6"></line>
+                      <line x1="8" y1="2" x2="8" y2="6"></line>
+                      <line x1="3" y1="10" x2="21" y2="10"></line>
+                    </svg>
+                  </span>
+                </div>
+
+                <!-- Calendário Interativo com bloqueio de dias com eventos ou visitas agendadas -->
+                <div class="visit-calendar-box" id="visitCalendarBox">
+                  <div class="visit-calendar-header">
+                    <button type="button" class="btn-cal-nav" id="btnVisitCalPrev" aria-label="Mês anterior">
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="15 18 9 12 15 6"></polyline>
+                      </svg>
+                    </button>
+                    <span class="visit-cal-month-title" id="visitCalMonthYear">Outubro 2026</span>
+                    <button type="button" class="btn-cal-nav" id="btnVisitCalNext" aria-label="Próximo mês">
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="9 18 15 12 9 6"></polyline>
+                      </svg>
+                    </button>
+                  </div>
+
+                  <div class="visit-calendar-weekdays">
+                    <span>Dom</span>
+                    <span>Seg</span>
+                    <span>Ter</span>
+                    <span>Qua</span>
+                    <span>Qui</span>
+                    <span>Sex</span>
+                    <span>Sáb</span>
+                  </div>
+
+                  <div class="visit-calendar-days" id="visitCalendarDays">
+                    <!-- Dias gerados dinamicamente via JS -->
+                  </div>
+
+                  <div class="visit-calendar-legend">
+                    <span class="cal-legend-item"><i class="cal-legend-dot dot-free"></i> Livre</span>
+                    <span class="cal-legend-item"><i class="cal-legend-dot dot-selected"></i> Selecionado</span>
+                    <span class="cal-legend-item"><i class="cal-legend-dot dot-occupied"></i> Indisponível (Evento/Visita)</span>
+                  </div>
+                </div>
+
+                <span class="visit-calendar-feedback" id="visitCalendarFeedback" style="display: none;"></span>
+              </div>
+
+              <div class="form-group">
+                <label for="visitRequestAddress">Endereço com Ponto de Referência</label>
+                <textarea id="visitRequestAddress" rows="3" placeholder="Rua, número, bairro e ponto de referência..." required></textarea>
+              </div>
+
+              <div class="form-actions" style="margin-top: 8px;">
+                <button type="submit" class="btn-form-save btn-primary-wide">Solicitar Visita</button>
+              </div>
+            </form>
+          </div>
+        </div>
+
+        <!-- Vista: Lista de Visitas Agendadas -->
+        <div class="visitor-view-container" id="visitListView" style="display: none; width: 100%;">
+          <div class="visitor-cards-list" id="visitCardsContainer">
+            <!-- Cards gerados dinamicamente via JS -->
+          </div>
+        </div>
+
+      </div>
+    </section>
+
     <!-- Modal Novo Pedido de Oração -->
     <div class="app-modal" id="modalNewPrayer" aria-hidden="true">
       <div class="app-modal-overlay" id="overlayNewPrayer"></div>
@@ -468,7 +585,7 @@
   </div>
 
   <script src="js/lenis.min.js"></script>
-  <script type="module" src="js/app.js?v=20"></script>
+  <script type="module" src="js/app.js?v=21"></script>
 </body>
 
 </html>
