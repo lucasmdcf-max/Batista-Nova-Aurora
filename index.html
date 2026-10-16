@@ -19,7 +19,7 @@
     rel="stylesheet">
 
   <link rel="stylesheet" href="css/lenis.css">
-  <link rel="stylesheet" href="css/style.css?v=25">
+  <link rel="stylesheet" href="css/style.css?v=26">
 </head>
 
 <body>
@@ -296,6 +296,104 @@
         <div class="visitor-view-container" id="visitorListView" style="display: none; width: 100%;">
           <div class="visitor-cards-list" id="visitorCardsContainer">
             <!-- Cards gerados dinamicamente via JS -->
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- Tela / Painel de Programações e Eventos -->
+    <section class="sub-screen" id="programacoesScreen" aria-hidden="true">
+      <div class="sub-screen-header">
+        <button type="button" class="btn-sub-back" id="btnProgramacoesBack" aria-label="Voltar">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2.2"
+            stroke-linecap="round" stroke-linejoin="round">
+            <line x1="19" y1="12" x2="5" y2="12"></line>
+            <polyline points="12 19 5 12 12 5"></polyline>
+          </svg>
+        </button>
+        <div class="sub-screen-title-wrap">
+          <h2 class="sub-screen-title">PROGRAMAÇÕES</h2>
+        </div>
+        <button type="button" class="btn-sub-action btn-add-event" id="btnAddEvent" aria-label="Adicionar Programação">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="12" y1="5" x2="12" y2="19"></line>
+            <line x1="5" y1="12" x2="19" y2="12"></line>
+          </svg>
+          <span>Adicionar</span>
+        </button>
+      </div>
+
+      <div class="sub-screen-body programacoes-screen-body">
+        
+        <!-- Bloco Superior: Carrossel das Artes da Semana em Curso -->
+        <div class="carousel-section">
+          <div class="carousel-section-header">
+            <div class="carousel-header-left">
+              <span class="offer-badge badge-orange">Semana em Curso</span>
+              <h3 class="carousel-heading">ARTES DA SEMANA</h3>
+            </div>
+            <span class="carousel-subtitle" id="carouselHeaderSubtitle">Destaques da Semana</span>
+          </div>
+
+          <div class="events-carousel-wrap">
+            <div class="events-carousel-track" id="carouselTrack">
+              <!-- Cards gerados dinamicamente via JS -->
+            </div>
+          </div>
+
+          <!-- Bolinhas / Indicadores do Carrossel -->
+          <div class="events-carousel-dots" id="carouselDots">
+            <!-- Gerado via JS -->
+          </div>
+        </div>
+
+        <!-- Bloco Inferior: Calendário Geral de Programações -->
+        <div class="calendar-section" style="margin-top: 18px;">
+          <div class="calendar-section-header">
+            <span class="offer-badge badge-blue">Calendário</span>
+            <h3 class="calendar-heading">TODAS AS PROGRAMAÇÕES</h3>
+          </div>
+
+          <div class="events-calendar-box" id="progCalendarBox">
+            <div class="events-calendar-header">
+              <button type="button" class="btn-cal-nav" id="btnProgCalPrev" aria-label="Mês anterior">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+                  <polyline points="15 18 9 12 15 6"></polyline>
+                </svg>
+              </button>
+              <span class="events-cal-month-title" id="progCalMonthYear">Outubro 2026</span>
+              <button type="button" class="btn-cal-nav" id="btnProgCalNext" aria-label="Próximo mês">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+                  <polyline points="9 18 15 12 9 6"></polyline>
+                </svg>
+              </button>
+            </div>
+
+            <div class="events-calendar-weekdays">
+              <span>Dom</span>
+              <span>Seg</span>
+              <span>Ter</span>
+              <span>Qua</span>
+              <span>Qui</span>
+              <span>Sex</span>
+              <span>Sáb</span>
+            </div>
+
+            <div class="events-calendar-days" id="progCalendarDays">
+              <!-- Dias gerados dinamicamente via JS -->
+            </div>
+
+            <div class="events-calendar-legend">
+              <span class="cal-legend-item"><i class="cal-legend-dot dot-event"></i> Com Programação</span>
+              <span class="cal-legend-item"><i class="cal-legend-dot dot-free"></i> Sem Programação</span>
+              <span class="cal-legend-item"><i class="cal-legend-dot dot-today"></i> Hoje</span>
+            </div>
+          </div>
+
+          <!-- Painel Dinâmico de Detalhes da Programação do Dia Selecionado -->
+          <div class="event-day-details-container" id="eventDayDetailsContainer" style="display: none;">
+            <!-- Conteúdo dinâmico via JS -->
           </div>
         </div>
 
@@ -599,10 +697,147 @@
       </div>
     </div>
 
+    <!-- Modal Adicionar Programação -->
+    <div class="app-modal" id="modalAddEvent" aria-hidden="true">
+      <div class="app-modal-overlay" id="overlayAddEvent"></div>
+      <div class="app-modal-card modal-event-card">
+        <div class="app-modal-header">
+          <h3>Nova Programação</h3>
+          <button type="button" class="btn-modal-close" id="btnCloseAddEvent" aria-label="Fechar">✕</button>
+        </div>
+        <form id="formAddEvent" class="app-form">
+          <div class="form-group">
+            <label for="inputEventTitle">Nome do Evento *</label>
+            <input type="text" id="inputEventTitle" placeholder="Ex: Culto de Celebração, Santa Ceia..." required autocomplete="off">
+          </div>
+
+          <div class="form-row-2col">
+            <div class="form-group">
+              <label for="inputEventDate">Data *</label>
+              <input type="date" id="inputEventDate" required>
+            </div>
+            <div class="form-group">
+              <label for="inputEventTime">Horário *</label>
+              <input type="time" id="inputEventTime" required value="19:30">
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="inputEventLocation">Local *</label>
+            <input type="text" id="inputEventLocation" placeholder="Ex: Templo Nova Aurora" value="Templo Nova Aurora" required>
+          </div>
+
+          <div class="form-group">
+            <label>Adicionar Arte (Banner / Flyer)</label>
+            
+            <div class="art-upload-box" id="artUploadBox">
+              <input type="file" id="inputEventArt" accept="image/*" class="art-file-input">
+              <div class="art-upload-content">
+                <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#ffaa33" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                  <circle cx="8.5" cy="8.5" r="1.5"></circle>
+                  <polyline points="21 15 16 10 5 21"></polyline>
+                </svg>
+                <span class="art-upload-label">Toque para selecionar imagem da arte</span>
+                <span class="art-upload-hint">PNG, JPG ou WEBP</span>
+              </div>
+            </div>
+
+            <!-- Preview da arte enviada -->
+            <div class="art-preview-wrap" id="artPreviewContainer" style="display: none;">
+              <div class="art-preview-frame">
+                <img id="artPreviewImg" src="" alt="Prévia da arte" class="art-preview-image">
+                <button type="button" class="btn-remove-art" id="btnRemoveArt" title="Remover arte">✕ Remover Arte</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="form-group form-repeat-group">
+            <div class="repeat-toggle-row">
+              <div class="repeat-toggle-info">
+                <span class="repeat-label">Se repete?</span>
+                <span class="repeat-sub">Marque para selecionar datas no calendário</span>
+              </div>
+              <label class="swipe-switch" for="eventRepeatsToggle">
+                <input type="checkbox" id="eventRepeatsToggle" class="swipe-checkbox">
+                <span class="swipe-slider"></span>
+              </label>
+            </div>
+
+            <!-- Seção do mini calendário de repetição -->
+            <div class="repeat-calendar-section" id="repeatSection" style="display: none;">
+              <div class="repeat-box-instruction">Toque nas datas do calendário para marcar repetições:</div>
+              <div class="repeat-calendar-box">
+                <div class="repeat-calendar-header">
+                  <button type="button" class="btn-cal-nav-sm" id="btnRepeatCalPrev" aria-label="Mês anterior">‹</button>
+                  <span class="repeat-cal-month-title" id="repeatCalMonthYear">Outubro 2026</span>
+                  <button type="button" class="btn-cal-nav-sm" id="btnRepeatCalNext" aria-label="Próximo mês">›</button>
+                </div>
+                <div class="repeat-calendar-weekdays">
+                  <span>D</span><span>S</span><span>T</span><span>Q</span><span>Q</span><span>S</span><span>S</span>
+                </div>
+                <div class="repeat-calendar-days" id="repeatCalendarDays">
+                  <!-- Gerado dinamicamente -->
+                </div>
+              </div>
+              <div class="repeat-dates-selected-wrap">
+                <span class="repeat-dates-label">Datas selecionadas para repetição:</span>
+                <div class="repeat-chips-container" id="repeatDatesBadges">
+                  <!-- Tags de datas selecionadas -->
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="form-actions" style="margin-top: 14px;">
+            <button type="button" class="btn-form-cancel" id="btnCancelAddEvent">Cancelar</button>
+            <button type="submit" class="btn-form-save btn-primary-wide">Salvar Programação</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Modal Zoom da Arte em Tela Cheia -->
+    <div class="app-modal modal-fullscreen-art" id="modalArtPreview" aria-hidden="true">
+      <div class="app-modal-overlay" id="overlayArtPreview"></div>
+      <div class="modal-art-view-box">
+        <div class="modal-art-view-header">
+          <h3 id="modalArtPreviewTitle" class="modal-art-view-title">Arte do Evento</h3>
+          <button type="button" class="btn-modal-close" id="btnCloseArtPreview" aria-label="Fechar">✕</button>
+        </div>
+        <div class="modal-art-view-body">
+          <img id="modalArtPreviewImg" src="" alt="Arte do evento ampliada" class="modal-art-view-image">
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal Excluir Programação (Admin) -->
+    <div class="app-modal" id="modalDeleteEvent" aria-hidden="true">
+      <div class="app-modal-overlay" id="overlayDeleteEvent"></div>
+      <div class="app-modal-card">
+        <div class="app-modal-header">
+          <h3>Excluir Programação</h3>
+          <button type="button" class="btn-modal-close" id="btnCloseDeleteEvent" aria-label="Fechar">✕</button>
+        </div>
+        <div class="app-modal-body">
+          <p class="delete-warning-text">Esta ação removerá esta programação do calendário da congregação.</p>
+          <div class="form-group" style="margin-top: 14px;">
+            <label for="adminDeleteEventPassword">Senha do Administrador</label>
+            <input type="password" id="adminDeleteEventPassword" placeholder="Digite a senha de administrador" autocomplete="current-password">
+            <span class="delete-error-msg" id="deleteEventErrorMsg" style="display: none;">Senha incorreta. Apenas administradores podem excluir.</span>
+          </div>
+          <div class="form-actions" style="margin-top: 18px;">
+            <button type="button" class="btn-form-cancel" id="btnCancelDeleteEvent">Cancelar</button>
+            <button type="button" class="btn-delete-confirm" id="btnConfirmDeleteEvent">Excluir</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
   </div>
 
   <script src="js/lenis.min.js"></script>
-  <script type="module" src="js/app.js?v=25"></script>
+  <script type="module" src="js/app.js?v=26"></script>
 </body>
 
 </html>

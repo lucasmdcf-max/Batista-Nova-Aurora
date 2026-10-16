@@ -2097,5 +2097,1022 @@ html::-webkit-scrollbar, body::-webkit-scrollbar {
   text-decoration: line-through;
 }
 
+/* ========================================================
+   MÓDULO DE PROGRAMAÇÕES E EVENTOS — Congregação Nova Aurora
+   ======================================================== */
+
+/* Botão discreto no topo direito do cabeçalho */
+.btn-sub-action.btn-add-event {
+  background: rgba(255, 153, 0, 0.16);
+  border: 1px solid rgba(255, 170, 51, 0.45);
+  color: #ffbb55;
+  border-radius: 20px;
+  padding: 6px 13px;
+  font-family: inherit;
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+.btn-sub-action.btn-add-event:hover {
+  background: rgba(255, 153, 0, 0.28);
+  border-color: #ffbb55;
+  color: #ffffff;
+  transform: translateY(-1px);
+  box-shadow: 0 0 12px rgba(255, 153, 0, 0.4);
+}
+
+.btn-sub-action.btn-add-event:active {
+  transform: scale(0.96);
+}
+
+.programacoes-screen-body {
+  padding: 14px 16px 28px 16px;
+}
+
+/* --------------------------------------------------------
+   Carrossel das Artes da Semana em Curso (Swipe Horizontal)
+   -------------------------------------------------------- */
+.carousel-section {
+  width: 100%;
+}
+
+.carousel-section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+
+.carousel-header-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.carousel-heading {
+  font-family: 'Century Gothic Light', 'Century Gothic', CenturyGothic, 'Questrial', 'Montserrat', sans-serif;
+  font-size: 0.92rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  color: #ffffff;
+  margin: 0;
+  text-transform: uppercase;
+}
+
+.carousel-subtitle {
+  font-size: 0.72rem;
+  color: #93c5fd;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+}
+
+.events-carousel-wrap {
+  width: 100%;
+  overflow: hidden;
+  border-radius: 16px;
+}
+
+.events-carousel-track {
+  display: flex;
+  gap: 12px;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  padding: 2px 2px 6px 2px;
+}
+
+.events-carousel-track::-webkit-scrollbar {
+  display: none;
+}
+
+.carousel-slide-card {
+  flex: 0 0 94%;
+  scroll-snap-align: center;
+  background: rgba(0, 24, 56, 0.75);
+  border: 1px solid rgba(145, 210, 255, 0.25);
+  border-radius: 16px;
+  overflow: hidden;
+  position: relative;
+  box-shadow: 0 8px 24px rgba(0, 10, 26, 0.55);
+  cursor: pointer;
+  transition: transform 0.22s ease, border-color 0.22s ease, box-shadow 0.22s ease;
+  user-select: none;
+}
+
+.carousel-slide-card:hover {
+  transform: translateY(-2px);
+  border-color: rgba(255, 170, 51, 0.45);
+  box-shadow: 0 10px 28px rgba(0, 10, 26, 0.7), 0 0 14px rgba(255, 153, 0, 0.2);
+}
+
+.slide-art-wrap {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  background: #020914;
+  overflow: hidden;
+}
+
+.slide-art-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  transition: transform 0.35s ease;
+}
+
+.carousel-slide-card:hover .slide-art-img {
+  transform: scale(1.02);
+}
+
+.slide-art-zoom-badge {
+  position: absolute;
+  top: 9px;
+  right: 9px;
+  background: rgba(2, 10, 24, 0.75);
+  backdrop-filter: blur(6px);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  color: #ffffff;
+  border-radius: 14px;
+  padding: 3px 9px;
+  font-size: 0.68rem;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+}
+
+.slide-art-placeholder {
+  width: 100%;
+  height: 145px;
+  background: radial-gradient(circle at center, rgba(255, 119, 0, 0.2), rgba(0, 20, 48, 0.95));
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  position: relative;
+  overflow: hidden;
+}
+
+.art-ph-glow {
+  position: absolute;
+  width: 90px;
+  height: 90px;
+  border-radius: 50%;
+  background: rgba(255, 153, 0, 0.3);
+  filter: blur(25px);
+}
+
+.art-ph-logo {
+  width: 48px;
+  height: auto;
+  opacity: 0.9;
+  position: relative;
+  z-index: 1;
+}
+
+.art-ph-badge {
+  font-size: 0.65rem;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  color: #ffbb66;
+  text-transform: uppercase;
+  position: relative;
+  z-index: 1;
+}
+
+.slide-info-overlay {
+  padding: 12px 14px 14px 14px;
+  background: linear-gradient(180deg, rgba(0, 22, 52, 0.75) 0%, rgba(0, 16, 40, 0.98) 100%);
+}
+
+.slide-badge-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+
+.slide-pill-date {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: #ffaa33;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.slide-pill-time {
+  font-size: 0.7rem;
+  font-weight: 600;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  color: #ffffff;
+  padding: 2px 7px;
+  border-radius: 8px;
+}
+
+.slide-event-title {
+  font-family: 'Century Gothic Light', 'Century Gothic', CenturyGothic, 'Questrial', 'Montserrat', sans-serif;
+  font-size: 1.02rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  color: #ffffff;
+  margin: 0 0 5px 0;
+  line-height: 1.3;
+}
+
+.slide-event-location {
+  font-size: 0.74rem;
+  color: #cbd5e1;
+  margin: 0;
+}
+
+.events-carousel-dots {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 6px;
+  margin-top: 10px;
+}
+
+.carousel-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.25);
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  transition: all 0.25s ease;
+}
+
+.carousel-dot.is-active {
+  width: 22px;
+  border-radius: 10px;
+  background: #ff9900;
+  box-shadow: 0 0 8px rgba(255, 153, 0, 0.75);
+}
+
+.carousel-slide-empty {
+  width: 100%;
+  padding: 26px 16px;
+  text-align: center;
+  background: rgba(0, 24, 56, 0.45);
+  border: 1px dashed rgba(145, 210, 255, 0.25);
+  border-radius: 14px;
+}
+
+.carousel-slide-empty .empty-icon-wrap {
+  margin-bottom: 8px;
+}
+
+.carousel-slide-empty .empty-title {
+  font-size: 0.95rem;
+  color: #ffffff;
+  margin: 0 0 4px 0;
+}
+
+.carousel-slide-empty .empty-desc {
+  font-size: 0.78rem;
+  color: #94a3b8;
+  margin: 0;
+}
+
+/* --------------------------------------------------------
+   Calendário Geral de Programações
+   -------------------------------------------------------- */
+.calendar-section-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.calendar-heading {
+  font-family: 'Century Gothic Light', 'Century Gothic', CenturyGothic, 'Questrial', 'Montserrat', sans-serif;
+  font-size: 0.92rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  color: #ffffff;
+  margin: 0;
+  text-transform: uppercase;
+}
+
+.events-calendar-box {
+  background: rgba(0, 28, 60, 0.62);
+  border: 1px solid rgba(145, 210, 255, 0.25);
+  border-radius: 14px;
+  padding: 12px;
+  box-shadow: inset 0 2px 10px rgba(0, 12, 28, 0.45);
+}
+
+.events-calendar-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+
+.events-cal-month-title {
+  font-family: 'Century Gothic Light', 'Century Gothic', CenturyGothic, 'Questrial', 'Montserrat', sans-serif;
+  font-size: 0.92rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #ffffff;
+}
+
+.events-calendar-weekdays {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  text-align: center;
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: #93c5fd;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin-bottom: 6px;
+}
+
+.events-calendar-days {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 5px;
+}
+
+/* Dias que possuem programação ficam em LARANJA */
+.cal-day.is-event-day {
+  background: linear-gradient(135deg, #ff7700, #ff9900) !important;
+  border-color: #ffaa33 !important;
+  color: #ffffff !important;
+  font-weight: 700 !important;
+  box-shadow: 0 0 12px rgba(255, 119, 0, 0.45);
+}
+
+.cal-day.is-event-day:hover {
+  background: linear-gradient(135deg, #ff8800, #ffaa00) !important;
+  transform: scale(1.06);
+  box-shadow: 0 0 16px rgba(255, 136, 0, 0.65);
+}
+
+.cal-day.is-selected {
+  outline: 2px solid #ffffff;
+  outline-offset: 1px;
+  transform: scale(1.06);
+  z-index: 2;
+}
+
+.cal-event-indicator {
+  position: absolute;
+  top: 2px;
+  right: 3px;
+  font-size: 0.6rem;
+  font-weight: 800;
+  color: #ffffff;
+  opacity: 0.9;
+}
+
+.events-calendar-legend {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  margin-top: 10px;
+  padding-top: 8px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  font-size: 0.68rem;
+  color: #cbd5e1;
+}
+
+.cal-legend-dot.dot-event {
+  background: #ff8800;
+  box-shadow: 0 0 8px #ff8800;
+}
+
+.cal-legend-dot.dot-today {
+  background: #38bdf8;
+  box-shadow: 0 0 6px #38bdf8;
+}
+
+/* --------------------------------------------------------
+   Detalhes da Programação do Dia Selecionado
+   -------------------------------------------------------- */
+.event-day-details-container {
+  margin-top: 14px;
+}
+
+.event-details-card {
+  background: rgba(0, 24, 54, 0.78);
+  border: 1px solid rgba(145, 210, 255, 0.25);
+  border-radius: 14px;
+  padding: 14px;
+  box-shadow: 0 6px 20px rgba(0, 10, 24, 0.5);
+  animation: fadeInProgDetails 0.25s ease-out;
+}
+
+@keyframes fadeInProgDetails {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.details-header {
+  margin-bottom: 12px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.details-header-badge {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.68rem;
+  font-weight: 700;
+  color: #ffaa33;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  margin-bottom: 2px;
+}
+
+.details-dot-orange {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #ff8800;
+  box-shadow: 0 0 6px #ff8800;
+}
+
+.details-date-title {
+  font-family: 'Century Gothic Light', 'Century Gothic', CenturyGothic, 'Questrial', 'Montserrat', sans-serif;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #ffffff;
+  display: block;
+}
+
+.details-empty-msg {
+  font-size: 0.82rem;
+  color: #94a3b8;
+  margin: 6px 0 12px 0;
+}
+
+.details-quick-add {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.btn-quick-add-prog {
+  background: rgba(255, 153, 0, 0.15);
+  border: 1px solid rgba(255, 170, 51, 0.4);
+  color: #ffbb66;
+  border-radius: 10px;
+  padding: 7px 12px;
+  font-size: 0.76rem;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-quick-add-prog:hover {
+  background: rgba(255, 153, 0, 0.28);
+  color: #ffffff;
+}
+
+.day-events-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.day-event-item {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  padding: 10px 12px;
+  position: relative;
+  transition: background 0.2s ease;
+}
+
+.day-event-item:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.day-event-art-thumb {
+  width: 64px;
+  height: 64px;
+  border-radius: 9px;
+  overflow: hidden;
+  position: relative;
+  flex-shrink: 0;
+  cursor: pointer;
+  background: #000;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.day-event-art-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.thumb-zoom-icon {
+  position: absolute;
+  bottom: 2px;
+  right: 2px;
+  font-size: 0.65rem;
+  background: rgba(0, 0, 0, 0.7);
+  border-radius: 4px;
+  padding: 1px 3px;
+}
+
+.day-event-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.day-event-badge-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 4px;
+  flex-wrap: wrap;
+}
+
+.day-event-badge-highlight {
+  font-size: 0.62rem;
+  font-weight: 700;
+  color: #ffaa33;
+  background: rgba(255, 153, 0, 0.15);
+  border: 1px solid rgba(255, 170, 51, 0.35);
+  padding: 1px 6px;
+  border-radius: 6px;
+  text-transform: uppercase;
+}
+
+.day-event-badge-time {
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: #e2e8f0;
+  background: rgba(255, 255, 255, 0.1);
+  padding: 1px 6px;
+  border-radius: 6px;
+}
+
+.day-event-title {
+  font-family: inherit;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #ffffff;
+  margin: 0 0 3px 0;
+  line-height: 1.25;
+}
+
+.day-event-location {
+  font-size: 0.74rem;
+  color: #cbd5e1;
+  margin: 0;
+}
+
+.day-event-desc {
+  font-size: 0.72rem;
+  color: #94a3b8;
+  margin: 4px 0 0 0;
+}
+
+.btn-delete-event-item {
+  background: transparent;
+  border: none;
+  color: #94a3b8;
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 6px;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+}
+
+.btn-delete-event-item:hover {
+  background: rgba(239, 68, 68, 0.18);
+  color: #f87171;
+}
+
+/* Tag de Programação no grid de horários de visitas */
+.slot-status-tag.slot-tag-event {
+  background: rgba(255, 136, 0, 0.2) !important;
+  color: #ffaa33 !important;
+  border: 1px solid rgba(255, 136, 0, 0.45);
+  padding: 1px 4px;
+  border-radius: 4px;
+  display: inline-block;
+}
+
+/* --------------------------------------------------------
+   Modal de Cadastro de Programação
+   -------------------------------------------------------- */
+.modal-event-card {
+  max-width: 440px;
+  width: 92%;
+  max-height: 88vh;
+  overflow-y: auto;
+}
+
+.form-row-2col {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+/* Área de Upload de Imagem */
+.art-upload-box {
+  position: relative;
+  background: rgba(255, 153, 0, 0.05);
+  border: 1.5px dashed rgba(255, 170, 51, 0.4);
+  border-radius: 12px;
+  padding: 16px 12px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.22s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.art-upload-box:hover {
+  background: rgba(255, 153, 0, 0.12);
+  border-color: #ffaa33;
+}
+
+.art-file-input {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  cursor: pointer;
+  z-index: 2;
+}
+
+.art-upload-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+  pointer-events: none;
+}
+
+.art-upload-label {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #ffbb66;
+}
+
+.art-upload-hint {
+  font-size: 0.68rem;
+  color: #94a3b8;
+}
+
+.art-preview-wrap {
+  margin-top: 6px;
+}
+
+.art-preview-frame {
+  position: relative;
+  border-radius: 12px;
+  overflow: hidden;
+  background: #000;
+  border: 1px solid rgba(255, 170, 51, 0.4);
+  max-height: 190px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.art-preview-image {
+  max-width: 100%;
+  max-height: 190px;
+  object-fit: contain;
+  display: block;
+}
+
+.btn-remove-art {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  background: rgba(239, 68, 68, 0.88);
+  border: none;
+  color: #ffffff;
+  border-radius: 8px;
+  padding: 4px 9px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+  transition: background 0.2s ease;
+}
+
+.btn-remove-art:hover {
+  background: #ef4444;
+}
+
+/* Seção "Se repete?" */
+.form-repeat-group {
+  background: rgba(0, 18, 42, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  padding: 12px;
+  margin-top: 6px;
+}
+
+.repeat-toggle-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.repeat-toggle-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.repeat-label {
+  font-size: 0.86rem;
+  font-weight: 600;
+  color: #ffffff;
+}
+
+.repeat-sub {
+  font-size: 0.7rem;
+  color: #94a3b8;
+}
+
+.repeat-calendar-section {
+  margin-top: 12px;
+  padding-top: 10px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  animation: fadeInProgDetails 0.2s ease-out;
+}
+
+.repeat-box-instruction {
+  font-size: 0.74rem;
+  color: #ffaa33;
+  margin-bottom: 8px;
+  font-weight: 500;
+}
+
+.repeat-calendar-box {
+  background: rgba(0, 12, 28, 0.6);
+  border: 1px solid rgba(145, 210, 255, 0.18);
+  border-radius: 10px;
+  padding: 10px;
+}
+
+.repeat-calendar-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.btn-cal-nav-sm {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: #ffffff;
+  width: 24px;
+  height: 24px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1rem;
+  cursor: pointer;
+}
+
+.repeat-cal-month-title {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #ffffff;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.repeat-calendar-weekdays {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  text-align: center;
+  font-size: 0.65rem;
+  font-weight: 600;
+  color: #93c5fd;
+  margin-bottom: 4px;
+}
+
+.repeat-calendar-days {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 4px;
+}
+
+.repeat-cal-day {
+  position: relative;
+  aspect-ratio: 1;
+  min-height: 26px;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: #f1f5f9;
+  font-size: 0.72rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  padding: 0;
+  outline: none;
+  transition: all 0.15s ease;
+}
+
+.repeat-cal-day.is-empty {
+  background: transparent;
+  border: none;
+  pointer-events: none;
+}
+
+.repeat-cal-day:not(.is-empty):hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.repeat-cal-day.is-selected {
+  background: #ff8800 !important;
+  border-color: #ffaa33 !important;
+  color: #ffffff !important;
+  font-weight: 700;
+  box-shadow: 0 0 8px rgba(255, 136, 0, 0.6);
+}
+
+.repeat-cal-day.is-base-date {
+  border-color: #38bdf8;
+  color: #7dd3fc;
+  font-weight: 700;
+}
+
+.repeat-base-dot {
+  font-size: 0.7rem;
+  line-height: 0.6;
+  color: #38bdf8;
+}
+
+.repeat-check-dot {
+  font-size: 0.6rem;
+  line-height: 0.6;
+  color: #ffffff;
+}
+
+.repeat-dates-selected-wrap {
+  margin-top: 8px;
+}
+
+.repeat-dates-label {
+  font-size: 0.68rem;
+  color: #cbd5e1;
+  display: block;
+  margin-bottom: 4px;
+}
+
+.repeat-chips-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  max-height: 80px;
+  overflow-y: auto;
+}
+
+.repeat-chip {
+  background: rgba(255, 153, 0, 0.18);
+  border: 1px solid rgba(255, 170, 51, 0.4);
+  color: #ffdd99;
+  padding: 2px 7px;
+  border-radius: 12px;
+  font-size: 0.7rem;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.btn-remove-repeat-chip {
+  background: transparent;
+  border: none;
+  color: #ff8888;
+  cursor: pointer;
+  padding: 0;
+  font-size: 0.72rem;
+  line-height: 1;
+}
+
+.repeat-none-text {
+  font-size: 0.68rem;
+  color: #94a3b8;
+  font-style: italic;
+}
+
+/* --------------------------------------------------------
+   Modal Zoom da Arte em Tela Cheia
+   -------------------------------------------------------- */
+.modal-fullscreen-art .modal-art-view-box {
+  position: relative;
+  max-width: 92vw;
+  max-height: 88vh;
+  border-radius: 16px;
+  background: #020914;
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  box-shadow: 0 10px 32px rgba(0, 0, 0, 0.85);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  z-index: 10001;
+}
+
+.modal-art-view-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  background: rgba(0, 20, 48, 0.9);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.modal-art-view-title {
+  font-family: 'Century Gothic Light', 'Century Gothic', CenturyGothic, 'Questrial', 'Montserrat', sans-serif;
+  font-size: 0.96rem;
+  font-weight: 600;
+  color: #ffffff;
+  margin: 0;
+  letter-spacing: 0.04em;
+}
+
+.modal-art-view-body {
+  padding: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: auto;
+  max-height: 76vh;
+}
+
+.modal-art-view-image {
+  max-width: 100%;
+  max-height: 72vh;
+  object-fit: contain;
+  border-radius: 8px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5);
+}
+
+/* Toast de Alerta */
+.app-toast-alert {
+  position: fixed;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%) translateY(30px);
+  background: rgba(2, 16, 38, 0.95);
+  border: 1px solid #ffaa33;
+  color: #ffffff;
+  padding: 10px 20px;
+  border-radius: 25px;
+  font-size: 0.82rem;
+  font-weight: 500;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.6), 0 0 15px rgba(255, 170, 51, 0.35);
+  opacity: 0;
+  pointer-events: none;
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  z-index: 99999;
+  text-align: center;
+  max-width: 90vw;
+}
+
+.app-toast-alert.is-visible {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+
 
 

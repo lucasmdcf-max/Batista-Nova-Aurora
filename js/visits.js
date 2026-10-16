@@ -85,6 +85,11 @@ function saveLocalVisits(list) {
 
 function loadLocalEvents() {
   try {
+    const rawProg = localStorage.getItem('nova_aurora_programacoes_v1');
+    if (rawProg) {
+      const parsed = JSON.parse(rawProg);
+      if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+    }
     const raw = localStorage.getItem(STORAGE_KEY_EVENTS);
     if (raw) {
       const parsed = JSON.parse(raw);
@@ -136,6 +141,33 @@ function getTodayISO() {
 }
 
 /**
+ * Verifica se um horário de visita entra em conflito com eventos da igreja
+ */
+function checkEventConflict(slot, eventsOnDate) {
+  if (!eventsOnDate || eventsOnDate.length === 0) return null;
+  const [sH, sM] = slot.split(':').map(Number);
+  const slotMinutes = sH * 60 + sM;
+
+  for (const ev of eventsOnDate) {
+    if (!ev.horario || ev.horario.trim() === '' || ev.horario.toLowerCase().includes('dia todo')) {
+      return ev; // Evento de dia inteiro ou sem horário bloqueia o dia
+    }
+    const timeMatch = ev.horario.match(/(\d{1,2}):(\d{2})/);
+    if (!timeMatch) return ev;
+    const evH = parseInt(timeMatch[1], 10);
+    const evM = parseInt(timeMatch[2], 10);
+    const evMinutes = evH * 60 + evM;
+
+    // Conflito de horário: se a visita (com duração de 1h30 a 2h)
+    // ou o evento (com duração de 1h30 a 2h) se sobrepõem (janela menor que 110 minutos)
+    if (Math.abs(slotMinutes - evMinutes) < 110) {
+      return ev;
+    }
+  }
+  return null;
+}
+
+/**
  * Retorna os detalhes de disponibilidade dos horários para uma determinada data (YYYY-MM-DD)
  */
 function getSlotsStatusForDate(iso) {
@@ -154,9 +186,16 @@ function getSlotsStatusForDate(iso) {
     return [];
   }
 
-  // Verifica se a congregação possui evento nesse dia
-  const hasEvent = scheduledEvents.some((ev) => normalizeDateToISO(ev.dataISO || ev.data) === iso);
-  if (hasEvent) {
+  // Verifica eventos da congregação nesta data
+  const eventsOnDate = scheduledEvents.filter(
+    (ev) => normalizeDateToISO(ev.dataISO || ev.data) === iso
+  );
+
+  // Se houver evento cadastrado como dia inteiro ou sem horário, bloqueia todos os horários do dia
+  const hasFullDayEvent = eventsOnDate.some(
+    (ev) => !ev.horario || ev.horario.trim() === '' || ev.horario.toLowerCase().includes('dia todo')
+  );
+  if (hasFullDayEvent) {
     return [];
   }
 
@@ -178,6 +217,8 @@ function getSlotsStatusForDate(iso) {
   return ALL_TIME_SLOTS.map((slot) => {
     const isThursdayNight = isThursday && THURSDAY_NIGHT_SLOTS.includes(slot);
     const isBooked = bookedSlots.has(slot);
+    const conflictingEvent = checkEventConflict(slot, eventsOnDate);
+    const isEventConflict = Boolean(conflictingEvent);
     let isPastTime = false;
 
     // Se a data selecionada for o dia de hoje, desabilita horários já passados
@@ -189,9 +230,11 @@ function getSlotsStatusForDate(iso) {
       }
     }
 
-    const isAvailable = !isThursdayNight && !isBooked && !isPastTime;
+    const isAvailable = !isThursdayNight && !isBooked && !isPastTime && !isEventConflict;
     let reason = '';
-    if (isThursdayNight) {
+    if (isEventConflict) {
+      reason = `Programação: ${conflictingEvent.titulo || 'Evento da Igreja'}`;
+    } else if (isThursdayNight) {
       reason = 'Quinta à noite (Culto)';
     } else if (isBooked) {
       reason = 'Horário já reservado';
@@ -205,7 +248,9 @@ function getSlotsStatusForDate(iso) {
       reason,
       isThursdayNight,
       isBooked,
-      isPastTime
+      isPastTime,
+      isEventConflict,
+      conflictingEvent
     };
   });
 }
@@ -232,25 +277,23 @@ function getDayBlockInfo(year, month, day) {
     return { isBlocked: true, type: 'past', label: 'Data no passado' };
   }
 
-  // 3. Evento da igreja no dia
-  const churchEvent = scheduledEvents.find((ev) => normalizeDateToISO(ev.dataISO || ev.data) === iso);
-  if (churchEvent) {
-    return {
-      isBlocked: true,
-      type: 'event',
-      label: churchEvent.titulo || 'Evento na congregação'
-    };
-  }
-
-  // 4. Verifica horários disponíveis
+  // 3. Verifica horários disponíveis considerando visitas, cultos e programações
   const slots = getSlotsStatusForDate(iso);
   const availableCount = slots.filter((s) => s.isAvailable).length;
   if (availableCount === 0) {
     const isThursday = dayOfWeek === 4;
+    const churchEvent = scheduledEvents.find((ev) => normalizeDateToISO(ev.dataISO || ev.data) === iso);
+    let fullLabel = 'Todos os horários preenchidos';
+    if (churchEvent) {
+      fullLabel = `Programação: ${churchEvent.titulo || 'Evento na congregação'}`;
+    } else if (isThursday) {
+      fullLabel = 'Horários preenchidos (Quinta à noite indisponível)';
+    }
+
     return {
       isBlocked: true,
-      type: 'full',
-      label: isThursday ? 'Horários preenchidos (Quinta à noite indisponível)' : 'Todos os horários preenchidos'
+      type: churchEvent ? 'event' : 'full',
+      label: fullLabel
     };
   }
 
@@ -407,7 +450,9 @@ function renderTimeSlots(iso) {
     if (!item.isAvailable) btnClasses.push('is-disabled');
 
     let subLabel = '';
-    if (item.isThursdayNight) {
+    if (item.isEventConflict) {
+      subLabel = '<span class="slot-status-tag slot-tag-event">Programação</span>';
+    } else if (item.isThursdayNight) {
       subLabel = '<span class="slot-status-tag">Quinta à noite</span>';
     } else if (item.isBooked) {
       subLabel = '<span class="slot-status-tag">Ocupado</span>';
@@ -757,7 +802,8 @@ function subscribeToVisitsAndEvents() {
           eventsFromProg.push({
             id: d.id,
             titulo: data.titulo || data.nome || 'Programação da Congregação',
-            dataISO: iso
+            dataISO: iso,
+            horario: data.horario || ''
           });
         }
       });
@@ -775,13 +821,27 @@ function subscribeToVisitsAndEvents() {
           eventsFromEv.push({
             id: d.id,
             titulo: data.titulo || data.nome || 'Evento da Congregação',
-            dataISO: iso
+            dataISO: iso,
+            horario: data.horario || ''
           });
         }
       });
       syncMergedEvents();
     }, () => {});
   } catch (_) {}
+
+  // Escuta atualizações locais disparadas pelo events.js
+  window.addEventListener('novaAuroraEventsUpdated', (e) => {
+    if (Array.isArray(e.detail)) {
+      eventsFromProg = e.detail.map((ev) => ({
+        id: ev.id,
+        titulo: ev.titulo || ev.nome || 'Programação da Congregação',
+        dataISO: normalizeDateToISO(ev.dataISO || ev.data),
+        horario: ev.horario || ''
+      }));
+      syncMergedEvents();
+    }
+  });
 }
 
 export function openVisitsScreen() {

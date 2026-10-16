@@ -8,6 +8,7 @@
 import { initPrayers, openPrayerScreen, closePrayerScreen } from './prayers.js';
 import { initVisitors, requestAccessToVisitors, closeVisitorsScreen } from './visitors.js';
 import { initVisits, openVisitsScreen, closeVisitsScreen } from './visits.js';
+import { initEvents, openEventsScreen, closeEventsScreen } from './events.js';
 
 (function () {
   'use strict';
@@ -231,8 +232,8 @@ import { initVisits, openVisitsScreen, closeVisitsScreen } from './visits.js';
   // ==========================================
   // Controle de Versão e Atualização Automática PWA
   // ==========================================
-  const APP_VERSION = '1.1.8';
-  const APP_BUILD = 25;
+  const APP_VERSION = '1.2.0';
+  const APP_BUILD = 26;
   let waitingWorker = null;
   let isUpdating = false;
 
@@ -326,6 +327,7 @@ import { initVisits, openVisitsScreen, closeVisitsScreen } from './visits.js';
       closeOffersScreen();
       closeVisitorsScreen();
       closeVisitsScreen();
+      closeEventsScreen();
       scrollToHome();
     });
   }
@@ -353,6 +355,9 @@ import { initVisits, openVisitsScreen, closeVisitsScreen } from './visits.js';
         } else if (href === '#ofertas') {
           e.preventDefault();
           openOffersScreen();
+        } else if (href === '#programacoes') {
+          e.preventDefault();
+          openEventsScreen();
         } else if (href === '#solicitar-visita') {
           e.preventDefault();
           openVisitsScreen();
@@ -364,10 +369,11 @@ import { initVisits, openVisitsScreen, closeVisitsScreen } from './visits.js';
     }
   });
 
-  // Inicializa o sistema de orações, de visitantes e de solicitação de visitas
+  // Inicializa o sistema de orações, de visitantes, de visitas e de programações
   initPrayers();
   initVisitors();
   initVisits();
+  initEvents();
 
   // PWA Service Worker com detecção em tempo real e atualização transparente
   if ('serviceWorker' in navigator) {
