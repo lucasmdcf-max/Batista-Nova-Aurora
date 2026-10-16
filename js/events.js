@@ -1,14 +1,12 @@
 /**
  * Gestão de Programações e Eventos — Congregação Batista Nova Aurora
- * - Carrossel com artes dos eventos programados para a semana em curso (swipe horizontal)
- * - Título limpo: "Eventos da semana"
- * - Barra de informações resumidas em 2 linhas entre as artes e o calendário com botão de Editar
- * - Calendário geral com destaque laranja nos dias com programação
- * - Ao clicar na data, a arte e informações aparecem no slide do topo e na barra de 2 linhas
- * - Nada abaixo do calendário
+ * - Banner parcial ocupando toda a largura com informações sobrepostas em degradê escuro
+ * - Calendário e banner perfeitamente encaixados na mesma tela sem necessidade de scroll
+ * - Ao clicar no banner, ele abre em tela cheia centralizado com apenas um "X" para fechar
+ * - Evento oficial cadastrado: Dia das crianças Nova Aurora (Sábado 17/10/2026 às 14:00h)
  * - Edição protegida por senha de membro (cbna.membro)
- * - Opção de excluir evento dentro do modal de edição com mensagem de confirmação
- * - Botão de adicionar apenas no topo da aba
+ * - Exclusão direta dentro da edição mediante mensagem de confirmação
+ * - Único botão de adicionar no topo da aba
  * - Sincronização em tempo real via Cloud Firestore e suporte Offline (localStorage)
  */
 
@@ -38,73 +36,29 @@ const WEEKDAY_NAMES_FULL = [
   'Quinta-feira', 'Sexta-feira', 'Sábado'
 ];
 
-// Fallback inicial para apresentação visual imediata
-function getInitialFallbackEvents() {
-  const now = new Date();
-  const y = now.getFullYear();
-  const m = now.getMonth();
-  const d = now.getDate();
-  const dow = now.getDay();
-
-  const sundayDiff = (7 - dow) % 7;
-  const thursdayDiff = (4 - dow + 7) % 7;
-  const saturdayDiff = (6 - dow + 7) % 7;
-
-  const dSunday = new Date(y, m, d + sundayDiff);
-  const dThursday = new Date(y, m, d + thursdayDiff);
-  const dSaturday = new Date(y, m, d + saturdayDiff);
-
-  const fmt = (dt) => {
-    const yr = dt.getFullYear();
-    const mo = String(dt.getMonth() + 1).padStart(2, '0');
-    const da = String(dt.getDate()).padStart(2, '0');
-    return `${yr}-${mo}-${da}`;
-  };
-
-  return [
-    {
-      id: 'fallback-culto-dom',
-      titulo: 'Culto de Celebração & Ceia do Senhor',
-      dataISO: fmt(dSunday),
-      horario: '18:30',
-      local: 'Templo Nova Aurora',
-      arteBase64: '',
-      descricao: 'Momento de adoração, comunhão e mensagem edificante para toda a família.',
-      isFallback: true
-    },
-    {
-      id: 'fallback-culto-qui',
-      titulo: 'Culto de Doutrina & Oração',
-      dataISO: fmt(dThursday),
-      horario: '19:30',
-      local: 'Templo Nova Aurora',
-      arteBase64: '',
-      descricao: 'Estudo aprofundado da Palavra de Deus e intercessão pela igreja e famílias.',
-      isFallback: true
-    },
-    {
-      id: 'fallback-jovens-sab',
-      titulo: 'Encontro da Juventude Conectados',
-      dataISO: fmt(dSaturday),
-      horario: '19:30',
-      local: 'Templo Nova Aurora',
-      arteBase64: '',
-      descricao: 'Louvor, dinâmicas e compartilhamento especial com os jovens.',
-      isFallback: true
-    }
-  ];
-}
+// Evento oficial solicitado pelo usuário
+const DEFAULT_INITIAL_EVENT = {
+  id: 'evento-dia-das-criancas-2026',
+  titulo: 'Dia das crianças Nova Aurora',
+  data: '17/10/2026',
+  dataISO: '2026-10-17',
+  horario: '14:00',
+  local: 'Congregação Nova Aurora',
+  arteUrl: 'icons/dia-das-criancas.jpg',
+  arteBase64: '',
+  descricao: 'Culto Especial Dia das Crianças — Um dia de bênçãos e diversão'
+};
 
 let eventsList = [];
-let currentCalendarMonth = new Date().getMonth();
-let currentCalendarYear = new Date().getFullYear();
-let selectedDateISO = '';
+let currentCalendarMonth = 9; // Outubro (0-indexed: 9)
+let currentCalendarYear = 2026;
+let selectedDateISO = '2026-10-17';
 let currentActiveEvent = null;
 let currentEditingEvent = null;
 
 // Variáveis do Modal de Adicionar Evento
-let currentRepeatMonth = new Date().getMonth();
-let currentRepeatYear = new Date().getFullYear();
+let currentRepeatMonth = 9;
+let currentRepeatYear = 2026;
 let selectedRepeatDates = new Set();
 let currentUploadedArtBase64 = '';
 let currentEditArtBase64 = '';
@@ -113,11 +67,10 @@ let currentEditArtBase64 = '';
 let programacoesScreen = null;
 let btnProgramacoesBack = null;
 let btnAddEvent = null;
-let carouselTrack = null;
-let carouselDots = null;
 
-// Barra de Informações Resumidas (2 Linhas)
-let eventSummaryBar = null;
+// Banner Hero parcial com informações sobrepostas
+let progHeroWrap = null;
+let progHeroImg = null;
 let summaryEventTitle = null;
 let summaryEventMeta = null;
 let btnSummaryEdit = null;
@@ -167,10 +120,9 @@ let editArtPreviewImg = null;
 let btnEditRemoveArt = null;
 let btnDeleteEventFromEdit = null;
 
-// Modal Preview Arte
+// Modal Preview Arte em Tela Cheia
 let modalArtPreview = null;
 let modalArtPreviewImg = null;
-let modalArtPreviewTitle = null;
 let btnCloseArtPreview = null;
 
 function escapeHtml(str) {
@@ -222,37 +174,27 @@ function getTodayISO() {
 }
 
 /**
- * Retorna o intervalo da semana em curso (de Domingo a Sábado)
+ * Lê eventos locais garantindo a remoção de itens mock/fixos antigos
  */
-function getCurrentWeekRange() {
-  const now = new Date();
-  const dayOfWeek = now.getDay(); // 0 = Domingo, 6 = Sábado
-  
-  const start = new Date(now.getFullYear(), now.getMonth(), now.getDate() - dayOfWeek);
-  const end = new Date(now.getFullYear(), now.getMonth(), now.getDate() + (6 - dayOfWeek));
-
-  const startISO = toISODateString(start.getFullYear(), start.getMonth(), start.getDate());
-  const endISO = toISODateString(end.getFullYear(), end.getMonth(), end.getDate());
-
-  return {
-    start,
-    end,
-    startISO,
-    endISO
-  };
-}
-
 function loadLocalEvents() {
   try {
     const raw = localStorage.getItem(STORAGE_KEY_PROG);
     if (raw) {
       const parsed = JSON.parse(raw);
-      if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      if (Array.isArray(parsed) && parsed.length > 0) {
+        // Remove eventos mock antigos que o usuário não conseguia excluir
+        const cleaned = parsed.filter(
+          (e) => !String(e.id || '').startsWith('fallback-')
+        );
+        if (cleaned.length > 0) {
+          return cleaned;
+        }
+      }
     }
   } catch (e) {
     console.warn('Erro ao ler cache de programações:', e);
   }
-  return getInitialFallbackEvents();
+  return [DEFAULT_INITIAL_EVENT];
 }
 
 function saveLocalEvents(list) {
@@ -310,21 +252,18 @@ function compressImage(file, maxDimension = 960, quality = 0.82) {
 }
 
 /**
- * Atualiza a barra de informações do evento em 2 linhas
- * Linha 1: Nome do Evento
- * Linha 2: Data, Horário e Local
- * Ao lado: Botão de Editar
+ * Atualiza o Banner Hero parcial e as informações sobrepostas em degradê escuro
  */
-function updateSummaryBar(ev, targetDateISO = '') {
+function updateHeroBanner(ev, targetDateISO = '') {
   if (!summaryEventTitle || !summaryEventMeta) return;
 
   if (ev) {
     currentActiveEvent = ev;
-    const iso = normalizeDateToISO(ev.dataISO || ev.data);
-    const [y, m, d] = (iso || targetDateISO).split('-').map(Number);
+    const iso = normalizeDateToISO(ev.dataISO || ev.data) || targetDateISO;
+    const [y, m, d] = iso.split('-').map(Number);
     const dateObj = new Date(y, m - 1, d);
     const weekday = WEEKDAY_NAMES_FULL[dateObj.getDay()] || '';
-    const dateFormatted = formatISOToBR(iso || targetDateISO);
+    const dateFormatted = formatISOToBR(iso);
 
     summaryEventTitle.textContent = ev.titulo || 'Programação da Congregação';
 
@@ -335,209 +274,24 @@ function updateSummaryBar(ev, targetDateISO = '') {
 
     summaryEventMeta.textContent = metaParts.join(' • ');
 
+    if (progHeroImg) {
+      const imgSrc = ev.arteUrl || ev.arteBase64 || 'icons/dia-das-criancas.jpg';
+      progHeroImg.src = imgSrc;
+      progHeroImg.style.display = 'block';
+    }
+
     if (btnSummaryEdit) {
       btnSummaryEdit.style.display = 'inline-flex';
     }
   } else if (targetDateISO) {
     currentActiveEvent = null;
-    summaryEventTitle.textContent = 'Nenhuma programação para este dia';
+    summaryEventTitle.textContent = 'Nenhuma programação neste dia';
     summaryEventMeta.textContent = formatISOTODateFull(targetDateISO);
-    if (btnSummaryEdit) {
-      btnSummaryEdit.style.display = 'none';
-    }
-  } else {
-    currentActiveEvent = null;
-    summaryEventTitle.textContent = 'Selecione uma data no calendário';
-    summaryEventMeta.textContent = 'Informações da programação';
+
     if (btnSummaryEdit) {
       btnSummaryEdit.style.display = 'none';
     }
   }
-}
-
-/**
- * Renderiza o Carrossel com as Artes dos Eventos da Semana em Curso
- * Se houver um evento selecionado fora da semana, garante que ele apareça no topo
- */
-function renderWeekCarousel(forceEventToShow = null) {
-  if (!carouselTrack) return;
-
-  const week = getCurrentWeekRange();
-
-  // Lista base: eventos da semana em curso
-  let displayEvents = eventsList
-    .filter((ev) => {
-      const iso = normalizeDateToISO(ev.dataISO || ev.data);
-      return iso >= week.startISO && iso <= week.endISO;
-    })
-    .sort((a, b) => {
-      const isoA = normalizeDateToISO(a.dataISO || a.data);
-      const isoB = normalizeDateToISO(b.dataISO || b.data);
-      if (isoA !== isoB) return isoA.localeCompare(isoB);
-      return (a.horario || '').localeCompare(b.horario || '');
-    });
-
-  // Se o usuário clicou em uma data com evento que não está na semana, inclui no início
-  if (forceEventToShow && !displayEvents.some((e) => e.id === forceEventToShow.id)) {
-    displayEvents = [forceEventToShow, ...displayEvents];
-  }
-
-  if (displayEvents.length === 0) {
-    carouselTrack.innerHTML = `
-      <div class="carousel-slide-empty">
-        <div class="empty-icon-wrap">
-          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#ff9900" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
-            <line x1="16" y1="2" x2="16" y2="6"></line>
-            <line x1="8" y1="2" x2="8" y2="6"></line>
-            <line x1="3" y1="10" x2="21" y2="10"></line>
-          </svg>
-        </div>
-        <h4 class="empty-title">Nenhuma arte de evento nesta semana</h4>
-        <p class="empty-desc">Toque em <strong>+ Adicionar</strong> acima para cadastrar a programação.</p>
-      </div>
-    `;
-    if (carouselDots) carouselDots.innerHTML = '';
-    updateSummaryBar(null, selectedDateISO);
-    return;
-  }
-
-  let htmlSlides = '';
-  displayEvents.forEach((ev, idx) => {
-    const iso = normalizeDateToISO(ev.dataISO || ev.data);
-    const dateFormatted = formatISOToBR(iso);
-    const [y, m, d] = iso.split('-').map(Number);
-    const dateObj = new Date(y, m - 1, d);
-    const weekday = WEEKDAY_NAMES_FULL[dateObj.getDay()] || '';
-    const artSrc = ev.arteBase64 || ev.arteUrl || '';
-
-    htmlSlides += `
-      <div class="carousel-slide-card" data-event-id="${escapeHtml(ev.id)}" data-slide-index="${idx}">
-        ${
-          artSrc
-            ? `<div class="slide-art-wrap" title="Toque para ampliar a arte">
-                <img src="${artSrc}" alt="${escapeHtml(ev.titulo)}" class="slide-art-img" loading="lazy" />
-                <div class="slide-art-zoom-badge">
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                    <circle cx="11" cy="11" r="8"></circle>
-                    <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-                    <line x1="11" y1="8" x2="11" y2="14"></line>
-                    <line x1="8" y1="11" x2="14" y2="11"></line>
-                  </svg>
-                  <span>Ver arte</span>
-                </div>
-              </div>`
-            : `<div class="slide-art-placeholder">
-                <div class="art-ph-glow"></div>
-                <img src="FUNDO APP/Logo branca - Nova Aurora_transparente.png?v=7" alt="Logo Nova Aurora" class="art-ph-logo" />
-                <span class="art-ph-badge">CONGREGAÇÃO NOVA AURORA</span>
-              </div>`
-        }
-
-        <div class="slide-info-overlay">
-          <div class="slide-badge-row">
-            <span class="slide-pill-date">${weekday}, ${dateFormatted}</span>
-            ${ev.horario ? `<span class="slide-pill-time">${escapeHtml(ev.horario)}</span>` : ''}
-          </div>
-          <h3 class="slide-event-title">${escapeHtml(ev.titulo)}</h3>
-          ${ev.local ? `<p class="slide-event-location">📍 ${escapeHtml(ev.local)}</p>` : ''}
-        </div>
-      </div>
-    `;
-  });
-
-  carouselTrack.innerHTML = htmlSlides;
-
-  // Renderiza bolinhas indicadoras
-  if (carouselDots) {
-    let dotsHtml = '';
-    for (let i = 0; i < displayEvents.length; i++) {
-      dotsHtml += `<button type="button" class="carousel-dot ${i === 0 ? 'is-active' : ''}" data-index="${i}" aria-label="Ir para arte ${i + 1}"></button>`;
-    }
-    carouselDots.innerHTML = dotsHtml;
-
-    // Listeners nas bolinhas
-    const dots = carouselDots.querySelectorAll('.carousel-dot');
-    dots.forEach((dot) => {
-      dot.addEventListener('click', () => {
-        const idx = Number(dot.getAttribute('data-index'));
-        const slides = carouselTrack.querySelectorAll('.carousel-slide-card');
-        if (slides[idx]) {
-          slides[idx].scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
-          if (displayEvents[idx]) {
-            updateSummaryBar(displayEvents[idx]);
-            highlightDayInCalendar(normalizeDateToISO(displayEvents[idx].dataISO || displayEvents[idx].data));
-          }
-        }
-      });
-    });
-  }
-
-  // Atualiza bolinhas e a barra de informações de 2 linhas ao deslizar o carrossel
-  let scrollTimeout = null;
-  carouselTrack.onscroll = () => {
-    const scrollLeft = carouselTrack.scrollLeft;
-    const slideWidth = carouselTrack.clientWidth;
-    if (slideWidth <= 0) return;
-    const activeIndex = Math.round(scrollLeft / slideWidth);
-
-    if (carouselDots) {
-      const dots = carouselDots.querySelectorAll('.carousel-dot');
-      dots.forEach((dot, idx) => {
-        if (idx === activeIndex) {
-          dot.classList.add('is-active');
-        } else {
-          dot.classList.remove('is-active');
-        }
-      });
-    }
-
-    clearTimeout(scrollTimeout);
-    scrollTimeout = setTimeout(() => {
-      if (displayEvents[activeIndex]) {
-        updateSummaryBar(displayEvents[activeIndex]);
-        highlightDayInCalendar(normalizeDateToISO(displayEvents[activeIndex].dataISO || displayEvents[activeIndex].data));
-      }
-    }, 120);
-  };
-
-  // Clique na arte: se tiver arte abre o modal em tela cheia
-  const slideCards = carouselTrack.querySelectorAll('.carousel-slide-card');
-  slideCards.forEach((card, idx) => {
-    card.addEventListener('click', (e) => {
-      const ev = displayEvents[idx];
-      if (!ev) return;
-
-      const artSrc = ev.arteBase64 || ev.arteUrl || '';
-      const clickedArt = e.target.closest('.slide-art-wrap') || e.target.closest('.slide-art-img');
-
-      if (artSrc && (clickedArt || e.target.closest('.slide-art-zoom-badge'))) {
-        openArtPreview(artSrc, ev.titulo);
-      } else {
-        updateSummaryBar(ev);
-        highlightDayInCalendar(normalizeDateToISO(ev.dataISO || ev.data));
-      }
-    });
-  });
-
-  // Atualiza a barra de resumo com o evento inicial
-  const initialEvent = forceEventToShow || displayEvents[0];
-  if (initialEvent) {
-    updateSummaryBar(initialEvent);
-  }
-}
-
-function highlightDayInCalendar(iso) {
-  if (!iso || !progCalendarDays) return;
-  selectedDateISO = iso;
-  const dayButtons = progCalendarDays.querySelectorAll('.cal-day:not(.cal-day-empty)');
-  dayButtons.forEach((b) => {
-    if (b.getAttribute('data-iso') === iso) {
-      b.classList.add('is-selected');
-    } else {
-      b.classList.remove('is-selected');
-    }
-  });
 }
 
 /**
@@ -605,46 +359,30 @@ function renderEventsCalendar() {
       dayButtons.forEach((b) => b.classList.remove('is-selected'));
       btn.classList.add('is-selected');
 
-      // Busca programação do dia clicado
       const dayEvents = eventsList.filter((ev) => normalizeDateToISO(ev.dataISO || ev.data) === iso);
       if (dayEvents.length > 0) {
-        const ev = dayEvents[0];
-        // Mostra a arte e os dados do evento no topo
-        renderWeekCarousel(ev);
-        // Atualiza a barra de resumo de 2 linhas e botão editar
-        updateSummaryBar(ev, iso);
-
-        // Faz o carrossel rolar até o slide no topo suavemente
-        const firstSlide = carouselTrack.querySelector('.carousel-slide-card');
-        if (firstSlide) {
-          firstSlide.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
-        }
+        updateHeroBanner(dayEvents[0], iso);
       } else {
-        // Dia sem programação: atualiza barra resumida
-        updateSummaryBar(null, iso);
+        updateHeroBanner(null, iso);
       }
     });
   });
 }
 
 /**
- * Preview da Arte em Modal Grande
+ * Preview da Arte em Tela Cheia no centro da tela com apenas um "X" para fechar
  */
-function openArtPreview(imageSrc, title = '') {
+function openArtPreview(imageSrc) {
   if (!modalArtPreview || !modalArtPreviewImg) return;
-  modalArtPreviewImg.src = imageSrc;
-  if (modalArtPreviewTitle) {
-    modalArtPreviewTitle.textContent = title || 'Arte da Programação';
-  }
-  modalArtPreview.classList.add('is-active');
+  modalArtPreviewImg.src = imageSrc || (progHeroImg ? progHeroImg.src : 'icons/dia-das-criancas.jpg');
+  modalArtPreview.classList.add('is-open', 'is-active');
   modalArtPreview.setAttribute('aria-hidden', 'false');
 }
 
 function closeArtPreview() {
   if (!modalArtPreview) return;
-  modalArtPreview.classList.remove('is-active');
+  modalArtPreview.classList.remove('is-open', 'is-active');
   modalArtPreview.setAttribute('aria-hidden', 'true');
-  if (modalArtPreviewImg) modalArtPreviewImg.src = '';
 }
 
 /**
@@ -663,19 +401,19 @@ export function openAddEventModal(prefillDate = '') {
   if (repeatSection) repeatSection.style.display = 'none';
   if (eventRepeatsToggle) eventRepeatsToggle.checked = false;
 
-  const targetDate = prefillDate || selectedDateISO || getTodayISO();
+  const targetDate = prefillDate || selectedDateISO || '2026-10-17';
   if (inputEventDate) inputEventDate.value = targetDate;
   if (inputEventTime) inputEventTime.value = '19:30';
-  if (inputEventLocation) inputEventLocation.value = 'Templo Nova Aurora';
+  if (inputEventLocation) inputEventLocation.value = 'Congregação Nova Aurora';
 
   const [y, m] = targetDate.split('-').map(Number);
-  currentRepeatYear = y || new Date().getFullYear();
-  currentRepeatMonth = (m - 1) || new Date().getMonth();
+  currentRepeatYear = y || 2026;
+  currentRepeatMonth = (m - 1) || 9;
 
   renderRepeatCalendar();
   renderRepeatDatesBadges();
 
-  modalAddEvent.classList.add('is-active');
+  modalAddEvent.classList.add('is-open', 'is-active');
   modalAddEvent.setAttribute('aria-hidden', 'false');
 
   if (inputEventTitle) {
@@ -685,7 +423,7 @@ export function openAddEventModal(prefillDate = '') {
 
 export function closeAddEventModal() {
   if (!modalAddEvent) return;
-  modalAddEvent.classList.remove('is-active');
+  modalAddEvent.classList.remove('is-open', 'is-active');
   modalAddEvent.setAttribute('aria-hidden', 'true');
 }
 
@@ -796,7 +534,7 @@ async function handleAddEventSubmit(e) {
   const titulo = inputEventTitle ? inputEventTitle.value.trim() : '';
   const dataPrincipal = inputEventDate ? inputEventDate.value : '';
   const horario = inputEventTime ? inputEventTime.value.trim() : '';
-  const local = inputEventLocation ? inputEventLocation.value.trim() : 'Templo Nova Aurora';
+  const local = inputEventLocation ? inputEventLocation.value.trim() : 'Congregação Nova Aurora';
 
   if (!titulo) {
     alert('Por favor, informe o nome do evento.');
@@ -830,6 +568,7 @@ async function handleAddEventSubmit(e) {
         horario: horario,
         local: local,
         arteBase64: currentUploadedArtBase64 || '',
+        arteUrl: currentUploadedArtBase64 ? '' : 'icons/dia-das-criancas.jpg',
         createdAt: serverTimestamp(),
         timestamp: Date.now()
       };
@@ -855,9 +594,8 @@ async function handleAddEventSubmit(e) {
     saveLocalEvents(eventsList);
 
     selectedDateISO = dataPrincipal;
-    renderWeekCarousel(savedFirstEvent);
     renderEventsCalendar();
-    updateSummaryBar(savedFirstEvent, dataPrincipal);
+    updateHeroBanner(savedFirstEvent, dataPrincipal);
 
     closeAddEventModal();
 
@@ -888,16 +626,17 @@ export function openEditEventModal(ev) {
   if (!modalEditEvent || !ev) return;
 
   currentEditingEvent = ev;
-  currentEditArtBase64 = ev.arteBase64 || ev.arteUrl || '';
+  currentEditArtBase64 = ev.arteBase64 || '';
 
   if (editEventId) editEventId.value = ev.id || '';
   if (editEventTitle) editEventTitle.value = ev.titulo || '';
   if (editEventDate) editEventDate.value = normalizeDateToISO(ev.dataISO || ev.data);
-  if (editEventTime) editEventTime.value = ev.horario || '19:30';
-  if (editEventLocation) editEventLocation.value = ev.local || 'Templo Nova Aurora';
+  if (editEventTime) editEventTime.value = ev.horario || '14:00';
+  if (editEventLocation) editEventLocation.value = ev.local || 'Congregação Nova Aurora';
 
-  if (currentEditArtBase64) {
-    if (editArtPreviewImg) editArtPreviewImg.src = currentEditArtBase64;
+  const previewSrc = currentEditArtBase64 || ev.arteUrl || '';
+  if (previewSrc) {
+    if (editArtPreviewImg) editArtPreviewImg.src = previewSrc;
     if (editArtPreviewContainer) editArtPreviewContainer.style.display = 'block';
     if (editArtUploadBox) editArtUploadBox.style.display = 'none';
   } else {
@@ -905,7 +644,7 @@ export function openEditEventModal(ev) {
     if (editArtUploadBox) editArtUploadBox.style.display = 'flex';
   }
 
-  modalEditEvent.classList.add('is-active');
+  modalEditEvent.classList.add('is-open', 'is-active');
   modalEditEvent.setAttribute('aria-hidden', 'false');
 
   if (editEventTitle) {
@@ -915,7 +654,7 @@ export function openEditEventModal(ev) {
 
 export function closeEditEventModal() {
   if (!modalEditEvent) return;
-  modalEditEvent.classList.remove('is-active');
+  modalEditEvent.classList.remove('is-open', 'is-active');
   modalEditEvent.setAttribute('aria-hidden', 'true');
   currentEditingEvent = null;
 }
@@ -931,7 +670,7 @@ async function handleEditEventSubmit(e) {
   const titulo = editEventTitle ? editEventTitle.value.trim() : '';
   const dataISO = editEventDate ? editEventDate.value : '';
   const horario = editEventTime ? editEventTime.value.trim() : '';
-  const local = editEventLocation ? editEventLocation.value.trim() : 'Templo Nova Aurora';
+  const local = editEventLocation ? editEventLocation.value.trim() : 'Congregação Nova Aurora';
 
   if (!titulo || !dataISO) {
     alert('Preencha os campos obrigatórios (evento e data).');
@@ -946,6 +685,7 @@ async function handleEditEventSubmit(e) {
     horario: horario,
     local: local,
     arteBase64: currentEditArtBase64 || '',
+    arteUrl: currentEditArtBase64 ? '' : (currentEditingEvent.arteUrl || 'icons/dia-das-criancas.jpg'),
     updatedAt: serverTimestamp()
   };
 
@@ -954,7 +694,6 @@ async function handleEditEventSubmit(e) {
       await updateDoc(doc(db, 'programacoes', id), updatedData);
     } catch (_) {}
 
-    // Atualiza cache local
     eventsList = eventsList.map((item) => {
       if (item.id === id) {
         return { ...item, ...updatedData };
@@ -966,9 +705,8 @@ async function handleEditEventSubmit(e) {
     const updatedEv = eventsList.find((item) => item.id === id) || { id, ...updatedData };
     selectedDateISO = dataISO;
 
-    renderWeekCarousel(updatedEv);
     renderEventsCalendar();
-    updateSummaryBar(updatedEv, dataISO);
+    updateHeroBanner(updatedEv, dataISO);
 
     closeEditEventModal();
     showNotification('Programação atualizada com sucesso!');
@@ -1002,9 +740,8 @@ async function handleDeleteEventFromEdit() {
 
     closeEditEventModal();
 
-    renderWeekCarousel();
     renderEventsCalendar();
-    updateSummaryBar(null, selectedDateISO);
+    updateHeroBanner(eventsList[0] || null, selectedDateISO);
 
     showNotification('Programação excluída com sucesso.');
 
@@ -1050,7 +787,8 @@ function subscribeToEvents() {
             data: data.data || formatISOToBR(iso),
             horario: data.horario || '',
             local: data.local || '',
-            arteBase64: data.arteBase64 || data.arteUrl || '',
+            arteBase64: data.arteBase64 || '',
+            arteUrl: data.arteUrl || (data.arteBase64 ? '' : 'icons/dia-das-criancas.jpg'),
             descricao: data.descricao || '',
             timestamp: data.timestamp || Date.now()
           });
@@ -1060,11 +798,10 @@ function subscribeToEvents() {
       if (items.length > 0) {
         eventsList = items;
         saveLocalEvents(items);
-        renderWeekCarousel();
         renderEventsCalendar();
         if (selectedDateISO) {
           const evOnDate = eventsList.find((e) => normalizeDateToISO(e.dataISO || e.data) === selectedDateISO);
-          updateSummaryBar(evOnDate, selectedDateISO);
+          updateHeroBanner(evOnDate || eventsList[0], selectedDateISO);
         }
       }
     }, (err) => {
@@ -1080,14 +817,14 @@ export function openEventsScreen() {
     programacoesScreen.classList.add('is-active');
     programacoesScreen.setAttribute('aria-hidden', 'false');
 
-    renderWeekCarousel();
+    selectedDateISO = '2026-10-17';
+    currentCalendarMonth = 9; // Outubro
+    currentCalendarYear = 2026;
+
     renderEventsCalendar();
 
-    if (!selectedDateISO) {
-      selectedDateISO = getTodayISO();
-    }
     const evOnDate = eventsList.find((e) => normalizeDateToISO(e.dataISO || e.data) === selectedDateISO);
-    updateSummaryBar(evOnDate || eventsList[0], selectedDateISO);
+    updateHeroBanner(evOnDate || eventsList[0] || DEFAULT_INITIAL_EVENT, selectedDateISO);
   }
 }
 
@@ -1108,11 +845,10 @@ export function initEvents() {
   programacoesScreen = document.getElementById('programacoesScreen');
   btnProgramacoesBack = document.getElementById('btnProgramacoesBack');
   btnAddEvent = document.getElementById('btnAddEvent');
-  carouselTrack = document.getElementById('carouselTrack');
-  carouselDots = document.getElementById('carouselDots');
 
-  // Barra de resumo em 2 linhas
-  eventSummaryBar = document.getElementById('eventSummaryBar');
+  // Banner parcial com informações sobrepostas
+  progHeroWrap = document.getElementById('progHeroWrap');
+  progHeroImg = document.getElementById('progHeroImg');
   summaryEventTitle = document.getElementById('summaryEventTitle');
   summaryEventMeta = document.getElementById('summaryEventMeta');
   btnSummaryEdit = document.getElementById('btnSummaryEdit');
@@ -1165,7 +901,6 @@ export function initEvents() {
   // Modal Preview Arte
   modalArtPreview = document.getElementById('modalArtPreview');
   modalArtPreviewImg = document.getElementById('modalArtPreviewImg');
-  modalArtPreviewTitle = document.getElementById('modalArtPreviewTitle');
   btnCloseArtPreview = document.getElementById('btnCloseArtPreview');
 
   // Listeners de Navegação da Tela
@@ -1178,10 +913,23 @@ export function initEvents() {
     btnAddEvent.addEventListener('click', () => openAddEventModal());
   }
 
-  // Botão Editar na barra de informações (abre somente com senha de membro: cbna.membro)
+  // Ao clicar no banner parcial, abre a arte completa no centro da tela
+  if (progHeroWrap) {
+    progHeroWrap.addEventListener('click', (e) => {
+      // Se clicou no botão de editar, não abre o preview da imagem
+      if (e.target.closest('#btnSummaryEdit')) return;
+      const imgSrc = progHeroImg ? progHeroImg.src : 'icons/dia-das-criancas.jpg';
+      openArtPreview(imgSrc);
+    });
+  }
+
+  // Botão Editar na barra sobreposta (abre com senha de membro: cbna.membro)
   if (btnSummaryEdit) {
-    btnSummaryEdit.addEventListener('click', () => {
-      if (!currentActiveEvent) return;
+    btnSummaryEdit.addEventListener('click', (e) => {
+      e.stopPropagation();
+      if (!currentActiveEvent) {
+        currentActiveEvent = eventsList[0] || DEFAULT_INITIAL_EVENT;
+      }
       requestMemberAccess(() => {
         openEditEventModal(currentActiveEvent);
       });
@@ -1343,7 +1091,7 @@ export function initEvents() {
     });
   }
 
-  // Preview de Arte
+  // Preview de Arte (Fechar no 'X' ou overlay)
   if (btnCloseArtPreview) {
     btnCloseArtPreview.addEventListener('click', closeArtPreview);
   }
@@ -1352,8 +1100,8 @@ export function initEvents() {
     overlayArt.addEventListener('click', closeArtPreview);
   }
 
-  // Inicia carregamento
-  renderWeekCarousel();
+  // Inicia exibição com o evento padrão
+  updateHeroBanner(eventsList[0] || DEFAULT_INITIAL_EVENT, selectedDateISO);
   renderEventsCalendar();
   subscribeToEvents();
 }

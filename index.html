@@ -19,7 +19,7 @@
     rel="stylesheet">
 
   <link rel="stylesheet" href="css/lenis.css">
-  <link rel="stylesheet" href="css/style.css?v=27">
+  <link rel="stylesheet" href="css/style.css?v=28">
 </head>
 
 <body>
@@ -326,56 +326,45 @@
 
       <div class="sub-screen-body programacoes-screen-body">
         
-        <!-- Bloco Superior: Carrossel das Artes da Semana em Curso -->
-        <div class="carousel-section">
-          <div class="carousel-section-header">
-            <h3 class="carousel-heading">Eventos da semana</h3>
-          </div>
-
-          <div class="events-carousel-wrap">
-            <div class="events-carousel-track" id="carouselTrack">
-              <!-- Cards gerados dinamicamente via JS -->
-            </div>
-          </div>
-
-          <!-- Bolinhas / Indicadores do Carrossel -->
-          <div class="events-carousel-dots" id="carouselDots">
-            <!-- Gerado via JS -->
-          </div>
-        </div>
-
-        <!-- Informações resumidas do evento selecionado em 2 linhas com botão de editar -->
-        <div class="event-summary-bar" id="eventSummaryBar">
-          <div class="event-summary-info">
-            <div class="summary-line-1" id="summaryEventTitle">Selecione uma data no calendário</div>
-            <div class="summary-line-2" id="summaryEventMeta">Informações da programação</div>
-          </div>
-          <button type="button" class="btn-summary-edit" id="btnSummaryEdit" aria-label="Editar programação" title="Editar programação" style="display: none;">
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M12 20h9"></path>
-              <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path>
+        <!-- Banner do evento ocupando toda largura, com informações sobrepostas em degradê escuro -->
+        <div class="prog-hero-wrap" id="progHeroWrap" title="Toque para ver a arte completa">
+          <img id="progHeroImg" src="icons/dia-das-criancas.jpg" alt="Arte da programação" class="prog-hero-img">
+          
+          <div class="prog-hero-zoom-badge" aria-hidden="true">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="11" cy="11" r="8"></circle>
+              <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
             </svg>
-            <span>Editar</span>
-          </button>
-        </div>
-
-        <!-- Bloco Inferior: Calendário Geral de Programações -->
-        <div class="calendar-section" style="margin-top: 14px;">
-          <div class="calendar-section-header">
-            <span class="offer-badge badge-blue">Calendário</span>
-            <h3 class="calendar-heading">TODAS AS PROGRAMAÇÕES</h3>
+            <span>Ver arte</span>
           </div>
 
+          <div class="prog-hero-overlay" id="progHeroOverlay">
+            <div class="prog-hero-info">
+              <div class="prog-hero-title" id="summaryEventTitle">Dia das crianças Nova Aurora</div>
+              <div class="prog-hero-meta" id="summaryEventMeta">Sábado, 17/10/2026 • 14:00 • Congregação Nova Aurora</div>
+            </div>
+            <button type="button" class="btn-summary-edit" id="btnSummaryEdit" aria-label="Editar programação" title="Editar programação">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M12 20h9"></path>
+                <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path>
+              </svg>
+              <span>Editar</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Calendário Geral de Programações (Encaixado perfeitamente na mesma tela sem scroll) -->
+        <div class="calendar-section prog-calendar-section">
           <div class="events-calendar-box" id="progCalendarBox">
             <div class="events-calendar-header">
               <button type="button" class="btn-cal-nav" id="btnProgCalPrev" aria-label="Mês anterior">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
                   <polyline points="15 18 9 12 15 6"></polyline>
                 </svg>
               </button>
               <span class="events-cal-month-title" id="progCalMonthYear">Outubro 2026</span>
               <button type="button" class="btn-cal-nav" id="btnProgCalNext" aria-label="Próximo mês">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
                   <polyline points="9 18 15 12 9 6"></polyline>
                 </svg>
               </button>
@@ -803,17 +792,12 @@
       </div>
     </div>
 
-    <!-- Modal Zoom da Arte em Tela Cheia -->
+    <!-- Modal Zoom da Arte em Tela Cheia Centralizada (com apenas um 'X' para fechar) -->
     <div class="app-modal modal-fullscreen-art" id="modalArtPreview" aria-hidden="true">
       <div class="app-modal-overlay" id="overlayArtPreview"></div>
-      <div class="modal-art-view-box">
-        <div class="modal-art-view-header">
-          <h3 id="modalArtPreviewTitle" class="modal-art-view-title">Arte do Evento</h3>
-          <button type="button" class="btn-modal-close" id="btnCloseArtPreview" aria-label="Fechar">✕</button>
-        </div>
-        <div class="modal-art-view-body">
-          <img id="modalArtPreviewImg" src="" alt="Arte do evento ampliada" class="modal-art-view-image">
-        </div>
+      <button type="button" class="btn-art-fullscreen-close" id="btnCloseArtPreview" aria-label="Fechar arte">✕</button>
+      <div class="modal-art-view-centered">
+        <img id="modalArtPreviewImg" src="icons/dia-das-criancas.jpg" alt="Arte do evento ampliada" class="modal-art-view-image">
       </div>
     </div>
 
@@ -887,7 +871,7 @@
   </div>
 
   <script src="js/lenis.min.js"></script>
-  <script type="module" src="js/app.js?v=27"></script>
+  <script type="module" src="js/app.js?v=28"></script>
 </body>
 
 </html>
