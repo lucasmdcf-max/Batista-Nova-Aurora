@@ -200,10 +200,9 @@ function handleMemberAuthSubmit(e) {
     try {
       sessionStorage.setItem('nova_aurora_member_unlocked', 'true');
     } catch (_) {}
+    const cb = pendingMemberAuthCallback;
     closeMemberAuthModal();
-    if (typeof pendingMemberAuthCallback === 'function') {
-      const cb = pendingMemberAuthCallback;
-      pendingMemberAuthCallback = null;
+    if (typeof cb === 'function') {
       cb();
     } else {
       openVisitorsScreen();

@@ -232,8 +232,8 @@ import { initEvents, openEventsScreen, closeEventsScreen } from './events.js';
   // ==========================================
   // Controle de Versão e Atualização Automática PWA
   // ==========================================
-  const APP_VERSION = '1.2.2';
-  const APP_BUILD = 28;
+  const APP_VERSION = '1.2.3';
+  const APP_BUILD = 29;
   let waitingWorker = null;
   let isUpdating = false;
 

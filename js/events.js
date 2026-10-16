@@ -927,11 +927,9 @@ export function initEvents() {
   if (btnSummaryEdit) {
     btnSummaryEdit.addEventListener('click', (e) => {
       e.stopPropagation();
-      if (!currentActiveEvent) {
-        currentActiveEvent = eventsList[0] || DEFAULT_INITIAL_EVENT;
-      }
+      const eventToEdit = currentActiveEvent || eventsList[0] || DEFAULT_INITIAL_EVENT;
       requestMemberAccess(() => {
-        openEditEventModal(currentActiveEvent);
+        openEditEventModal(eventToEdit);
       });
     });
   }
