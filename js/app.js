@@ -231,8 +231,8 @@ import { initVisits, openVisitsScreen, closeVisitsScreen } from './visits.js';
   // ==========================================
   // Controle de Versão e Atualização Automática PWA
   // ==========================================
-  const APP_VERSION = '1.1.7';
-  const APP_BUILD = 24;
+  const APP_VERSION = '1.1.8';
+  const APP_BUILD = 25;
   let waitingWorker = null;
   let isUpdating = false;
 

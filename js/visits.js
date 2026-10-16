@@ -1,7 +1,11 @@
 /**
  * Gestão de Solicitação de Visitas — Congregação Batista Nova Aurora
- * - Formulário de cadastro: Nome, Data (seleção no calendário interativo) e Endereço com Ponto de Referência
- * - Bloqueio automático no calendário para dias que já possuem eventos ou visitas agendadas (e datas passadas)
+ * - Formulário de cadastro: Nome, Data (marcar no calendário), Horário e Endereço com Ponto de Referência
+ * - Regras de disponibilidade:
+ *   * Domingos e Segundas desabilitados para visitas
+ *   * Quintas-feiras à noite (18:00 e 20:00) desabilitadas (horário de culto)
+ *   * Horários organizados a cada 2h: 09:00, 14:00, 16:00, 18:00, 20:00 (exceto intervalo de almoço 12:00 às 14:00)
+ *   * Bloqueio automático de dias e horários com visitas ou eventos já agendados
  * - Sincronização em tempo real via Cloud Firestore e suporte Offline (localStorage)
  */
 
@@ -23,9 +27,14 @@ const MONTH_NAMES = [
   'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'
 ];
 
+// Horários disponíveis organizados a cada 2 horas (09:00 às 21:00, exceto 12:00 às 14:00)
+const ALL_TIME_SLOTS = ['09:00', '14:00', '16:00', '18:00', '20:00'];
+const THURSDAY_NIGHT_SLOTS = ['18:00', '20:00'];
+
 let scheduledVisits = [];
 let scheduledEvents = [];
 let selectedDateISO = ''; // YYYY-MM-DD
+let selectedTimeSlot = ''; // HH:MM
 let currentCalendarMonth = new Date().getMonth();
 let currentCalendarYear = new Date().getFullYear();
 let currentTab = 'form'; // 'form' | 'list'
@@ -42,13 +51,16 @@ let visitCardsContainer = null;
 
 let formVisitRequest = null;
 let inputVisitName = null;
-let inputVisitDateDisplay = null;
 let inputVisitAddress = null;
 let calendarGridDays = null;
 let calendarMonthYearLabel = null;
 let btnCalPrev = null;
 let btnCalNext = null;
 let calendarFeedbackMsg = null;
+
+let visitTimeSelectorWrap = null;
+let visitTimeSelectedDate = null;
+let visitTimeSlotsGrid = null;
 
 function loadLocalVisits() {
   try {
@@ -110,9 +122,7 @@ function formatISOToBR(isoStr) {
 function normalizeDateToISO(dateVal) {
   if (!dateVal) return '';
   const str = String(dateVal).trim();
-  // Se já estiver em YYYY-MM-DD
   if (/^\d{4}-\d{2}-\d{2}$/.test(str)) return str;
-  // Se estiver em DD/MM/YYYY
   const brMatch = str.match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
   if (brMatch) {
     return `${brMatch[3]}-${brMatch[2]}-${brMatch[1]}`;
@@ -126,41 +136,129 @@ function getTodayISO() {
 }
 
 /**
- * Retorna um Mapa de todas as datas ocupadas (YYYY-MM-DD -> motivo)
- * verificando tanto visitas agendadas quanto eventos/programações
+ * Retorna os detalhes de disponibilidade dos horários para uma determinada data (YYYY-MM-DD)
  */
-function getOccupiedDatesMap() {
-  const map = new Map();
+function getSlotsStatusForDate(iso) {
+  if (!iso) return [];
+  const [y, m, d] = iso.split('-').map(Number);
+  const dateObj = new Date(y, m - 1, d);
+  const dayOfWeek = dateObj.getDay();
 
-  // 1. Eventos cadastrados
-  scheduledEvents.forEach((ev) => {
-    const iso = normalizeDateToISO(ev.dataISO || ev.data);
-    if (iso) {
-      map.set(iso, {
-        type: 'event',
-        label: ev.titulo || ev.nome || 'Evento agendado'
-      });
+  // Domingos (0) e Segundas (1)
+  if (dayOfWeek === 0 || dayOfWeek === 1) {
+    return [];
+  }
+
+  const todayISO = getTodayISO();
+  if (iso < todayISO) {
+    return [];
+  }
+
+  // Verifica se a congregação possui evento nesse dia
+  const hasEvent = scheduledEvents.some((ev) => normalizeDateToISO(ev.dataISO || ev.data) === iso);
+  if (hasEvent) {
+    return [];
+  }
+
+  const isThursday = dayOfWeek === 4;
+
+  // Visitas cadastradas nesta data
+  const visitsOnDate = scheduledVisits.filter(
+    (v) => normalizeDateToISO(v.dataISO || v.data) === iso
+  );
+
+  // Se houver visita antiga sem horário, considera o dia inteiro ocupado
+  const hasFullDayBooking = visitsOnDate.some((v) => !v.horario);
+  if (hasFullDayBooking) {
+    return [];
+  }
+
+  const bookedSlots = new Set(visitsOnDate.map((v) => v.horario).filter(Boolean));
+
+  return ALL_TIME_SLOTS.map((slot) => {
+    const isThursdayNight = isThursday && THURSDAY_NIGHT_SLOTS.includes(slot);
+    const isBooked = bookedSlots.has(slot);
+    let isPastTime = false;
+
+    // Se a data selecionada for o dia de hoje, desabilita horários já passados
+    if (iso === todayISO) {
+      const now = new Date();
+      const [slotH, slotM] = slot.split(':').map(Number);
+      if (now.getHours() > slotH || (now.getHours() === slotH && now.getMinutes() >= slotM)) {
+        isPastTime = true;
+      }
     }
-  });
 
-  // 2. Visitas agendadas
-  scheduledVisits.forEach((v) => {
-    const iso = normalizeDateToISO(v.dataISO || v.data);
-    if (iso) {
-      const existing = map.get(iso);
-      map.set(iso, {
-        type: existing ? 'both' : 'visit',
-        label: existing ? 'Evento e visita agendados' : 'Visita já agendada neste dia'
-      });
+    const isAvailable = !isThursdayNight && !isBooked && !isPastTime;
+    let reason = '';
+    if (isThursdayNight) {
+      reason = 'Quinta à noite (Culto)';
+    } else if (isBooked) {
+      reason = 'Horário já reservado';
+    } else if (isPastTime) {
+      reason = 'Horário já passou';
     }
-  });
 
-  return map;
+    return {
+      slot,
+      isAvailable,
+      reason,
+      isThursdayNight,
+      isBooked,
+      isPastTime
+    };
+  });
 }
 
 /**
- * Renderiza o calendário mensal interativo bloqueando datas passadas
- * e dias que já possuem eventos ou visitas agendadas.
+ * Retorna as informações de bloqueio de uma data para o calendário
+ */
+function getDayBlockInfo(year, month, day) {
+  const iso = toISODateString(year, month, day);
+  const dateObj = new Date(year, month, day);
+  const dayOfWeek = dateObj.getDay();
+  const todayISO = getTodayISO();
+
+  // 1. Domingo ou Segunda
+  if (dayOfWeek === 0) {
+    return { isBlocked: true, type: 'sunday', label: 'Domingos não disponíveis para visitas' };
+  }
+  if (dayOfWeek === 1) {
+    return { isBlocked: true, type: 'monday', label: 'Segundas-feiras não disponíveis para visitas' };
+  }
+
+  // 2. Data no passado
+  if (iso < todayISO) {
+    return { isBlocked: true, type: 'past', label: 'Data no passado' };
+  }
+
+  // 3. Evento da igreja no dia
+  const churchEvent = scheduledEvents.find((ev) => normalizeDateToISO(ev.dataISO || ev.data) === iso);
+  if (churchEvent) {
+    return {
+      isBlocked: true,
+      type: 'event',
+      label: churchEvent.titulo || 'Evento na congregação'
+    };
+  }
+
+  // 4. Verifica horários disponíveis
+  const slots = getSlotsStatusForDate(iso);
+  const availableCount = slots.filter((s) => s.isAvailable).length;
+  if (availableCount === 0) {
+    const isThursday = dayOfWeek === 4;
+    return {
+      isBlocked: true,
+      type: 'full',
+      label: isThursday ? 'Horários preenchidos (Quinta à noite indisponível)' : 'Todos os horários preenchidos'
+    };
+  }
+
+  return { isBlocked: false, type: 'free', label: 'Disponível' };
+}
+
+/**
+ * Renderiza o calendário mensal interativo
  */
 function renderCalendar() {
   if (!calendarGridDays || !calendarMonthYearLabel) return;
@@ -170,13 +268,26 @@ function renderCalendar() {
   const firstDayOfMonth = new Date(currentCalendarYear, currentCalendarMonth, 1).getDay();
   const daysInMonth = new Date(currentCalendarYear, currentCalendarMonth + 1, 0).getDate();
   const todayISO = getTodayISO();
-  const occupiedMap = getOccupiedDatesMap();
 
-  // Se a data selecionada passou a ficar ocupada por outra pessoa em tempo real, limpa seleção
-  if (selectedDateISO && occupiedMap.has(selectedDateISO)) {
-    selectedDateISO = '';
-    updateSelectedDateInput();
-    showCalendarNotice('A data selecionada acabou de ser preenchida. Por favor, escolha outro dia livre.');
+  // Validação em tempo real da seleção atual
+  if (selectedDateISO) {
+    const [selY, selM, selD] = selectedDateISO.split('-').map(Number);
+    const selBlock = getDayBlockInfo(selY, selM - 1, selD);
+    if (selBlock.isBlocked) {
+      selectedDateISO = '';
+      selectedTimeSlot = '';
+      hideTimeSelector();
+      showCalendarNotice('A data selecionada não está mais disponível. Por favor, escolha outro dia livre.');
+    } else if (selectedTimeSlot) {
+      // Verifica se o horário selecionado ainda está vago
+      const currentSlots = getSlotsStatusForDate(selectedDateISO);
+      const chosenSlotObj = currentSlots.find((s) => s.slot === selectedTimeSlot);
+      if (!chosenSlotObj || !chosenSlotObj.isAvailable) {
+        selectedTimeSlot = '';
+        renderTimeSlots(selectedDateISO);
+        showCalendarNotice('O horário selecionado acabou de ser preenchido. Por favor, escolha outro horário.');
+      }
+    }
   }
 
   let html = '';
@@ -188,24 +299,32 @@ function renderCalendar() {
 
   for (let day = 1; day <= daysInMonth; day++) {
     const iso = toISODateString(currentCalendarYear, currentCalendarMonth, day);
-    const isPast = iso < todayISO;
+    const dateObj = new Date(currentCalendarYear, currentCalendarMonth, day);
+    const dayOfWeek = dateObj.getDay();
+    const isSunday = dayOfWeek === 0;
+    const isMonday = dayOfWeek === 1;
     const isToday = iso === todayISO;
-    const occupiedInfo = occupiedMap.get(iso);
-    const isOccupied = Boolean(occupiedInfo);
+    const blockInfo = getDayBlockInfo(currentCalendarYear, currentCalendarMonth, day);
+    const isPast = blockInfo.type === 'past';
+    const isOccupied = blockInfo.isBlocked && !isPast && !isSunday && !isMonday;
     const isSelected = iso === selectedDateISO;
 
     let classes = ['cal-day'];
     if (isToday) classes.push('is-today');
     if (isPast) classes.push('is-past');
+    if (isSunday || isMonday) classes.push('is-blocked-weekday');
     if (isOccupied) classes.push('is-occupied');
-    if (isSelected && !isOccupied && !isPast) classes.push('is-selected');
+    if (isSelected && !blockInfo.isBlocked) classes.push('is-selected');
 
-    const isDisabled = isPast || isOccupied;
     let titleText = `Selecionar ${formatISOToBR(iso)}`;
-    if (isOccupied) {
-      titleText = `Indisponível (${occupiedInfo.label})`;
+    if (isSunday) {
+      titleText = 'Domingos não disponíveis para visitas';
+    } else if (isMonday) {
+      titleText = 'Segundas-feiras não disponíveis para visitas';
+    } else if (isOccupied) {
+      titleText = `Indisponível (${blockInfo.label})`;
     } else if (isPast) {
-      titleText = 'Data já passou';
+      titleText = 'Data no passado';
     }
 
     html += `
@@ -213,9 +332,11 @@ function renderCalendar() {
         type="button"
         class="${classes.join(' ')}"
         data-iso="${iso}"
-        data-occupied="${isOccupied ? 'true' : 'false'}"
-        data-past="${isPast ? 'true' : 'false'}"
-        ${isDisabled ? 'aria-disabled="true"' : ''}
+        data-day="${day}"
+        data-dow="${dayOfWeek}"
+        data-blocked="${blockInfo.isBlocked ? 'true' : 'false'}"
+        data-block-type="${blockInfo.type}"
+        ${blockInfo.isBlocked ? 'aria-disabled="true"' : ''}
         title="${escapeHtml(titleText)}"
       >
         <span class="cal-day-number">${day}</span>
@@ -230,36 +351,106 @@ function renderCalendar() {
   calendarGridDays.querySelectorAll('.cal-day:not(.cal-day-empty)').forEach((btn) => {
     btn.addEventListener('click', () => {
       const iso = btn.getAttribute('data-iso');
-      const isOccupied = btn.getAttribute('data-occupied') === 'true';
-      const isPast = btn.getAttribute('data-past') === 'true';
+      const isBlocked = btn.getAttribute('data-blocked') === 'true';
+      const blockType = btn.getAttribute('data-block-type');
 
-      if (isOccupied) {
-        const info = occupiedMap.get(iso);
-        showCalendarNotice(`O dia ${formatISOToBR(iso)} já possui ${info && info.type === 'event' ? 'evento agendado' : 'visita ou evento agendado'} e não está disponível.`);
-        return;
-      }
-
-      if (isPast) {
-        showCalendarNotice('Não é possível agendar visitas em datas passadas.');
+      if (isBlocked) {
+        if (blockType === 'sunday') {
+          showCalendarNotice('Visitas não são realizadas aos domingos.');
+        } else if (blockType === 'monday') {
+          showCalendarNotice('Visitas não são realizadas às segundas-feiras.');
+        } else if (blockType === 'past') {
+          showCalendarNotice('Não é possível agendar visitas em datas passadas.');
+        } else if (blockType === 'event') {
+          showCalendarNotice(`O dia ${formatISOToBR(iso)} possui evento na congregação e não está disponível.`);
+        } else {
+          showCalendarNotice(`O dia ${formatISOToBR(iso)} já está com todos os horários preenchidos.`);
+        }
         return;
       }
 
       hideCalendarNotice();
       selectedDateISO = iso;
-      updateSelectedDateInput();
+      selectedTimeSlot = ''; // Reseta horário ao trocar de dia
       renderCalendar();
+      renderTimeSlots(iso);
     });
   });
 }
 
-function updateSelectedDateInput() {
-  if (!inputVisitDateDisplay) return;
-  if (selectedDateISO) {
-    inputVisitDateDisplay.value = formatISOToBR(selectedDateISO);
-    inputVisitDateDisplay.classList.add('has-value');
-  } else {
-    inputVisitDateDisplay.value = '';
-    inputVisitDateDisplay.classList.remove('has-value');
+/**
+ * Renderiza a lista de horários disponíveis para o dia selecionado
+ */
+function renderTimeSlots(iso) {
+  if (!visitTimeSelectorWrap || !visitTimeSlotsGrid) return;
+
+  if (!iso) {
+    hideTimeSelector();
+    return;
+  }
+
+  const slots = getSlotsStatusForDate(iso);
+  if (slots.length === 0) {
+    hideTimeSelector();
+    return;
+  }
+
+  if (visitTimeSelectedDate) {
+    visitTimeSelectedDate.textContent = formatISOToBR(iso);
+  }
+
+  let html = '';
+  slots.forEach((item) => {
+    const isSelected = item.slot === selectedTimeSlot;
+    let btnClasses = ['btn-time-slot'];
+    if (isSelected) btnClasses.push('is-selected');
+    if (!item.isAvailable) btnClasses.push('is-disabled');
+
+    let subLabel = '';
+    if (item.isThursdayNight) {
+      subLabel = '<span class="slot-status-tag">Quinta à noite</span>';
+    } else if (item.isBooked) {
+      subLabel = '<span class="slot-status-tag">Ocupado</span>';
+    } else if (item.isPastTime) {
+      subLabel = '<span class="slot-status-tag">Encerrado</span>';
+    }
+
+    html += `
+      <button
+        type="button"
+        class="${btnClasses.join(' ')}"
+        data-slot="${item.slot}"
+        data-available="${item.isAvailable ? 'true' : 'false'}"
+        ${!item.isAvailable ? 'disabled aria-disabled="true"' : ''}
+        title="${escapeHtml(item.reason || `Escolher horário ${item.slot}`)}"
+      >
+        <span class="slot-time-text">${item.slot}</span>
+        ${subLabel}
+      </button>
+    `;
+  });
+
+  visitTimeSlotsGrid.innerHTML = html;
+  visitTimeSelectorWrap.style.display = 'block';
+
+  // Listeners dos botões de horário
+  visitTimeSlotsGrid.querySelectorAll('.btn-time-slot[data-available="true"]').forEach((slotBtn) => {
+    slotBtn.addEventListener('click', () => {
+      selectedTimeSlot = slotBtn.getAttribute('data-slot');
+      hideCalendarNotice();
+
+      // Atualiza visualmente o botão selecionado
+      visitTimeSlotsGrid.querySelectorAll('.btn-time-slot').forEach((b) => {
+        b.classList.remove('is-selected');
+      });
+      slotBtn.classList.add('is-selected');
+    });
+  });
+}
+
+function hideTimeSelector() {
+  if (visitTimeSelectorWrap) {
+    visitTimeSelectorWrap.style.display = 'none';
   }
 }
 
@@ -286,6 +477,9 @@ function switchVisitTab(tab) {
     if (visitFormView) visitFormView.style.display = 'block';
     if (visitListView) visitListView.style.display = 'none';
     renderCalendar();
+    if (selectedDateISO) {
+      renderTimeSlots(selectedDateISO);
+    }
   } else {
     if (tabVisitForm) tabVisitForm.classList.remove('is-active');
     if (tabVisitList) tabVisitList.classList.add('is-active');
@@ -315,21 +509,23 @@ function renderScheduledVisitsList() {
           <line x1="3" y1="10" x2="21" y2="10"></line>
         </svg>
         <p>Nenhuma visita agendada no momento.</p>
-        <span>Use a aba "Agendar Visita" para escolher uma data livre no calendário.</span>
+        <span>Use a aba "Agendar Visita" para escolher uma data e horário livres no calendário.</span>
       </div>
     `;
     return;
   }
 
-  // Ordena pelas datas agendadas (mais próximas primeiro)
+  // Ordena pelas datas agendadas e horários (mais próximos primeiro)
   const sorted = [...scheduledVisits].sort((a, b) => {
-    const isoA = normalizeDateToISO(a.dataISO || a.data) || '9999-99-99';
-    const isoB = normalizeDateToISO(b.dataISO || b.data) || '9999-99-99';
+    const isoA = (normalizeDateToISO(a.dataISO || a.data) || '9999-99-99') + ' ' + (a.horario || '00:00');
+    const isoB = (normalizeDateToISO(b.dataISO || b.data) || '9999-99-99') + ' ' + (b.horario || '00:00');
     return isoA.localeCompare(isoB);
   });
 
   visitCardsContainer.innerHTML = sorted.map((item) => {
     const displayDate = item.data || formatISOToBR(item.dataISO);
+    const displaySchedule = item.horario ? `${displayDate} às ${item.horario}` : displayDate;
+
     return `
       <div class="visit-scheduled-card" data-id="${escapeHtml(item.id)}">
         <div class="visit-scheduled-top">
@@ -342,10 +538,10 @@ function renderScheduledVisitsList() {
                 <line x1="8" y1="2" x2="8" y2="6"></line>
                 <line x1="3" y1="10" x2="21" y2="10"></line>
               </svg>
-              ${escapeHtml(displayDate)}
+              ${escapeHtml(displaySchedule)}
             </span>
           </div>
-          <button type="button" class="btn-cancel-visit" data-action="delete-visit" data-id="${escapeHtml(item.id)}" title="Cancelar agendamento e liberar data">
+          <button type="button" class="btn-cancel-visit" data-action="delete-visit" data-id="${escapeHtml(item.id)}" title="Cancelar agendamento e liberar horário">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <polyline points="3 6 5 6 21 6"></polyline>
               <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
@@ -391,10 +587,20 @@ async function handleVisitRequestSubmit(e) {
     return;
   }
 
-  const occupiedMap = getOccupiedDatesMap();
-  if (occupiedMap.has(selectedDateISO)) {
-    showCalendarNotice('Esta data já possui um evento ou visita agendada. Escolha outro dia disponível.');
-    renderCalendar();
+  if (!selectedTimeSlot) {
+    showCalendarNotice('Por favor, clique em um dos horários disponíveis para a visita.');
+    if (visitTimeSlotsGrid) {
+      visitTimeSlotsGrid.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+    return;
+  }
+
+  // Validação final de horário disponível
+  const availableSlots = getSlotsStatusForDate(selectedDateISO);
+  const currentSlotStatus = availableSlots.find((s) => s.slot === selectedTimeSlot);
+  if (!currentSlotStatus || !currentSlotStatus.isAvailable) {
+    showCalendarNotice('Este horário não está mais disponível. Por favor, escolha outro horário.');
+    renderTimeSlots(selectedDateISO);
     return;
   }
 
@@ -408,6 +614,7 @@ async function handleVisitRequestSubmit(e) {
     nome,
     dataISO: selectedDateISO,
     data: formatISOToBR(selectedDateISO),
+    horario: selectedTimeSlot,
     endereco,
     timestamp: Date.now()
   };
@@ -420,8 +627,9 @@ async function handleVisitRequestSubmit(e) {
   if (inputVisitName) inputVisitName.value = '';
   if (inputVisitAddress) inputVisitAddress.value = '';
   selectedDateISO = '';
-  updateSelectedDateInput();
+  selectedTimeSlot = '';
   hideCalendarNotice();
+  hideTimeSelector();
   renderCalendar();
 
   if (countScheduledVisits) {
@@ -438,6 +646,7 @@ async function handleVisitRequestSubmit(e) {
         nome: newVisit.nome,
         dataISO: newVisit.dataISO,
         data: newVisit.data,
+        horario: newVisit.horario,
         endereco: newVisit.endereco,
         timestamp: serverTimestamp()
       });
@@ -455,7 +664,8 @@ async function handleDeleteVisit(visitId) {
   const item = scheduledVisits.find((v) => String(v.id) === String(visitId));
   if (!item) return;
 
-  if (!confirm(`Deseja cancelar a visita agendada de "${item.nome}" no dia ${item.data}?`)) {
+  const msgTime = item.horario ? ` às ${item.horario}` : '';
+  if (!confirm(`Deseja cancelar o agendamento de "${item.nome}" no dia ${item.data}${msgTime}?`)) {
     return;
   }
 
@@ -463,6 +673,9 @@ async function handleDeleteVisit(visitId) {
   saveLocalVisits(scheduledVisits);
   renderScheduledVisitsList();
   renderCalendar();
+  if (selectedDateISO) {
+    renderTimeSlots(selectedDateISO);
+  }
 
   if (!String(visitId).startsWith('temp-')) {
     try {
@@ -493,6 +706,7 @@ function subscribeToVisitsAndEvents() {
           nome: data.nome || '',
           dataISO: iso,
           data: data.data || formatISOToBR(iso),
+          horario: data.horario || '',
           endereco: data.endereco || '',
           timestamp: Date.now()
         });
@@ -506,6 +720,9 @@ function subscribeToVisitsAndEvents() {
         countScheduledVisits.textContent = scheduledVisits.length;
       }
       renderCalendar();
+      if (selectedDateISO) {
+        renderTimeSlots(selectedDateISO);
+      }
       if (currentTab === 'list') {
         renderScheduledVisitsList();
       }
@@ -525,6 +742,9 @@ function subscribeToVisitsAndEvents() {
       localStorage.setItem(STORAGE_KEY_EVENTS, JSON.stringify(scheduledEvents));
     } catch (_) {}
     renderCalendar();
+    if (selectedDateISO) {
+      renderTimeSlots(selectedDateISO);
+    }
   };
 
   try {
@@ -569,6 +789,9 @@ export function openVisitsScreen() {
     visitsScreen.classList.add('is-active');
     visitsScreen.setAttribute('aria-hidden', 'false');
     renderCalendar();
+    if (selectedDateISO) {
+      renderTimeSlots(selectedDateISO);
+    }
     if (currentTab === 'list') {
       renderScheduledVisitsList();
     }
@@ -597,13 +820,16 @@ export function initVisits() {
 
   formVisitRequest = document.getElementById('formVisitRequest');
   inputVisitName = document.getElementById('visitRequestName');
-  inputVisitDateDisplay = document.getElementById('visitRequestDateDisplay');
   inputVisitAddress = document.getElementById('visitRequestAddress');
   calendarGridDays = document.getElementById('visitCalendarDays');
   calendarMonthYearLabel = document.getElementById('visitCalMonthYear');
   btnCalPrev = document.getElementById('btnVisitCalPrev');
   btnCalNext = document.getElementById('btnVisitCalNext');
   calendarFeedbackMsg = document.getElementById('visitCalendarFeedback');
+
+  visitTimeSelectorWrap = document.getElementById('visitTimeSelectorWrap');
+  visitTimeSelectedDate = document.getElementById('visitTimeSelectedDate');
+  visitTimeSlotsGrid = document.getElementById('visitTimeSlotsGrid');
 
   if (btnVisitsBack) {
     btnVisitsBack.addEventListener('click', closeVisitsScreen);
@@ -625,6 +851,9 @@ export function initVisits() {
         currentCalendarYear--;
       }
       renderCalendar();
+      if (selectedDateISO) {
+        renderTimeSlots(selectedDateISO);
+      }
     });
   }
 
@@ -636,6 +865,9 @@ export function initVisits() {
         currentCalendarYear++;
       }
       renderCalendar();
+      if (selectedDateISO) {
+        renderTimeSlots(selectedDateISO);
+      }
     });
   }
 

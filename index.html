@@ -19,7 +19,7 @@
     rel="stylesheet">
 
   <link rel="stylesheet" href="css/lenis.css">
-  <link rel="stylesheet" href="css/style.css?v=24">
+  <link rel="stylesheet" href="css/style.css?v=25">
 </head>
 
 <body>
@@ -384,6 +384,16 @@
                 </div>
 
                 <span class="visit-calendar-feedback" id="visitCalendarFeedback" style="display: none;"></span>
+
+                <!-- Seletor de Horários Disponíveis (Aparece ao selecionar o dia) -->
+                <div class="visit-time-selector-wrap" id="visitTimeSelectorWrap" style="display: none;">
+                  <div class="visit-time-header">
+                    <span class="visit-time-title">Horário da Visita em <strong id="visitTimeSelectedDate"></strong>:</span>
+                  </div>
+                  <div class="visit-time-slots-grid" id="visitTimeSlotsGrid">
+                    <!-- Horários gerados dinamicamente via JS -->
+                  </div>
+                </div>
               </div>
 
               <div class="form-group">
@@ -392,7 +402,7 @@
               </div>
 
               <div class="form-actions" style="margin-top: 8px;">
-                <button type="submit" class="btn-form-save btn-primary-wide">Solicitar Visita</button>
+                <button type="submit" class="btn-form-save btn-primary-wide" id="btnSubmitVisit">Salvar Agendamento</button>
               </div>
             </form>
           </div>
@@ -592,7 +602,7 @@
   </div>
 
   <script src="js/lenis.min.js"></script>
-  <script type="module" src="js/app.js?v=24"></script>
+  <script type="module" src="js/app.js?v=25"></script>
 </body>
 
 </html>
