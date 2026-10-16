@@ -68,12 +68,11 @@ let programacoesScreen = null;
 let btnProgramacoesBack = null;
 let btnAddEvent = null;
 
-// Banner Hero parcial com informações sobrepostas
+// Banner Hero parcial com suporte a múltiplos eventos e deslizamento lateral
 let progHeroWrap = null;
-let progHeroImg = null;
-let summaryEventTitle = null;
-let summaryEventMeta = null;
-let btnSummaryEdit = null;
+let progHeroTrack = null;
+let progHeroDotsIndicator = null;
+let currentDayEvents = [];
 
 // Calendário
 let calMonthYearLabel = null;
@@ -120,10 +119,16 @@ let editArtPreviewImg = null;
 let btnEditRemoveArt = null;
 let btnDeleteEventFromEdit = null;
 
-// Modal Preview Arte em Tela Cheia
+// Modal Preview Arte em Tela Cheia (com suporte a deslizar entre as artes do dia)
 let modalArtPreview = null;
-let modalArtPreviewImg = null;
+let modalArtTrack = null;
+let modalArtNavBar = null;
+let btnArtPrev = null;
+let btnArtNext = null;
+let artCounterBadge = null;
 let btnCloseArtPreview = null;
+let currentPreviewArts = [];
+let currentPreviewIndex = 0;
 
 function escapeHtml(str) {
   if (!str) return '';
@@ -252,46 +257,105 @@ function compressImage(file, maxDimension = 960, quality = 0.82) {
 }
 
 /**
- * Atualiza o Banner Hero parcial e as informações sobrepostas em degradê escuro
+ * Atualiza o Banner Hero parcial e as informações sobrepostas em degradê escuro.
+ * Suporta múltiplos eventos no mesmo dia com deslizamento horizontal suave e dots.
  */
-function updateHeroBanner(ev, targetDateISO = '') {
-  if (!summaryEventTitle || !summaryEventMeta) return;
+function updateHeroBanner(eventsForDay, targetDateISO = '') {
+  if (!progHeroTrack) return;
 
-  if (ev) {
-    currentActiveEvent = ev;
-    const iso = normalizeDateToISO(ev.dataISO || ev.data) || targetDateISO;
-    const [y, m, d] = iso.split('-').map(Number);
+  const rawList = Array.isArray(eventsForDay)
+    ? eventsForDay
+    : (eventsForDay ? [eventsForDay] : []);
+  currentDayEvents = rawList.filter(Boolean);
+
+  const iso = targetDateISO || (currentDayEvents[0] ? normalizeDateToISO(currentDayEvents[0].dataISO || currentDayEvents[0].data) : selectedDateISO);
+
+  // Se não há eventos no dia selecionado
+  if (currentDayEvents.length === 0) {
+    currentActiveEvent = null;
+    if (progHeroDotsIndicator) {
+      progHeroDotsIndicator.style.display = 'none';
+      progHeroDotsIndicator.innerHTML = '';
+    }
+
+    progHeroTrack.innerHTML = `
+      <div class="prog-hero-slide is-empty-day">
+        <div class="prog-hero-empty-backdrop"></div>
+        <div class="prog-hero-overlay">
+          <div class="prog-hero-info">
+            <span class="prog-hero-title">Nenhuma programação neste dia</span>
+            <span class="prog-hero-meta">${escapeHtml(formatISOTODateFull(iso))}</span>
+          </div>
+        </div>
+      </div>
+    `;
+    return;
+  }
+
+  currentActiveEvent = currentDayEvents[0];
+
+  // Configuração dos dots indicadores se houver 2 ou mais eventos
+  if (progHeroDotsIndicator) {
+    if (currentDayEvents.length > 1) {
+      progHeroDotsIndicator.style.display = 'flex';
+      progHeroDotsIndicator.innerHTML = currentDayEvents
+        .map((_, idx) => `<span class="prog-hero-dot ${idx === 0 ? 'is-active' : ''}" data-dot-idx="${idx}"></span>`)
+        .join('');
+    } else {
+      progHeroDotsIndicator.style.display = 'none';
+      progHeroDotsIndicator.innerHTML = '';
+    }
+  }
+
+  // Renderiza cada evento como um slide dentro do track
+  progHeroTrack.innerHTML = currentDayEvents.map((ev, idx) => {
+    const evIso = normalizeDateToISO(ev.dataISO || ev.data) || iso;
+    const [y, m, d] = evIso.split('-').map(Number);
     const dateObj = new Date(y, m - 1, d);
     const weekday = WEEKDAY_NAMES_FULL[dateObj.getDay()] || '';
-    const dateFormatted = formatISOToBR(iso);
-
-    summaryEventTitle.textContent = ev.titulo || 'Programação da Congregação';
+    const dateFormatted = formatISOToBR(evIso);
 
     const metaParts = [];
     if (weekday && dateFormatted) metaParts.push(`${weekday}, ${dateFormatted}`);
     if (ev.horario) metaParts.push(ev.horario);
     if (ev.local) metaParts.push(ev.local);
 
-    summaryEventMeta.textContent = metaParts.join(' • ');
+    const imgSrc = ev.arteUrl || ev.arteBase64 || 'icons/dia-das-criancas.jpg';
+    const counterBadgeHtml = currentDayEvents.length > 1
+      ? `<div class="prog-hero-slide-counter"><span>${idx + 1}/${currentDayEvents.length}</span></div>`
+      : '';
 
-    if (progHeroImg) {
-      const imgSrc = ev.arteUrl || ev.arteBase64 || 'icons/dia-das-criancas.jpg';
-      progHeroImg.src = imgSrc;
-      progHeroImg.style.display = 'block';
-    }
+    return `
+      <div class="prog-hero-slide" data-slide-index="${idx}" data-event-id="${escapeHtml(ev.id || '')}">
+        <img src="${escapeHtml(imgSrc)}" alt="${escapeHtml(ev.titulo || 'Arte da Programação')}" class="prog-hero-img" loading="lazy">
+        ${counterBadgeHtml}
+        <div class="prog-hero-zoom-badge">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <circle cx="11" cy="11" r="8"></circle>
+            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+            <line x1="11" y1="8" x2="11" y2="14"></line>
+            <line x1="8" y1="11" x2="14" y2="11"></line>
+          </svg>
+          <span>Toque para ver</span>
+        </div>
+        <div class="prog-hero-overlay">
+          <div class="prog-hero-info">
+            <span class="prog-hero-title">${escapeHtml(ev.titulo || 'Programação da Congregação')}</span>
+            <span class="prog-hero-meta">${escapeHtml(metaParts.join(' • '))}</span>
+          </div>
+          <button type="button" class="btn-hero-edit" data-event-id="${escapeHtml(ev.id || '')}" aria-label="Editar programação" title="Editar Programação">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3">
+              <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+              <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+            </svg>
+            <span>Editar</span>
+          </button>
+        </div>
+      </div>
+    `;
+  }).join('');
 
-    if (btnSummaryEdit) {
-      btnSummaryEdit.style.display = 'inline-flex';
-    }
-  } else if (targetDateISO) {
-    currentActiveEvent = null;
-    summaryEventTitle.textContent = 'Nenhuma programação neste dia';
-    summaryEventMeta.textContent = formatISOTODateFull(targetDateISO);
-
-    if (btnSummaryEdit) {
-      btnSummaryEdit.style.display = 'none';
-    }
-  }
+  progHeroTrack.scrollLeft = 0;
 }
 
 /**
@@ -360,23 +424,78 @@ function renderEventsCalendar() {
       btn.classList.add('is-selected');
 
       const dayEvents = eventsList.filter((ev) => normalizeDateToISO(ev.dataISO || ev.data) === iso);
-      if (dayEvents.length > 0) {
-        updateHeroBanner(dayEvents[0], iso);
-      } else {
-        updateHeroBanner(null, iso);
-      }
+      updateHeroBanner(dayEvents, iso);
     });
   });
 }
 
 /**
- * Preview da Arte em Tela Cheia no centro da tela com apenas um "X" para fechar
+ * Preview da Arte em Tela Cheia no centro da tela com apenas um "X" para fechar.
+ * Suporta deslizar para o lado para ver todas as artes de eventos agendados para aquele dia.
  */
-function openArtPreview(imageSrc) {
-  if (!modalArtPreview || !modalArtPreviewImg) return;
-  modalArtPreviewImg.src = imageSrc || (progHeroImg ? progHeroImg.src : 'icons/dia-das-criancas.jpg');
+function openArtPreview(eventsOrSrc, initialIndex = 0) {
+  if (!modalArtPreview || !modalArtTrack) return;
+
+  if (Array.isArray(eventsOrSrc)) {
+    currentPreviewArts = eventsOrSrc.map((ev) => ({
+      src: ev.arteUrl || ev.arteBase64 || 'icons/dia-das-criancas.jpg',
+      title: ev.titulo || 'Arte da Programação'
+    }));
+  } else if (typeof eventsOrSrc === 'string' && eventsOrSrc.trim()) {
+    currentPreviewArts = [{
+      src: eventsOrSrc,
+      title: 'Arte da Programação'
+    }];
+  } else {
+    currentPreviewArts = [{
+      src: 'icons/dia-das-criancas.jpg',
+      title: 'Arte da Programação'
+    }];
+  }
+
+  if (currentPreviewArts.length === 0) {
+    currentPreviewArts = [{
+      src: 'icons/dia-das-criancas.jpg',
+      title: 'Arte da Programação'
+    }];
+  }
+
+  currentPreviewIndex = Math.max(0, Math.min(initialIndex, currentPreviewArts.length - 1));
+
+  // Renderiza slides de arte no track
+  modalArtTrack.innerHTML = currentPreviewArts.map((item, idx) => `
+    <div class="modal-art-slide" data-art-index="${idx}">
+      <img src="${escapeHtml(item.src)}" alt="${escapeHtml(item.title)}" class="modal-art-slide-img" loading="lazy">
+    </div>
+  `).join('');
+
+  // Configura barra de navegação se houver 2 ou mais artes
+  if (modalArtNavBar && artCounterBadge) {
+    if (currentPreviewArts.length > 1) {
+      modalArtNavBar.style.display = 'flex';
+      artCounterBadge.textContent = `${currentPreviewIndex + 1} / ${currentPreviewArts.length}`;
+    } else {
+      modalArtNavBar.style.display = 'none';
+    }
+  }
+
   modalArtPreview.classList.add('is-open', 'is-active');
   modalArtPreview.setAttribute('aria-hidden', 'false');
+
+  // Ajusta a rolagem para a arte selecionada
+  requestAnimationFrame(() => {
+    if (modalArtTrack.clientWidth > 0) {
+      modalArtTrack.scrollLeft = currentPreviewIndex * modalArtTrack.clientWidth;
+    }
+  });
+}
+
+function updateModalArtCounter() {
+  if (!modalArtTrack || !artCounterBadge || currentPreviewArts.length <= 1) return;
+  const width = modalArtTrack.clientWidth || 1;
+  const idx = Math.min(Math.round(modalArtTrack.scrollLeft / width), currentPreviewArts.length - 1);
+  currentPreviewIndex = Math.max(0, idx);
+  artCounterBadge.textContent = `${currentPreviewIndex + 1} / ${currentPreviewArts.length}`;
 }
 
 function closeArtPreview() {
@@ -595,7 +714,8 @@ async function handleAddEventSubmit(e) {
 
     selectedDateISO = dataPrincipal;
     renderEventsCalendar();
-    updateHeroBanner(savedFirstEvent, dataPrincipal);
+    const dayEvents = eventsList.filter((ev) => normalizeDateToISO(ev.dataISO || ev.data) === dataPrincipal);
+    updateHeroBanner(dayEvents.length > 0 ? dayEvents : (savedFirstEvent ? [savedFirstEvent] : []), dataPrincipal);
 
     closeAddEventModal();
 
@@ -706,7 +826,8 @@ async function handleEditEventSubmit(e) {
     selectedDateISO = dataISO;
 
     renderEventsCalendar();
-    updateHeroBanner(updatedEv, dataISO);
+    const dayEvents = eventsList.filter((ev) => normalizeDateToISO(ev.dataISO || ev.data) === dataISO);
+    updateHeroBanner(dayEvents, dataISO);
 
     closeEditEventModal();
     showNotification('Programação atualizada com sucesso!');
@@ -741,7 +862,8 @@ async function handleDeleteEventFromEdit() {
     closeEditEventModal();
 
     renderEventsCalendar();
-    updateHeroBanner(eventsList[0] || null, selectedDateISO);
+    const dayEvents = eventsList.filter((ev) => normalizeDateToISO(ev.dataISO || ev.data) === selectedDateISO);
+    updateHeroBanner(dayEvents, selectedDateISO);
 
     showNotification('Programação excluída com sucesso.');
 
@@ -800,8 +922,8 @@ function subscribeToEvents() {
         saveLocalEvents(items);
         renderEventsCalendar();
         if (selectedDateISO) {
-          const evOnDate = eventsList.find((e) => normalizeDateToISO(e.dataISO || e.data) === selectedDateISO);
-          updateHeroBanner(evOnDate || eventsList[0], selectedDateISO);
+          const evOnDate = eventsList.filter((e) => normalizeDateToISO(e.dataISO || e.data) === selectedDateISO);
+          updateHeroBanner(evOnDate.length > 0 ? evOnDate : eventsList, selectedDateISO);
         }
       }
     }, (err) => {
@@ -823,8 +945,8 @@ export function openEventsScreen() {
 
     renderEventsCalendar();
 
-    const evOnDate = eventsList.find((e) => normalizeDateToISO(e.dataISO || e.data) === selectedDateISO);
-    updateHeroBanner(evOnDate || eventsList[0] || DEFAULT_INITIAL_EVENT, selectedDateISO);
+    const evOnDate = eventsList.filter((e) => normalizeDateToISO(e.dataISO || e.data) === selectedDateISO);
+    updateHeroBanner(evOnDate.length > 0 ? evOnDate : (eventsList[0] ? [eventsList[0]] : [DEFAULT_INITIAL_EVENT]), selectedDateISO);
   }
 }
 
@@ -846,12 +968,10 @@ export function initEvents() {
   btnProgramacoesBack = document.getElementById('btnProgramacoesBack');
   btnAddEvent = document.getElementById('btnAddEvent');
 
-  // Banner parcial com informações sobrepostas
+  // Banner parcial com suporte a múltiplos eventos e deslizamento lateral
   progHeroWrap = document.getElementById('progHeroWrap');
-  progHeroImg = document.getElementById('progHeroImg');
-  summaryEventTitle = document.getElementById('summaryEventTitle');
-  summaryEventMeta = document.getElementById('summaryEventMeta');
-  btnSummaryEdit = document.getElementById('btnSummaryEdit');
+  progHeroTrack = document.getElementById('progHeroTrack');
+  progHeroDotsIndicator = document.getElementById('progHeroDotsIndicator');
 
   // Calendário
   calMonthYearLabel = document.getElementById('progCalMonthYear');
@@ -898,9 +1018,13 @@ export function initEvents() {
   btnEditRemoveArt = document.getElementById('btnEditRemoveArt');
   btnDeleteEventFromEdit = document.getElementById('btnDeleteEventFromEdit');
 
-  // Modal Preview Arte
+  // Modal Preview Arte (com suporte a deslizar entre as artes do dia)
   modalArtPreview = document.getElementById('modalArtPreview');
-  modalArtPreviewImg = document.getElementById('modalArtPreviewImg');
+  modalArtTrack = document.getElementById('modalArtTrack');
+  modalArtNavBar = document.getElementById('modalArtNavBar');
+  btnArtPrev = document.getElementById('btnArtPrev');
+  btnArtNext = document.getElementById('btnArtNext');
+  artCounterBadge = document.getElementById('artCounterBadge');
   btnCloseArtPreview = document.getElementById('btnCloseArtPreview');
 
   // Listeners de Navegação da Tela
@@ -913,25 +1037,40 @@ export function initEvents() {
     btnAddEvent.addEventListener('click', () => openAddEventModal());
   }
 
-  // Ao clicar no banner parcial, abre a arte completa no centro da tela
-  if (progHeroWrap) {
-    progHeroWrap.addEventListener('click', (e) => {
-      // Se clicou no botão de editar, não abre o preview da imagem
-      if (e.target.closest('#btnSummaryEdit')) return;
-      const imgSrc = progHeroImg ? progHeroImg.src : 'icons/dia-das-criancas.jpg';
-      openArtPreview(imgSrc);
-    });
-  }
+  // Interações no Banner Hero (deslize lateral, clique para ver arte e clique no botão editar)
+  if (progHeroTrack) {
+    progHeroTrack.addEventListener('click', (e) => {
+      const editBtn = e.target.closest('.btn-hero-edit');
+      if (editBtn) {
+        e.stopPropagation();
+        const evId = editBtn.getAttribute('data-event-id');
+        const targetEvent = currentDayEvents.find((item) => item.id === evId) || currentActiveEvent || eventsList[0];
+        if (targetEvent) {
+          requestMemberAccess(() => {
+            openEditEventModal(targetEvent);
+          });
+        }
+        return;
+      }
 
-  // Botão Editar na barra sobreposta (abre com senha de membro: cbna.membro)
-  if (btnSummaryEdit) {
-    btnSummaryEdit.addEventListener('click', (e) => {
-      e.stopPropagation();
-      const eventToEdit = currentActiveEvent || eventsList[0] || DEFAULT_INITIAL_EVENT;
-      requestMemberAccess(() => {
-        openEditEventModal(eventToEdit);
-      });
+      const slide = e.target.closest('.prog-hero-slide');
+      if (slide && !slide.classList.contains('is-empty-day')) {
+        const slideIdx = parseInt(slide.getAttribute('data-slide-index') || '0', 10);
+        openArtPreview(currentDayEvents, slideIdx);
+      }
     });
+
+    // Atualiza os dots indicadores ao deslizar horizontalmente
+    progHeroTrack.addEventListener('scroll', () => {
+      if (!progHeroDotsIndicator || currentDayEvents.length <= 1) return;
+      const scrollLeft = progHeroTrack.scrollLeft;
+      const width = progHeroTrack.clientWidth || 1;
+      const activeIndex = Math.min(Math.round(scrollLeft / width), currentDayEvents.length - 1);
+      const dots = progHeroDotsIndicator.querySelectorAll('.prog-hero-dot');
+      dots.forEach((dot, i) => {
+        dot.classList.toggle('is-active', i === activeIndex);
+      });
+    }, { passive: true });
   }
 
   // Navegação do Mês no Calendário Geral
@@ -1098,8 +1237,28 @@ export function initEvents() {
     overlayArt.addEventListener('click', closeArtPreview);
   }
 
-  // Inicia exibição com o evento padrão
-  updateHeroBanner(eventsList[0] || DEFAULT_INITIAL_EVENT, selectedDateISO);
+  // Navegação entre artes do dia no modal
+  if (btnArtPrev && modalArtTrack) {
+    btnArtPrev.addEventListener('click', (e) => {
+      e.stopPropagation();
+      modalArtTrack.scrollBy({ left: -modalArtTrack.clientWidth, behavior: 'smooth' });
+    });
+  }
+
+  if (btnArtNext && modalArtTrack) {
+    btnArtNext.addEventListener('click', (e) => {
+      e.stopPropagation();
+      modalArtTrack.scrollBy({ left: modalArtTrack.clientWidth, behavior: 'smooth' });
+    });
+  }
+
+  if (modalArtTrack) {
+    modalArtTrack.addEventListener('scroll', updateModalArtCounter, { passive: true });
+  }
+
+  // Inicia exibição com os eventos do dia inicial
+  const initialDayEvents = eventsList.filter((e) => normalizeDateToISO(e.dataISO || e.data) === selectedDateISO);
+  updateHeroBanner(initialDayEvents.length > 0 ? initialDayEvents : (eventsList[0] ? [eventsList[0]] : [DEFAULT_INITIAL_EVENT]), selectedDateISO);
   renderEventsCalendar();
   subscribeToEvents();
 }
