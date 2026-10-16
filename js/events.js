@@ -1,11 +1,15 @@
 /**
  * Gestão de Programações e Eventos — Congregação Batista Nova Aurora
  * - Carrossel com artes dos eventos programados para a semana em curso (swipe horizontal)
+ * - Título limpo: "Eventos da semana"
+ * - Barra de informações resumidas em 2 linhas entre as artes e o calendário com botão de Editar
  * - Calendário geral com destaque laranja nos dias com programação
- * - Exibição de detalhes da programação e banner ao clicar na data
- * - Modal discreto para adicionar evento: evento, data, horário, local, arte (upload), repetição em calendário
+ * - Ao clicar na data, a arte e informações aparecem no slide do topo e na barra de 2 linhas
+ * - Nada abaixo do calendário
+ * - Edição protegida por senha de membro (cbna.membro)
+ * - Opção de excluir evento dentro do modal de edição com mensagem de confirmação
+ * - Botão de adicionar apenas no topo da aba
  * - Sincronização em tempo real via Cloud Firestore e suporte Offline (localStorage)
- * - Integração automática com o calendário de solicitação de visitas
  */
 
 import { db } from './firebase-config.js';
@@ -13,14 +17,16 @@ import {
   collection,
   addDoc,
   onSnapshot,
+  updateDoc,
   deleteDoc,
   doc,
   serverTimestamp
 } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
 
+import { requestMemberAccess } from './visitors.js';
+
 const STORAGE_KEY_PROG = 'nova_aurora_programacoes_v1';
 const STORAGE_KEY_EVENTS_COMPAT = 'nova_aurora_eventos_v1';
-const ADMIN_PASSWORD = 'CBNA.adm';
 
 const MONTH_NAMES = [
   'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
@@ -40,7 +46,6 @@ function getInitialFallbackEvents() {
   const d = now.getDate();
   const dow = now.getDay();
 
-  // Calcula datas próximas da semana para cultos regulares
   const sundayDiff = (7 - dow) % 7;
   const thursdayDiff = (4 - dow + 7) % 7;
   const saturdayDiff = (6 - dow + 7) % 7;
@@ -94,12 +99,15 @@ let eventsList = [];
 let currentCalendarMonth = new Date().getMonth();
 let currentCalendarYear = new Date().getFullYear();
 let selectedDateISO = '';
+let currentActiveEvent = null;
+let currentEditingEvent = null;
 
 // Variáveis do Modal de Adicionar Evento
 let currentRepeatMonth = new Date().getMonth();
 let currentRepeatYear = new Date().getFullYear();
 let selectedRepeatDates = new Set();
 let currentUploadedArtBase64 = '';
+let currentEditArtBase64 = '';
 
 // Elementos DOM
 let programacoesScreen = null;
@@ -107,14 +115,18 @@ let btnProgramacoesBack = null;
 let btnAddEvent = null;
 let carouselTrack = null;
 let carouselDots = null;
-let carouselEmptyNotice = null;
-let carouselHeaderSubtitle = null;
 
+// Barra de Informações Resumidas (2 Linhas)
+let eventSummaryBar = null;
+let summaryEventTitle = null;
+let summaryEventMeta = null;
+let btnSummaryEdit = null;
+
+// Calendário
 let calMonthYearLabel = null;
 let btnProgCalPrev = null;
 let btnProgCalNext = null;
 let progCalendarDays = null;
-let eventDayDetailsContainer = null;
 
 // Modal Novo Evento
 let modalAddEvent = null;
@@ -138,20 +150,28 @@ let btnRepeatCalNext = null;
 let repeatCalendarDays = null;
 let repeatDatesBadges = null;
 
+// Modal Editar Evento
+let modalEditEvent = null;
+let formEditEvent = null;
+let btnCloseEditEvent = null;
+let btnCancelEditEvent = null;
+let editEventId = null;
+let editEventTitle = null;
+let editEventDate = null;
+let editEventTime = null;
+let editEventLocation = null;
+let editEventArtInput = null;
+let editArtUploadBox = null;
+let editArtPreviewContainer = null;
+let editArtPreviewImg = null;
+let btnEditRemoveArt = null;
+let btnDeleteEventFromEdit = null;
+
 // Modal Preview Arte
 let modalArtPreview = null;
 let modalArtPreviewImg = null;
 let modalArtPreviewTitle = null;
 let btnCloseArtPreview = null;
-
-// Modal Confirmação Exclusão
-let modalDeleteEvent = null;
-let btnConfirmDeleteEvent = null;
-let btnCancelDeleteEvent = null;
-let btnCloseDeleteEvent = null;
-let deleteEventErrorMsg = null;
-let adminDeleteEventPassword = null;
-let pendingDeleteEventId = null;
 
 function escapeHtml(str) {
   if (!str) return '';
@@ -208,9 +228,7 @@ function getCurrentWeekRange() {
   const now = new Date();
   const dayOfWeek = now.getDay(); // 0 = Domingo, 6 = Sábado
   
-  // Domingo como primeiro dia da semana
   const start = new Date(now.getFullYear(), now.getMonth(), now.getDate() - dayOfWeek);
-  // Sábado como último dia da semana
   const end = new Date(now.getFullYear(), now.getMonth(), now.getDate() + (6 - dayOfWeek));
 
   const startISO = toISODateString(start.getFullYear(), start.getMonth(), start.getDate());
@@ -220,8 +238,7 @@ function getCurrentWeekRange() {
     start,
     end,
     startISO,
-    endISO,
-    label: `${start.getDate()} a ${end.getDate()} de ${MONTH_NAMES[end.getMonth()]}`
+    endISO
   };
 }
 
@@ -241,9 +258,7 @@ function loadLocalEvents() {
 function saveLocalEvents(list) {
   try {
     localStorage.setItem(STORAGE_KEY_PROG, JSON.stringify(list));
-    // Sincroniza também a chave de compatibilidade usada no visits.js
     localStorage.setItem(STORAGE_KEY_EVENTS_COMPAT, JSON.stringify(list));
-    // Notifica outros módulos no app
     window.dispatchEvent(new CustomEvent('novaAuroraEventsUpdated', { detail: list }));
   } catch (e) {
     console.warn('Erro ao salvar cache de programações:', e);
@@ -251,7 +266,7 @@ function saveLocalEvents(list) {
 }
 
 /**
- * Redimensiona e comprime imagem via HTML5 Canvas para salvar de forma leve no Firestore e LocalStorage
+ * Redimensiona e comprime imagem via HTML5 Canvas
  */
 function compressImage(file, maxDimension = 960, quality = 0.82) {
   return new Promise((resolve, reject) => {
@@ -295,18 +310,62 @@ function compressImage(file, maxDimension = 960, quality = 0.82) {
 }
 
 /**
- * Renderiza o Carrossel com as Artes dos Eventos da Semana em Curso
+ * Atualiza a barra de informações do evento em 2 linhas
+ * Linha 1: Nome do Evento
+ * Linha 2: Data, Horário e Local
+ * Ao lado: Botão de Editar
  */
-function renderWeekCarousel() {
+function updateSummaryBar(ev, targetDateISO = '') {
+  if (!summaryEventTitle || !summaryEventMeta) return;
+
+  if (ev) {
+    currentActiveEvent = ev;
+    const iso = normalizeDateToISO(ev.dataISO || ev.data);
+    const [y, m, d] = (iso || targetDateISO).split('-').map(Number);
+    const dateObj = new Date(y, m - 1, d);
+    const weekday = WEEKDAY_NAMES_FULL[dateObj.getDay()] || '';
+    const dateFormatted = formatISOToBR(iso || targetDateISO);
+
+    summaryEventTitle.textContent = ev.titulo || 'Programação da Congregação';
+
+    const metaParts = [];
+    if (weekday && dateFormatted) metaParts.push(`${weekday}, ${dateFormatted}`);
+    if (ev.horario) metaParts.push(ev.horario);
+    if (ev.local) metaParts.push(ev.local);
+
+    summaryEventMeta.textContent = metaParts.join(' • ');
+
+    if (btnSummaryEdit) {
+      btnSummaryEdit.style.display = 'inline-flex';
+    }
+  } else if (targetDateISO) {
+    currentActiveEvent = null;
+    summaryEventTitle.textContent = 'Nenhuma programação para este dia';
+    summaryEventMeta.textContent = formatISOTODateFull(targetDateISO);
+    if (btnSummaryEdit) {
+      btnSummaryEdit.style.display = 'none';
+    }
+  } else {
+    currentActiveEvent = null;
+    summaryEventTitle.textContent = 'Selecione uma data no calendário';
+    summaryEventMeta.textContent = 'Informações da programação';
+    if (btnSummaryEdit) {
+      btnSummaryEdit.style.display = 'none';
+    }
+  }
+}
+
+/**
+ * Renderiza o Carrossel com as Artes dos Eventos da Semana em Curso
+ * Se houver um evento selecionado fora da semana, garante que ele apareça no topo
+ */
+function renderWeekCarousel(forceEventToShow = null) {
   if (!carouselTrack) return;
 
   const week = getCurrentWeekRange();
-  if (carouselHeaderSubtitle) {
-    carouselHeaderSubtitle.textContent = `Semana de ${week.label}`;
-  }
 
-  // Filtra eventos da semana em curso
-  const weekEvents = eventsList
+  // Lista base: eventos da semana em curso
+  let displayEvents = eventsList
     .filter((ev) => {
       const iso = normalizeDateToISO(ev.dataISO || ev.data);
       return iso >= week.startISO && iso <= week.endISO;
@@ -318,11 +377,16 @@ function renderWeekCarousel() {
       return (a.horario || '').localeCompare(b.horario || '');
     });
 
-  if (weekEvents.length === 0) {
+  // Se o usuário clicou em uma data com evento que não está na semana, inclui no início
+  if (forceEventToShow && !displayEvents.some((e) => e.id === forceEventToShow.id)) {
+    displayEvents = [forceEventToShow, ...displayEvents];
+  }
+
+  if (displayEvents.length === 0) {
     carouselTrack.innerHTML = `
       <div class="carousel-slide-empty">
         <div class="empty-icon-wrap">
-          <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="#ff9900" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#ff9900" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
             <line x1="16" y1="2" x2="16" y2="6"></line>
             <line x1="8" y1="2" x2="8" y2="6"></line>
@@ -330,15 +394,16 @@ function renderWeekCarousel() {
           </svg>
         </div>
         <h4 class="empty-title">Nenhuma arte de evento nesta semana</h4>
-        <p class="empty-desc">Toque em <strong>+ Adicionar</strong> acima para cadastrar a programação da congregação.</p>
+        <p class="empty-desc">Toque em <strong>+ Adicionar</strong> acima para cadastrar a programação.</p>
       </div>
     `;
     if (carouselDots) carouselDots.innerHTML = '';
+    updateSummaryBar(null, selectedDateISO);
     return;
   }
 
   let htmlSlides = '';
-  weekEvents.forEach((ev, idx) => {
+  displayEvents.forEach((ev, idx) => {
     const iso = normalizeDateToISO(ev.dataISO || ev.data);
     const dateFormatted = formatISOToBR(iso);
     const [y, m, d] = iso.split('-').map(Number);
@@ -386,7 +451,7 @@ function renderWeekCarousel() {
   // Renderiza bolinhas indicadoras
   if (carouselDots) {
     let dotsHtml = '';
-    for (let i = 0; i < weekEvents.length; i++) {
+    for (let i = 0; i < displayEvents.length; i++) {
       dotsHtml += `<button type="button" class="carousel-dot ${i === 0 ? 'is-active' : ''}" data-index="${i}" aria-label="Ir para arte ${i + 1}"></button>`;
     }
     carouselDots.innerHTML = dotsHtml;
@@ -399,12 +464,17 @@ function renderWeekCarousel() {
         const slides = carouselTrack.querySelectorAll('.carousel-slide-card');
         if (slides[idx]) {
           slides[idx].scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
+          if (displayEvents[idx]) {
+            updateSummaryBar(displayEvents[idx]);
+            highlightDayInCalendar(normalizeDateToISO(displayEvents[idx].dataISO || displayEvents[idx].data));
+          }
         }
       });
     });
   }
 
-  // Atualiza bolinhas ao deslizar
+  // Atualiza bolinhas e a barra de informações de 2 linhas ao deslizar o carrossel
+  let scrollTimeout = null;
   carouselTrack.onscroll = () => {
     const scrollLeft = carouselTrack.scrollLeft;
     const slideWidth = carouselTrack.clientWidth;
@@ -421,14 +491,21 @@ function renderWeekCarousel() {
         }
       });
     }
+
+    clearTimeout(scrollTimeout);
+    scrollTimeout = setTimeout(() => {
+      if (displayEvents[activeIndex]) {
+        updateSummaryBar(displayEvents[activeIndex]);
+        highlightDayInCalendar(normalizeDateToISO(displayEvents[activeIndex].dataISO || displayEvents[activeIndex].data));
+      }
+    }, 120);
   };
 
-  // Ao clicar na arte do carrossel, se tiver arte abre o preview em tela cheia, senão rola até os detalhes daquele dia
+  // Clique na arte: se tiver arte abre o modal em tela cheia
   const slideCards = carouselTrack.querySelectorAll('.carousel-slide-card');
-  slideCards.forEach((card) => {
+  slideCards.forEach((card, idx) => {
     card.addEventListener('click', (e) => {
-      const evId = card.getAttribute('data-event-id');
-      const ev = eventsList.find((item) => item.id === evId);
+      const ev = displayEvents[idx];
       if (!ev) return;
 
       const artSrc = ev.arteBase64 || ev.arteUrl || '';
@@ -437,23 +514,29 @@ function renderWeekCarousel() {
       if (artSrc && (clickedArt || e.target.closest('.slide-art-zoom-badge'))) {
         openArtPreview(artSrc, ev.titulo);
       } else {
-        // Seleciona o dia no calendário e exibe seus detalhes
-        const iso = normalizeDateToISO(ev.dataISO || ev.data);
-        if (iso) {
-          const [y, m, d] = iso.split('-').map(Number);
-          currentCalendarMonth = m - 1;
-          currentCalendarYear = y;
-          selectedDateISO = iso;
-          renderEventsCalendar();
-          renderDayDetails(iso);
-          // Rola suavemente até o calendário
-          const calBox = document.getElementById('progCalendarBox');
-          if (calBox) {
-            calBox.scrollIntoView({ behavior: 'smooth', block: 'start' });
-          }
-        }
+        updateSummaryBar(ev);
+        highlightDayInCalendar(normalizeDateToISO(ev.dataISO || ev.data));
       }
     });
+  });
+
+  // Atualiza a barra de resumo com o evento inicial
+  const initialEvent = forceEventToShow || displayEvents[0];
+  if (initialEvent) {
+    updateSummaryBar(initialEvent);
+  }
+}
+
+function highlightDayInCalendar(iso) {
+  if (!iso || !progCalendarDays) return;
+  selectedDateISO = iso;
+  const dayButtons = progCalendarDays.querySelectorAll('.cal-day:not(.cal-day-empty)');
+  dayButtons.forEach((b) => {
+    if (b.getAttribute('data-iso') === iso) {
+      b.classList.add('is-selected');
+    } else {
+      b.classList.remove('is-selected');
+    }
   });
 }
 
@@ -472,7 +555,6 @@ function renderEventsCalendar() {
 
   let html = '';
 
-  // Dias em branco antes do início do mês
   for (let i = 0; i < firstDayOfMonth; i++) {
     html += `<div class="cal-day cal-day-empty" aria-hidden="true"></div>`;
   }
@@ -482,7 +564,6 @@ function renderEventsCalendar() {
     const isToday = iso === todayISO;
     const isSelected = iso === selectedDateISO;
 
-    // Verifica se existem programações neste dia
     const dayEvents = eventsList.filter((ev) => normalizeDateToISO(ev.dataISO || ev.data) === iso);
     const hasEvent = dayEvents.length > 0;
 
@@ -521,140 +602,29 @@ function renderEventsCalendar() {
       const iso = btn.getAttribute('data-iso');
       selectedDateISO = iso;
 
-      // Atualiza visual selecionado
       dayButtons.forEach((b) => b.classList.remove('is-selected'));
       btn.classList.add('is-selected');
 
-      renderDayDetails(iso);
-    });
-  });
-}
+      // Busca programação do dia clicado
+      const dayEvents = eventsList.filter((ev) => normalizeDateToISO(ev.dataISO || ev.data) === iso);
+      if (dayEvents.length > 0) {
+        const ev = dayEvents[0];
+        // Mostra a arte e os dados do evento no topo
+        renderWeekCarousel(ev);
+        // Atualiza a barra de resumo de 2 linhas e botão editar
+        updateSummaryBar(ev, iso);
 
-/**
- * Renderiza os detalhes da programação do dia clicado logo abaixo do calendário
- */
-function renderDayDetails(iso) {
-  if (!eventDayDetailsContainer) return;
-
-  if (!iso) {
-    eventDayDetailsContainer.innerHTML = '';
-    eventDayDetailsContainer.style.display = 'none';
-    return;
-  }
-
-  const dayEvents = eventsList.filter((ev) => normalizeDateToISO(ev.dataISO || ev.data) === iso);
-  const formattedDateFull = formatISOTODateFull(iso);
-
-  eventDayDetailsContainer.style.display = 'block';
-
-  if (dayEvents.length === 0) {
-    eventDayDetailsContainer.innerHTML = `
-      <div class="event-details-card">
-        <div class="details-header">
-          <span class="details-date-title">📅 ${formattedDateFull}</span>
-        </div>
-        <p class="details-empty-msg">Nenhuma programação cadastrada para este dia.</p>
-        <div class="details-quick-add">
-          <button type="button" class="btn-quick-add-prog" id="btnQuickAddProg">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-              <line x1="12" y1="5" x2="12" y2="19"></line>
-              <line x1="5" y1="12" x2="19" y2="12"></line>
-            </svg>
-            <span>Adicionar Programação neste dia</span>
-          </button>
-        </div>
-      </div>
-    `;
-
-    const btnQuick = eventDayDetailsContainer.querySelector('#btnQuickAddProg');
-    if (btnQuick) {
-      btnQuick.addEventListener('click', () => openAddEventModal(iso));
-    }
-    return;
-  }
-
-  let eventsHtml = '';
-  dayEvents.forEach((ev) => {
-    const artSrc = ev.arteBase64 || ev.arteUrl || '';
-    eventsHtml += `
-      <div class="day-event-item" data-id="${escapeHtml(ev.id)}">
-        ${
-          artSrc
-            ? `<div class="day-event-art-thumb" title="Toque para ampliar arte">
-                <img src="${artSrc}" alt="${escapeHtml(ev.titulo)}" class="day-event-art-img" />
-                <span class="thumb-zoom-icon">🔍</span>
-              </div>`
-            : ''
+        // Faz o carrossel rolar até o slide no topo suavemente
+        const firstSlide = carouselTrack.querySelector('.carousel-slide-card');
+        if (firstSlide) {
+          firstSlide.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
         }
-        <div class="day-event-info">
-          <div class="day-event-badge-row">
-            <span class="day-event-badge-highlight">Programação Oficial</span>
-            ${ev.horario ? `<span class="day-event-badge-time">⏰ ${escapeHtml(ev.horario)}</span>` : ''}
-          </div>
-          <h4 class="day-event-title">${escapeHtml(ev.titulo)}</h4>
-          ${ev.local ? `<p class="day-event-location">📍 ${escapeHtml(ev.local)}</p>` : ''}
-          ${ev.descricao ? `<p class="day-event-desc">${escapeHtml(ev.descricao)}</p>` : ''}
-        </div>
-        <button type="button" class="btn-delete-event-item" data-id="${escapeHtml(ev.id)}" title="Excluir esta programação" aria-label="Excluir programação">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <polyline points="3 6 5 6 21 6"></polyline>
-            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
-          </svg>
-        </button>
-      </div>
-    `;
-  });
-
-  eventDayDetailsContainer.innerHTML = `
-    <div class="event-details-card">
-      <div class="details-header">
-        <div class="details-header-badge">
-          <span class="details-dot-orange"></span>
-          <span>PROGRAMAÇÕES DO DIA</span>
-        </div>
-        <span class="details-date-title">${formattedDateFull}</span>
-      </div>
-      <div class="day-events-list">
-        ${eventsHtml}
-      </div>
-      <div class="details-quick-add" style="margin-top: 10px;">
-        <button type="button" class="btn-quick-add-prog" id="btnQuickAddProg">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-            <line x1="12" y1="5" x2="12" y2="19"></line>
-            <line x1="5" y1="12" x2="19" y2="12"></line>
-          </svg>
-          <span>Adicionar Outra Programação</span>
-        </button>
-      </div>
-    </div>
-  `;
-
-  // Listener para ampliar a imagem
-  const artThumbs = eventDayDetailsContainer.querySelectorAll('.day-event-art-thumb');
-  artThumbs.forEach((thumb) => {
-    thumb.addEventListener('click', () => {
-      const img = thumb.querySelector('img');
-      if (img && img.src) {
-        const titleEl = thumb.closest('.day-event-item').querySelector('.day-event-title');
-        openArtPreview(img.src, titleEl ? titleEl.textContent : 'Arte da Programação');
+      } else {
+        // Dia sem programação: atualiza barra resumida
+        updateSummaryBar(null, iso);
       }
     });
   });
-
-  // Listener para excluir
-  const delButtons = eventDayDetailsContainer.querySelectorAll('.btn-delete-event-item');
-  delButtons.forEach((btn) => {
-    btn.addEventListener('click', (e) => {
-      e.stopPropagation();
-      const id = btn.getAttribute('data-id');
-      requestDeleteEvent(id);
-    });
-  });
-
-  const btnQuick = eventDayDetailsContainer.querySelector('#btnQuickAddProg');
-  if (btnQuick) {
-    btnQuick.addEventListener('click', () => openAddEventModal(iso));
-  }
 }
 
 /**
@@ -683,7 +653,6 @@ function closeArtPreview() {
 export function openAddEventModal(prefillDate = '') {
   if (!modalAddEvent) return;
 
-  // Reset do formulário
   if (formAddEvent) formAddEvent.reset();
   currentUploadedArtBase64 = '';
   selectedRepeatDates.clear();
@@ -694,13 +663,11 @@ export function openAddEventModal(prefillDate = '') {
   if (repeatSection) repeatSection.style.display = 'none';
   if (eventRepeatsToggle) eventRepeatsToggle.checked = false;
 
-  // Preenchimento de campos padrão
   const targetDate = prefillDate || selectedDateISO || getTodayISO();
   if (inputEventDate) inputEventDate.value = targetDate;
   if (inputEventTime) inputEventTime.value = '19:30';
   if (inputEventLocation) inputEventLocation.value = 'Templo Nova Aurora';
 
-  // Configura o mês do mini calendário de repetição baseado na data selecionada
   const [y, m] = targetDate.split('-').map(Number);
   currentRepeatYear = y || new Date().getFullYear();
   currentRepeatMonth = (m - 1) || new Date().getMonth();
@@ -768,7 +735,6 @@ function renderRepeatCalendar() {
 
   repeatCalendarDays.innerHTML = html;
 
-  // Listeners
   const buttons = repeatCalendarDays.querySelectorAll('.repeat-cal-day:not(.is-empty)');
   buttons.forEach((btn) => {
     btn.addEventListener('click', (e) => {
@@ -822,7 +788,7 @@ function renderRepeatDatesBadges() {
 }
 
 /**
- * Salva a nova programação (data principal + repetições)
+ * Salva a nova programação
  */
 async function handleAddEventSubmit(e) {
   e.preventDefault();
@@ -853,7 +819,7 @@ async function handleAddEventSubmit(e) {
 
   try {
     const allDates = [dataPrincipal, ...Array.from(selectedRepeatDates)];
-    const savedIds = [];
+    let savedFirstEvent = null;
 
     for (const dtISO of allDates) {
       const eventDocData = {
@@ -870,30 +836,31 @@ async function handleAddEventSubmit(e) {
 
       try {
         const docRef = await addDoc(collection(db, 'programacoes'), eventDocData);
-        savedIds.push(docRef.id);
+        const newEv = { id: docRef.id, ...eventDocData };
+        eventsList.push(newEv);
+        if (!savedFirstEvent) savedFirstEvent = newEv;
       } catch (err) {
         console.warn('Erro ao salvar no Firestore (usando modo offline):', err);
         const fallbackId = 'local-' + Date.now() + '-' + Math.random().toString(36).substr(2, 5);
-        eventsList.push({
+        const newEv = {
           id: fallbackId,
           ...eventDocData,
           createdAt: new Date().toISOString()
-        });
-        savedIds.push(fallbackId);
+        };
+        eventsList.push(newEv);
+        if (!savedFirstEvent) savedFirstEvent = newEv;
       }
     }
 
     saveLocalEvents(eventsList);
 
-    // Atualiza visual
     selectedDateISO = dataPrincipal;
-    renderWeekCarousel();
+    renderWeekCarousel(savedFirstEvent);
     renderEventsCalendar();
-    renderDayDetails(dataPrincipal);
+    updateSummaryBar(savedFirstEvent, dataPrincipal);
 
     closeAddEventModal();
 
-    // Notifica usuário
     const totalSalvos = allDates.length;
     showNotification(
       totalSalvos > 1
@@ -901,7 +868,6 @@ async function handleAddEventSubmit(e) {
         : 'Programação salva com sucesso!'
     );
 
-    // Garante que o agendamento de visitas atualize o bloqueio de horário
     window.dispatchEvent(new CustomEvent('novaAuroraEventsUpdated', { detail: eventsList }));
 
   } catch (err) {
@@ -916,59 +882,132 @@ async function handleAddEventSubmit(e) {
 }
 
 /**
- * Solicitação e exclusão de eventos com segurança
+ * Modal de Edição de Evento (Protegido por senha de membro: cbna.membro)
  */
-function requestDeleteEvent(id) {
-  pendingDeleteEventId = id;
-  if (!modalDeleteEvent) {
-    if (confirm('Tem certeza que deseja excluir esta programação?')) {
-      executeDeleteEvent(id);
-    }
+export function openEditEventModal(ev) {
+  if (!modalEditEvent || !ev) return;
+
+  currentEditingEvent = ev;
+  currentEditArtBase64 = ev.arteBase64 || ev.arteUrl || '';
+
+  if (editEventId) editEventId.value = ev.id || '';
+  if (editEventTitle) editEventTitle.value = ev.titulo || '';
+  if (editEventDate) editEventDate.value = normalizeDateToISO(ev.dataISO || ev.data);
+  if (editEventTime) editEventTime.value = ev.horario || '19:30';
+  if (editEventLocation) editEventLocation.value = ev.local || 'Templo Nova Aurora';
+
+  if (currentEditArtBase64) {
+    if (editArtPreviewImg) editArtPreviewImg.src = currentEditArtBase64;
+    if (editArtPreviewContainer) editArtPreviewContainer.style.display = 'block';
+    if (editArtUploadBox) editArtUploadBox.style.display = 'none';
+  } else {
+    if (editArtPreviewContainer) editArtPreviewContainer.style.display = 'none';
+    if (editArtUploadBox) editArtUploadBox.style.display = 'flex';
+  }
+
+  modalEditEvent.classList.add('is-active');
+  modalEditEvent.setAttribute('aria-hidden', 'false');
+
+  if (editEventTitle) {
+    setTimeout(() => editEventTitle.focus(), 150);
+  }
+}
+
+export function closeEditEventModal() {
+  if (!modalEditEvent) return;
+  modalEditEvent.classList.remove('is-active');
+  modalEditEvent.setAttribute('aria-hidden', 'true');
+  currentEditingEvent = null;
+}
+
+/**
+ * Salva as alterações da programação editada
+ */
+async function handleEditEventSubmit(e) {
+  e.preventDefault();
+  if (!currentEditingEvent) return;
+
+  const id = currentEditingEvent.id;
+  const titulo = editEventTitle ? editEventTitle.value.trim() : '';
+  const dataISO = editEventDate ? editEventDate.value : '';
+  const horario = editEventTime ? editEventTime.value.trim() : '';
+  const local = editEventLocation ? editEventLocation.value.trim() : 'Templo Nova Aurora';
+
+  if (!titulo || !dataISO) {
+    alert('Preencha os campos obrigatórios (evento e data).');
     return;
   }
 
-  if (adminDeleteEventPassword) adminDeleteEventPassword.value = '';
-  if (deleteEventErrorMsg) deleteEventErrorMsg.style.display = 'none';
+  const updatedData = {
+    titulo: titulo,
+    nome: titulo,
+    data: formatISOToBR(dataISO),
+    dataISO: dataISO,
+    horario: horario,
+    local: local,
+    arteBase64: currentEditArtBase64 || '',
+    updatedAt: serverTimestamp()
+  };
 
-  modalDeleteEvent.classList.add('is-active');
-  modalDeleteEvent.setAttribute('aria-hidden', 'false');
+  try {
+    try {
+      await updateDoc(doc(db, 'programacoes', id), updatedData);
+    } catch (_) {}
 
-  if (adminDeleteEventPassword) {
-    setTimeout(() => adminDeleteEventPassword.focus(), 150);
+    // Atualiza cache local
+    eventsList = eventsList.map((item) => {
+      if (item.id === id) {
+        return { ...item, ...updatedData };
+      }
+      return item;
+    });
+    saveLocalEvents(eventsList);
+
+    const updatedEv = eventsList.find((item) => item.id === id) || { id, ...updatedData };
+    selectedDateISO = dataISO;
+
+    renderWeekCarousel(updatedEv);
+    renderEventsCalendar();
+    updateSummaryBar(updatedEv, dataISO);
+
+    closeEditEventModal();
+    showNotification('Programação atualizada com sucesso!');
+
+    window.dispatchEvent(new CustomEvent('novaAuroraEventsUpdated', { detail: eventsList }));
+  } catch (err) {
+    console.error('Erro ao atualizar programação:', err);
+    alert('Erro ao atualizar: ' + err.message);
   }
 }
 
-function closeDeleteEventModal() {
-  if (!modalDeleteEvent) return;
-  modalDeleteEvent.classList.remove('is-active');
-  modalDeleteEvent.setAttribute('aria-hidden', 'true');
-  pendingDeleteEventId = null;
-}
+/**
+ * Exclusão direta com mensagem de confirmação
+ */
+async function handleDeleteEventFromEdit() {
+  if (!currentEditingEvent) return;
 
-async function executeDeleteEvent(id) {
-  if (!id) return;
+  const evTitle = currentEditingEvent.titulo || 'esta programação';
+  const confirmed = window.confirm(`Deseja realmente excluir "${evTitle}"? Esta ação é definitiva.`);
+  if (!confirmed) return;
+
+  const id = currentEditingEvent.id;
 
   try {
-    // 1. Tenta deletar no Firestore
     try {
       await deleteDoc(doc(db, 'programacoes', id));
     } catch (_) {}
 
-    // 2. Remove do cache local
     eventsList = eventsList.filter((item) => item.id !== id);
     saveLocalEvents(eventsList);
 
-    // 3. Atualiza UI
+    closeEditEventModal();
+
     renderWeekCarousel();
     renderEventsCalendar();
-    if (selectedDateISO) {
-      renderDayDetails(selectedDateISO);
-    }
+    updateSummaryBar(null, selectedDateISO);
 
-    closeDeleteEventModal();
-    showNotification('Programação removida com sucesso.');
+    showNotification('Programação excluída com sucesso.');
 
-    // Notifica visits.js
     window.dispatchEvent(new CustomEvent('novaAuroraEventsUpdated', { detail: eventsList }));
   } catch (err) {
     console.error('Erro ao excluir evento:', err);
@@ -1024,7 +1063,8 @@ function subscribeToEvents() {
         renderWeekCarousel();
         renderEventsCalendar();
         if (selectedDateISO) {
-          renderDayDetails(selectedDateISO);
+          const evOnDate = eventsList.find((e) => normalizeDateToISO(e.dataISO || e.data) === selectedDateISO);
+          updateSummaryBar(evOnDate, selectedDateISO);
         }
       }
     }, (err) => {
@@ -1043,11 +1083,11 @@ export function openEventsScreen() {
     renderWeekCarousel();
     renderEventsCalendar();
 
-    // Se ainda não houver dia selecionado, seleciona o dia de hoje
     if (!selectedDateISO) {
       selectedDateISO = getTodayISO();
-      renderDayDetails(selectedDateISO);
     }
+    const evOnDate = eventsList.find((e) => normalizeDateToISO(e.dataISO || e.data) === selectedDateISO);
+    updateSummaryBar(evOnDate || eventsList[0], selectedDateISO);
   }
 }
 
@@ -1070,13 +1110,18 @@ export function initEvents() {
   btnAddEvent = document.getElementById('btnAddEvent');
   carouselTrack = document.getElementById('carouselTrack');
   carouselDots = document.getElementById('carouselDots');
-  carouselHeaderSubtitle = document.getElementById('carouselHeaderSubtitle');
 
+  // Barra de resumo em 2 linhas
+  eventSummaryBar = document.getElementById('eventSummaryBar');
+  summaryEventTitle = document.getElementById('summaryEventTitle');
+  summaryEventMeta = document.getElementById('summaryEventMeta');
+  btnSummaryEdit = document.getElementById('btnSummaryEdit');
+
+  // Calendário
   calMonthYearLabel = document.getElementById('progCalMonthYear');
   btnProgCalPrev = document.getElementById('btnProgCalPrev');
   btnProgCalNext = document.getElementById('btnProgCalNext');
   progCalendarDays = document.getElementById('progCalendarDays');
-  eventDayDetailsContainer = document.getElementById('eventDayDetailsContainer');
 
   // Elementos do Modal de Adicionar
   modalAddEvent = document.getElementById('modalAddEvent');
@@ -1100,27 +1145,47 @@ export function initEvents() {
   repeatCalendarDays = document.getElementById('repeatCalendarDays');
   repeatDatesBadges = document.getElementById('repeatDatesBadges');
 
+  // Elementos do Modal de Editar
+  modalEditEvent = document.getElementById('modalEditEvent');
+  formEditEvent = document.getElementById('formEditEvent');
+  btnCloseEditEvent = document.getElementById('btnCloseEditEvent');
+  btnCancelEditEvent = document.getElementById('btnCancelEditEvent');
+  editEventId = document.getElementById('editEventId');
+  editEventTitle = document.getElementById('editEventTitle');
+  editEventDate = document.getElementById('editEventDate');
+  editEventTime = document.getElementById('editEventTime');
+  editEventLocation = document.getElementById('editEventLocation');
+  editEventArtInput = document.getElementById('editEventArtInput');
+  editArtUploadBox = document.getElementById('editArtUploadBox');
+  editArtPreviewContainer = document.getElementById('editArtPreviewContainer');
+  editArtPreviewImg = document.getElementById('editArtPreviewImg');
+  btnEditRemoveArt = document.getElementById('btnEditRemoveArt');
+  btnDeleteEventFromEdit = document.getElementById('btnDeleteEventFromEdit');
+
   // Modal Preview Arte
   modalArtPreview = document.getElementById('modalArtPreview');
   modalArtPreviewImg = document.getElementById('modalArtPreviewImg');
   modalArtPreviewTitle = document.getElementById('modalArtPreviewTitle');
   btnCloseArtPreview = document.getElementById('btnCloseArtPreview');
 
-  // Modal Exclusão
-  modalDeleteEvent = document.getElementById('modalDeleteEvent');
-  btnConfirmDeleteEvent = document.getElementById('btnConfirmDeleteEvent');
-  btnCancelDeleteEvent = document.getElementById('btnCancelDeleteEvent');
-  btnCloseDeleteEvent = document.getElementById('btnCloseDeleteEvent');
-  deleteEventErrorMsg = document.getElementById('deleteEventErrorMsg');
-  adminDeleteEventPassword = document.getElementById('adminDeleteEventPassword');
-
   // Listeners de Navegação da Tela
   if (btnProgramacoesBack) {
     btnProgramacoesBack.addEventListener('click', closeEventsScreen);
   }
 
+  // Único botão de adicionar (topo da aba)
   if (btnAddEvent) {
     btnAddEvent.addEventListener('click', () => openAddEventModal());
+  }
+
+  // Botão Editar na barra de informações (abre somente com senha de membro: cbna.membro)
+  if (btnSummaryEdit) {
+    btnSummaryEdit.addEventListener('click', () => {
+      if (!currentActiveEvent) return;
+      requestMemberAccess(() => {
+        openEditEventModal(currentActiveEvent);
+      });
+    });
   }
 
   // Navegação do Mês no Calendário Geral
@@ -1150,21 +1215,18 @@ export function initEvents() {
   if (btnCloseAddEvent) {
     btnCloseAddEvent.addEventListener('click', closeAddEventModal);
   }
-
   if (btnCancelAddEvent) {
     btnCancelAddEvent.addEventListener('click', closeAddEventModal);
   }
-
   const overlayAdd = document.getElementById('overlayAddEvent');
   if (overlayAdd) {
     overlayAdd.addEventListener('click', closeAddEventModal);
   }
-
   if (formAddEvent) {
     formAddEvent.addEventListener('submit', handleAddEventSubmit);
   }
 
-  // Upload e Compressão de Arte
+  // Upload e Compressão de Arte (Novo)
   if (inputEventArt) {
     inputEventArt.addEventListener('change', async (e) => {
       const file = e.target.files && e.target.files[0];
@@ -1209,7 +1271,6 @@ export function initEvents() {
     });
   }
 
-  // Navegação no mini calendário de repetição
   if (btnRepeatCalPrev) {
     btnRepeatCalPrev.addEventListener('click', () => {
       currentRepeatMonth--;
@@ -1232,6 +1293,56 @@ export function initEvents() {
     });
   }
 
+  // Listeners do Modal Editar
+  if (btnCloseEditEvent) {
+    btnCloseEditEvent.addEventListener('click', closeEditEventModal);
+  }
+  if (btnCancelEditEvent) {
+    btnCancelEditEvent.addEventListener('click', closeEditEventModal);
+  }
+  const overlayEdit = document.getElementById('overlayEditEvent');
+  if (overlayEdit) {
+    overlayEdit.addEventListener('click', closeEditEventModal);
+  }
+  if (formEditEvent) {
+    formEditEvent.addEventListener('submit', handleEditEventSubmit);
+  }
+  if (btnDeleteEventFromEdit) {
+    btnDeleteEventFromEdit.addEventListener('click', handleDeleteEventFromEdit);
+  }
+
+  // Upload e Compressão de Arte (Edição)
+  if (editEventArtInput) {
+    editEventArtInput.addEventListener('change', async (e) => {
+      const file = e.target.files && e.target.files[0];
+      if (!file) return;
+
+      try {
+        if (editArtUploadBox) editArtUploadBox.classList.add('is-uploading');
+        const compressedBase64 = await compressImage(file, 960, 0.82);
+        currentEditArtBase64 = compressedBase64;
+
+        if (editArtPreviewImg) editArtPreviewImg.src = compressedBase64;
+        if (editArtPreviewContainer) editArtPreviewContainer.style.display = 'block';
+        if (editArtUploadBox) editArtUploadBox.style.display = 'none';
+      } catch (err) {
+        alert('Erro ao carregar imagem: ' + err.message);
+      } finally {
+        if (editArtUploadBox) editArtUploadBox.classList.remove('is-uploading');
+      }
+    });
+  }
+
+  if (btnEditRemoveArt) {
+    btnEditRemoveArt.addEventListener('click', () => {
+      currentEditArtBase64 = '';
+      if (editEventArtInput) editEventArtInput.value = '';
+      if (editArtPreviewContainer) editArtPreviewContainer.style.display = 'none';
+      if (editArtPreviewImg) editArtPreviewImg.src = '';
+      if (editArtUploadBox) editArtUploadBox.style.display = 'flex';
+    });
+  }
+
   // Preview de Arte
   if (btnCloseArtPreview) {
     btnCloseArtPreview.addEventListener('click', closeArtPreview);
@@ -1239,29 +1350,6 @@ export function initEvents() {
   const overlayArt = document.getElementById('overlayArtPreview');
   if (overlayArt) {
     overlayArt.addEventListener('click', closeArtPreview);
-  }
-
-  // Exclusão com Senha de Admin
-  if (btnCloseDeleteEvent) {
-    btnCloseDeleteEvent.addEventListener('click', closeDeleteEventModal);
-  }
-  if (btnCancelDeleteEvent) {
-    btnCancelDeleteEvent.addEventListener('click', closeDeleteEventModal);
-  }
-  const overlayDelete = document.getElementById('overlayDeleteEvent');
-  if (overlayDelete) {
-    overlayDelete.addEventListener('click', closeDeleteEventModal);
-  }
-
-  if (btnConfirmDeleteEvent) {
-    btnConfirmDeleteEvent.addEventListener('click', () => {
-      const pwd = adminDeleteEventPassword ? adminDeleteEventPassword.value.trim() : '';
-      if (pwd === ADMIN_PASSWORD) {
-        executeDeleteEvent(pendingDeleteEventId);
-      } else {
-        if (deleteEventErrorMsg) deleteEventErrorMsg.style.display = 'block';
-      }
-    });
   }
 
   // Inicia carregamento

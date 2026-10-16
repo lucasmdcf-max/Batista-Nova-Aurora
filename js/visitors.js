@@ -22,7 +22,7 @@ import {
 } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
 
 const STORAGE_KEY = 'nova_aurora_visitantes_v2';
-const MEMBER_PASSWORD = 'bemvindo';
+const MEMBER_PASSWORD = 'cbna.membro';
 
 // Fallback inicial offline
 const initialFallbackVisitors = [];
@@ -146,15 +146,31 @@ function attachPhoneMask(input) {
   });
 }
 
+let pendingMemberAuthCallback = null;
+
+export function isMemberAuthenticated() {
+  try {
+    return isMemberUnlocked || sessionStorage.getItem('nova_aurora_member_unlocked') === 'true';
+  } catch (_) {
+    return isMemberUnlocked;
+  }
+}
+
+export function requestMemberAccess(callback) {
+  if (isMemberAuthenticated()) {
+    isMemberUnlocked = true;
+    if (typeof callback === 'function') callback();
+    return;
+  }
+  pendingMemberAuthCallback = callback;
+  openMemberAuthModal();
+}
+
 /**
  * Autenticação de Membro
  */
 export function requestAccessToVisitors() {
-  if (isMemberUnlocked) {
-    openVisitorsScreen();
-    return;
-  }
-  openMemberAuthModal();
+  requestMemberAccess(() => openVisitorsScreen());
 }
 
 function openMemberAuthModal() {
@@ -173,6 +189,7 @@ function closeMemberAuthModal() {
   modalMemberAuth.classList.remove('is-open');
   modalMemberAuth.setAttribute('aria-hidden', 'true');
   if (memberAuthErrorMsg) memberAuthErrorMsg.style.display = 'none';
+  pendingMemberAuthCallback = null;
 }
 
 function handleMemberAuthSubmit(e) {
@@ -180,8 +197,17 @@ function handleMemberAuthSubmit(e) {
   const entered = (inputMemberPassword ? inputMemberPassword.value : '').trim().toLowerCase();
   if (entered === MEMBER_PASSWORD.toLowerCase()) {
     isMemberUnlocked = true;
+    try {
+      sessionStorage.setItem('nova_aurora_member_unlocked', 'true');
+    } catch (_) {}
     closeMemberAuthModal();
-    openVisitorsScreen();
+    if (typeof pendingMemberAuthCallback === 'function') {
+      const cb = pendingMemberAuthCallback;
+      pendingMemberAuthCallback = null;
+      cb();
+    } else {
+      openVisitorsScreen();
+    }
   } else {
     if (memberAuthErrorMsg) {
       memberAuthErrorMsg.style.display = 'block';

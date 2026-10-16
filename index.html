@@ -19,7 +19,7 @@
     rel="stylesheet">
 
   <link rel="stylesheet" href="css/lenis.css">
-  <link rel="stylesheet" href="css/style.css?v=26">
+  <link rel="stylesheet" href="css/style.css?v=27">
 </head>
 
 <body>
@@ -329,11 +329,7 @@
         <!-- Bloco Superior: Carrossel das Artes da Semana em Curso -->
         <div class="carousel-section">
           <div class="carousel-section-header">
-            <div class="carousel-header-left">
-              <span class="offer-badge badge-orange">Semana em Curso</span>
-              <h3 class="carousel-heading">ARTES DA SEMANA</h3>
-            </div>
-            <span class="carousel-subtitle" id="carouselHeaderSubtitle">Destaques da Semana</span>
+            <h3 class="carousel-heading">Eventos da semana</h3>
           </div>
 
           <div class="events-carousel-wrap">
@@ -348,8 +344,23 @@
           </div>
         </div>
 
+        <!-- Informações resumidas do evento selecionado em 2 linhas com botão de editar -->
+        <div class="event-summary-bar" id="eventSummaryBar">
+          <div class="event-summary-info">
+            <div class="summary-line-1" id="summaryEventTitle">Selecione uma data no calendário</div>
+            <div class="summary-line-2" id="summaryEventMeta">Informações da programação</div>
+          </div>
+          <button type="button" class="btn-summary-edit" id="btnSummaryEdit" aria-label="Editar programação" title="Editar programação" style="display: none;">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M12 20h9"></path>
+              <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path>
+            </svg>
+            <span>Editar</span>
+          </button>
+        </div>
+
         <!-- Bloco Inferior: Calendário Geral de Programações -->
-        <div class="calendar-section" style="margin-top: 18px;">
+        <div class="calendar-section" style="margin-top: 14px;">
           <div class="calendar-section-header">
             <span class="offer-badge badge-blue">Calendário</span>
             <h3 class="calendar-heading">TODAS AS PROGRAMAÇÕES</h3>
@@ -389,11 +400,6 @@
               <span class="cal-legend-item"><i class="cal-legend-dot dot-free"></i> Sem Programação</span>
               <span class="cal-legend-item"><i class="cal-legend-dot dot-today"></i> Hoje</span>
             </div>
-          </div>
-
-          <!-- Painel Dinâmico de Detalhes da Programação do Dia Selecionado -->
-          <div class="event-day-details-container" id="eventDayDetailsContainer" style="display: none;">
-            <!-- Conteúdo dinâmico via JS -->
           </div>
         </div>
 
@@ -811,33 +817,77 @@
       </div>
     </div>
 
-    <!-- Modal Excluir Programação (Admin) -->
-    <div class="app-modal" id="modalDeleteEvent" aria-hidden="true">
-      <div class="app-modal-overlay" id="overlayDeleteEvent"></div>
-      <div class="app-modal-card">
+    <!-- Modal Editar Programação -->
+    <div class="app-modal" id="modalEditEvent" aria-hidden="true">
+      <div class="app-modal-overlay" id="overlayEditEvent"></div>
+      <div class="app-modal-card modal-event-card">
         <div class="app-modal-header">
-          <h3>Excluir Programação</h3>
-          <button type="button" class="btn-modal-close" id="btnCloseDeleteEvent" aria-label="Fechar">✕</button>
+          <h3>Editar Programação</h3>
+          <button type="button" class="btn-modal-close" id="btnCloseEditEvent" aria-label="Fechar">✕</button>
         </div>
-        <div class="app-modal-body">
-          <p class="delete-warning-text">Esta ação removerá esta programação do calendário da congregação.</p>
-          <div class="form-group" style="margin-top: 14px;">
-            <label for="adminDeleteEventPassword">Senha do Administrador</label>
-            <input type="password" id="adminDeleteEventPassword" placeholder="Digite a senha de administrador" autocomplete="current-password">
-            <span class="delete-error-msg" id="deleteEventErrorMsg" style="display: none;">Senha incorreta. Apenas administradores podem excluir.</span>
+        <form id="formEditEvent" class="app-form">
+          <input type="hidden" id="editEventId">
+          <div class="form-group">
+            <label for="editEventTitle">Nome do Evento *</label>
+            <input type="text" id="editEventTitle" placeholder="Ex: Culto de Celebração" required autocomplete="off">
           </div>
-          <div class="form-actions" style="margin-top: 18px;">
-            <button type="button" class="btn-form-cancel" id="btnCancelDeleteEvent">Cancelar</button>
-            <button type="button" class="btn-delete-confirm" id="btnConfirmDeleteEvent">Excluir</button>
+
+          <div class="form-row-2col">
+            <div class="form-group">
+              <label for="editEventDate">Data *</label>
+              <input type="date" id="editEventDate" required>
+            </div>
+            <div class="form-group">
+              <label for="editEventTime">Horário *</label>
+              <input type="time" id="editEventTime" required>
+            </div>
           </div>
-        </div>
+
+          <div class="form-group">
+            <label for="editEventLocation">Local *</label>
+            <input type="text" id="editEventLocation" placeholder="Ex: Templo Nova Aurora" required>
+          </div>
+
+          <div class="form-group">
+            <label>Arte do Evento (Banner / Flyer)</label>
+            
+            <div class="art-upload-box" id="editArtUploadBox">
+              <input type="file" id="editEventArtInput" accept="image/*" class="art-file-input">
+              <div class="art-upload-content">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#ffaa33" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                  <circle cx="8.5" cy="8.5" r="1.5"></circle>
+                  <polyline points="21 15 16 10 5 21"></polyline>
+                </svg>
+                <span class="art-upload-label">Trocar arte da programação</span>
+                <span class="art-upload-hint">PNG, JPG ou WEBP</span>
+              </div>
+            </div>
+
+            <!-- Preview da arte atual/nova -->
+            <div class="art-preview-wrap" id="editArtPreviewContainer" style="display: none;">
+              <div class="art-preview-frame">
+                <img id="editArtPreviewImg" src="" alt="Prévia da arte" class="art-preview-image">
+                <button type="button" class="btn-remove-art" id="btnEditRemoveArt" title="Remover arte">✕ Remover Arte</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="form-actions edit-event-form-actions" style="margin-top: 16px; display: flex; justify-content: space-between; align-items: center;">
+            <button type="button" class="btn-delete-confirm btn-delete-event-trigger" id="btnDeleteEventFromEdit">Excluir Evento</button>
+            <div style="display: flex; gap: 8px;">
+              <button type="button" class="btn-form-cancel" id="btnCancelEditEvent">Cancelar</button>
+              <button type="submit" class="btn-form-save">Salvar Alterações</button>
+            </div>
+          </div>
+        </form>
       </div>
     </div>
 
   </div>
 
   <script src="js/lenis.min.js"></script>
-  <script type="module" src="js/app.js?v=26"></script>
+  <script type="module" src="js/app.js?v=27"></script>
 </body>
 
 </html>
