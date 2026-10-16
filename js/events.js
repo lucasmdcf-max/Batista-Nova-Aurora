@@ -21,7 +21,7 @@ import {
   serverTimestamp
 } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
 
-import { requestMemberAccess } from './visitors.js';
+import { requestMemberAccess, isMemberAuthenticated } from './visitors.js';
 
 const STORAGE_KEY_PROG = 'nova_aurora_programacoes_v1';
 const STORAGE_KEY_EVENTS_COMPAT = 'nova_aurora_eventos_v1';
@@ -505,39 +505,41 @@ function closeArtPreview() {
 }
 
 /**
- * Gerenciamento do Modal de Cadastro de Evento
+ * Gerenciamento do Modal de Cadastro de Evento (Protegido por Senha de Membro)
  */
 export function openAddEventModal(prefillDate = '') {
-  if (!modalAddEvent) return;
+  requestMemberAccess(() => {
+    if (!modalAddEvent) return;
 
-  if (formAddEvent) formAddEvent.reset();
-  currentUploadedArtBase64 = '';
-  selectedRepeatDates.clear();
+    if (formAddEvent) formAddEvent.reset();
+    currentUploadedArtBase64 = '';
+    selectedRepeatDates.clear();
 
-  if (artPreviewContainer) artPreviewContainer.style.display = 'none';
-  if (artPreviewImg) artPreviewImg.src = '';
-  if (artUploadBox) artUploadBox.style.display = 'flex';
-  if (repeatSection) repeatSection.style.display = 'none';
-  if (eventRepeatsToggle) eventRepeatsToggle.checked = false;
+    if (artPreviewContainer) artPreviewContainer.style.display = 'none';
+    if (artPreviewImg) artPreviewImg.src = '';
+    if (artUploadBox) artUploadBox.style.display = 'flex';
+    if (repeatSection) repeatSection.style.display = 'none';
+    if (eventRepeatsToggle) eventRepeatsToggle.checked = false;
 
-  const targetDate = prefillDate || selectedDateISO || '2026-10-17';
-  if (inputEventDate) inputEventDate.value = targetDate;
-  if (inputEventTime) inputEventTime.value = '19:30';
-  if (inputEventLocation) inputEventLocation.value = 'Congregação Nova Aurora';
+    const targetDate = prefillDate || selectedDateISO || '2026-10-17';
+    if (inputEventDate) inputEventDate.value = targetDate;
+    if (inputEventTime) inputEventTime.value = '19:30';
+    if (inputEventLocation) inputEventLocation.value = 'Congregação Nova Aurora';
 
-  const [y, m] = targetDate.split('-').map(Number);
-  currentRepeatYear = y || 2026;
-  currentRepeatMonth = (m - 1) || 9;
+    const [y, m] = targetDate.split('-').map(Number);
+    currentRepeatYear = y || 2026;
+    currentRepeatMonth = (m - 1) || 9;
 
-  renderRepeatCalendar();
-  renderRepeatDatesBadges();
+    renderRepeatCalendar();
+    renderRepeatDatesBadges();
 
-  modalAddEvent.classList.add('is-open', 'is-active');
-  modalAddEvent.setAttribute('aria-hidden', 'false');
+    modalAddEvent.classList.add('is-open', 'is-active');
+    modalAddEvent.setAttribute('aria-hidden', 'false');
 
-  if (inputEventTitle) {
-    setTimeout(() => inputEventTitle.focus(), 150);
-  }
+    if (inputEventTitle) {
+      setTimeout(() => inputEventTitle.focus(), 150);
+    }
+  });
 }
 
 export function closeAddEventModal() {
@@ -649,6 +651,11 @@ function renderRepeatDatesBadges() {
  */
 async function handleAddEventSubmit(e) {
   e.preventDefault();
+
+  if (!isMemberAuthenticated()) {
+    alert('Apenas membros autorizados podem cadastrar programações.');
+    return;
+  }
 
   const titulo = inputEventTitle ? inputEventTitle.value.trim() : '';
   const dataPrincipal = inputEventDate ? inputEventDate.value : '';
@@ -786,6 +793,11 @@ async function handleEditEventSubmit(e) {
   e.preventDefault();
   if (!currentEditingEvent) return;
 
+  if (!isMemberAuthenticated()) {
+    alert('Apenas membros autorizados podem editar programações.');
+    return;
+  }
+
   const id = currentEditingEvent.id;
   const titulo = editEventTitle ? editEventTitle.value.trim() : '';
   const dataISO = editEventDate ? editEventDate.value : '';
@@ -844,6 +856,11 @@ async function handleEditEventSubmit(e) {
  */
 async function handleDeleteEventFromEdit() {
   if (!currentEditingEvent) return;
+
+  if (!isMemberAuthenticated()) {
+    alert('Apenas membros autorizados podem excluir programações.');
+    return;
+  }
 
   const evTitle = currentEditingEvent.titulo || 'esta programação';
   const confirmed = window.confirm(`Deseja realmente excluir "${evTitle}"? Esta ação é definitiva.`);
