@@ -19,7 +19,7 @@
     rel="stylesheet">
 
   <link rel="stylesheet" href="css/lenis.css">
-  <link rel="stylesheet" href="css/style.css?v=23">
+  <link rel="stylesheet" href="css/style.css?v=24">
 </head>
 
 <body>
@@ -29,7 +29,10 @@
 
     <!-- Nome da congregação no topo (revelado em fade-in no nível mais baixo do scroll) -->
     <div class="congregation-header-brand" id="congregationBrand">
-      <img src="FUNDO APP/nome-trimmed.png?v=3" alt="Congregação Nova Aurora">
+      <picture>
+        <source srcset="FUNDO APP/nome-trimmed.webp?v=24" type="image/webp">
+        <img src="FUNDO APP/nome-trimmed.png?v=24" alt="Congregação Nova Aurora" decoding="async">
+      </picture>
     </div>
 
     <!-- Viewport estático: Fica 100% travado dentro da tela -->
@@ -37,27 +40,42 @@
       <div class="parallax-stage" id="parallaxStage">
         <!-- Fundo integral de segurança contra qualquer transparência -->
         <div class="parallax-layer layer-base" id="layerBase">
-          <img src="FUNDO APP/referência.png?v=3" alt="Base">
+          <picture>
+            <source srcset="FUNDO APP/referencia.webp?v=24" type="image/webp">
+            <img src="FUNDO APP/referência.png?v=24" alt="Base" loading="eager" decoding="async">
+          </picture>
         </div>
 
         <!-- Camada 04: Céu, montanha dourada e Cruz -->
         <div class="parallax-layer layer-04" id="layer04">
-          <img src="FUNDO APP/04.png?v=3" alt="Camada 04">
+          <picture>
+            <source srcset="FUNDO APP/04.webp?v=24" type="image/webp">
+            <img src="FUNDO APP/04.png?v=24" alt="Camada 04" loading="eager" decoding="async">
+          </picture>
         </div>
 
         <!-- Camada 03: Colinas -->
         <div class="parallax-layer layer-03" id="layer03">
-          <img src="FUNDO APP/03.png?v=3" alt="Camada 03">
+          <picture>
+            <source srcset="FUNDO APP/03.webp?v=24" type="image/webp">
+            <img src="FUNDO APP/03.png?v=24" alt="Camada 03" loading="eager" decoding="async">
+          </picture>
         </div>
 
         <!-- Camada 02: Cidade (atualizada) -->
         <div class="parallax-layer layer-02" id="layer02">
-          <img src="FUNDO APP/02.png?v=3" alt="Camada 02">
+          <picture>
+            <source srcset="FUNDO APP/02.webp?v=24" type="image/webp">
+            <img src="FUNDO APP/02.png?v=24" alt="Camada 02" loading="eager" decoding="async">
+          </picture>
         </div>
 
         <!-- Camada 01: Rua de paralelepípedos e casas -->
         <div class="parallax-layer layer-01" id="layer01">
-          <img src="FUNDO APP/01.png?v=3" alt="Camada 01">
+          <picture>
+            <source srcset="FUNDO APP/01.webp?v=24" type="image/webp">
+            <img src="FUNDO APP/01.png?v=24" alt="Camada 01" loading="eager" decoding="async">
+          </picture>
         </div>
       </div>
     </div>
@@ -574,7 +592,7 @@
   </div>
 
   <script src="js/lenis.min.js"></script>
-  <script type="module" src="js/app.js?v=23"></script>
+  <script type="module" src="js/app.js?v=24"></script>
 </body>
 
 </html>

@@ -23,42 +23,46 @@ import { initVisits, openVisitsScreen, closeVisitsScreen } from './visits.js';
   const btnHome = document.getElementById('btnHome');
   const homeMenuItems = Array.from(document.querySelectorAll('.home-menu-item'));
 
+  let cachedH = (mobileFrame && mobileFrame.clientHeight) || window.innerHeight;
+  let lastProgress = -1;
+
   function renderParallax(progress) {
-    const H = mobileFrame.clientHeight || window.innerHeight;
+    const p = Math.min(1, Math.max(0, progress));
+    // Evita recalcular e re-renderizar quando o scroll estiver estacionário
+    if (lastProgress !== -1 && Math.abs(p - lastProgress) < 0.0001) return;
+    lastProgress = p;
+
+    const H = cachedH;
     const L = H * 1.75;
     const delta = L - H;
-    const p = Math.min(1, Math.max(0, progress));
 
     // Camada Base e Camada 04 (Céu e Cruz):
     const y4 = -p * (delta * 0.50);
-    if (layerBase) layerBase.style.transform = `translate3d(-50%, ${y4}px, 0)`;
-    if (layer04) layer04.style.transform = `translate3d(-50%, ${y4}px, 0)`;
+    const y4Str = `translate3d(-50%, ${y4.toFixed(1)}px, 0)`;
+    if (layerBase) layerBase.style.transform = y4Str;
+    if (layer04) layer04.style.transform = y4Str;
 
     // Camada 03 (Colinas)
     const y3 = -p * (delta * 0.68);
-    if (layer03) layer03.style.transform = `translate3d(-50%, ${y3}px, 0)`;
+    if (layer03) layer03.style.transform = `translate3d(-50%, ${y3.toFixed(1)}px, 0)`;
 
     // Camada 02 (Cidade)
     const y2 = -p * (delta * 0.85);
-    if (layer02) layer02.style.transform = `translate3d(-50%, ${y2}px, 0)`;
+    if (layer02) layer02.style.transform = `translate3d(-50%, ${y2.toFixed(1)}px, 0)`;
 
     // Camada 01 (Rua):
-    // Ao final (p = 1), y1 = -delta (a base toca perfeitamente no fundo da tela)
     const y1 = -p * delta;
-    if (layer01) layer01.style.transform = `translate3d(-50%, ${y1}px, 0)`;
+    if (layer01) layer01.style.transform = `translate3d(-50%, ${y1.toFixed(1)}px, 0)`;
 
     // Nome da Congregação: Efeito Fade-In no topo ao atingir o nível mais baixo do scroll
     if (congregationBrand) {
-      // Inicia a transição a partir de 70% da descida e atinge 100% de opacidade no nível mais baixo
       const fadeStart = 0.70;
       const fade = Math.max(0, Math.min(1, (p - fadeStart) / (1 - fadeStart)));
       congregationBrand.style.opacity = fade.toFixed(3);
-      congregationBrand.style.transform = `translate(-50%, ${(1 - fade) * -12}px)`;
+      congregationBrand.style.transform = `translate3d(-50%, ${((1 - fade) * -12).toFixed(1)}px, 0)`;
     }
 
     // Menu Inicial em Cascata:
-    // Desliza da esquerda para a direita de cima para baixo sucessivamente
-    // Quando topar o scroll na parte inferior (p = 1.0), o último item ("INFANTIL") aparece completamente.
     if (homeMenuItems.length > 0) {
       const cascadeStart = 0.65;
       const totalItems = homeMenuItems.length;
@@ -76,7 +80,7 @@ import { initVisits, openVisitsScreen, closeVisitsScreen } from './visits.js';
         const offsetX = (1 - eased) * -45;
 
         item.style.opacity = eased.toFixed(3);
-        item.style.transform = `translateX(${offsetX.toFixed(1)}px)`;
+        item.style.transform = `translate3d(${offsetX.toFixed(1)}px, 0, 0)`;
         item.style.pointerEvents = eased > 0.4 ? 'auto' : 'none';
       }
     }
@@ -91,23 +95,24 @@ import { initVisits, openVisitsScreen, closeVisitsScreen } from './visits.js';
     lenis = new window.Lenis({
       wrapper: scrollContainer,
       content: scrollContainer.querySelector('.scroll-spacer'),
-      duration: 1.2,
+      duration: 1.0,
       easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
       smoothWheel: true,
+      syncTouch: false,
       wheelMultiplier: 1.0,
-      touchMultiplier: 1.8,
+      touchMultiplier: 1.0,
+    });
+
+    lenis.on('scroll', (e) => {
+      renderParallax(e.progress);
     });
 
     function raf(time) {
       lenis.raf(time);
-      renderParallax(lenis.progress || 0);
       requestAnimationFrame(raf);
     }
     requestAnimationFrame(raf);
-  }
-
-  // Listener nativo do container para sincronismo imediato (mouse, toque, teclado)
-  if (scrollContainer) {
+  } else if (scrollContainer) {
     scrollContainer.addEventListener('scroll', () => {
       const scroll = scrollContainer.scrollTop;
       const maxScroll = scrollContainer.scrollHeight - scrollContainer.clientHeight;
@@ -124,13 +129,15 @@ import { initVisits, openVisitsScreen, closeVisitsScreen } from './visits.js';
   }, { passive: true });
 
   window.addEventListener('resize', () => {
+    cachedH = (mobileFrame && mobileFrame.clientHeight) || window.innerHeight;
     if (scrollContainer) {
       const scroll = scrollContainer.scrollTop;
       const maxScroll = scrollContainer.scrollHeight - scrollContainer.clientHeight;
       const progress = maxScroll > 0 ? scroll / maxScroll : 0;
+      lastProgress = -1;
       renderParallax(progress);
     }
-  });
+  }, { passive: true });
 
   // Retorna para o menu inicial (limite inferior do scroll onde o nome da congregação é exibido)
   function scrollToHome() {
@@ -224,8 +231,8 @@ import { initVisits, openVisitsScreen, closeVisitsScreen } from './visits.js';
   // ==========================================
   // Controle de Versão e Atualização Automática PWA
   // ==========================================
-  const APP_VERSION = '1.1.6';
-  const APP_BUILD = 23;
+  const APP_VERSION = '1.1.7';
+  const APP_BUILD = 24;
   let waitingWorker = null;
   let isUpdating = false;
 
