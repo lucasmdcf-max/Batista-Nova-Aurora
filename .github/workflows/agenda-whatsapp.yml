@@ -1,0 +1,28 @@
+name: Agenda Diaria WhatsApp (07h00)
+
+on:
+  schedule:
+    # Executa todos os dias às 10:00 UTC (07:00 da manhã no Horário de Brasília / UTC-3)
+    - cron: '0 10 * * *'
+  workflow_dispatch:
+    # Permite disparar o envio manualmente a qualquer momento pela aba Actions do GitHub
+
+jobs:
+  enviar-agenda:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Baixar Código do Repositório
+        uses: actions/checkout@v4
+
+      - name: Configurar Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Executar Envio da Agenda Diária
+        env:
+          PHONE_NUMBER: '5581994990084'
+          CALLMEBOT_APIKEY: ${{ secrets.CALLMEBOT_APIKEY }}
+        run: |
+          node scripts/enviar-agenda-whatsapp.js
