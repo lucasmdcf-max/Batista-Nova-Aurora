@@ -51,6 +51,7 @@ let visitCardsContainer = null;
 
 let formVisitRequest = null;
 let inputVisitName = null;
+let inputVisitPhone = null;
 let inputVisitAddress = null;
 let calendarGridDays = null;
 let calendarMonthYearLabel = null;
@@ -61,6 +62,32 @@ let calendarFeedbackMsg = null;
 let visitTimeSelectorWrap = null;
 let visitTimeSelectedDate = null;
 let visitTimeSlotsGrid = null;
+
+function cleanPhoneNumber(phone) {
+  return String(phone || '').replace(/\D/g, '');
+}
+
+function formatPhoneDisplay(val) {
+  const digits = cleanPhoneNumber(val).slice(0, 11);
+  if (digits.length <= 2) return digits;
+  if (digits.length <= 6) return `(${digits.slice(0, 2)}) ${digits.slice(2)}`;
+  if (digits.length <= 10) return `(${digits.slice(0, 2)}) ${digits.slice(2, 6)}-${digits.slice(6)}`;
+  return `(${digits.slice(0, 2)}) ${digits.slice(2, 7)}-${digits.slice(7, 11)}`;
+}
+
+function attachPhoneMask(input) {
+  if (!input) return;
+  input.addEventListener('input', () => {
+    const cursor = input.selectionStart;
+    const oldLength = input.value.length;
+    input.value = formatPhoneDisplay(input.value);
+    const newLength = input.value.length;
+    const diff = newLength - oldLength;
+    if (cursor !== null) {
+      input.setSelectionRange(cursor + diff, cursor + diff);
+    }
+  });
+}
 
 function loadLocalVisits() {
   try {
@@ -570,6 +597,9 @@ function renderScheduledVisitsList() {
   visitCardsContainer.innerHTML = sorted.map((item) => {
     const displayDate = item.data || formatISOToBR(item.dataISO);
     const displaySchedule = item.horario ? `${displayDate} às ${item.horario}` : displayDate;
+    const cleanPhone = cleanPhoneNumber(item.telefone);
+    const waMsg = encodeURIComponent(`Olá ${item.nome}! Tudo bem? Entramos em contato da Congregação Batista Nova Aurora sobre a visita agendada para ${displaySchedule}. Que Deus abençoe!`);
+    const waUrl = cleanPhone.length >= 10 ? `https://wa.me/55${cleanPhone}?text=${waMsg}` : '';
 
     return `
       <div class="visit-scheduled-card" data-id="${escapeHtml(item.id)}">
@@ -586,13 +616,31 @@ function renderScheduledVisitsList() {
               ${escapeHtml(displaySchedule)}
             </span>
           </div>
-          <button type="button" class="btn-cancel-visit" data-action="delete-visit" data-id="${escapeHtml(item.id)}" title="Cancelar agendamento e liberar horário">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <polyline points="3 6 5 6 21 6"></polyline>
-              <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
-            </svg>
-          </button>
+          <div class="visit-card-actions">
+            ${waUrl ? `
+              <a href="${waUrl}" target="_blank" rel="noopener noreferrer" class="btn-whatsapp-direct" title="Falar no WhatsApp com ${escapeHtml(item.nome)}">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M20.52 3.48A11.93 11.93 0 0 0 12.06 0C5.46 0 .09 5.37.09 11.97c0 2.11.55 4.16 1.6 5.97L0 24l6.22-1.63a11.9 11.9 0 0 0 5.84 1.51h.01c6.6 0 11.97-5.37 11.97-11.97 0-3.2-1.25-6.21-3.52-8.43zm-8.46 18.49h-.01a9.92 9.92 0 0 1-5.06-1.39l-.36-.21-3.76.99 1-3.66-.23-.37a9.9 9.9 0 0 1-1.52-5.26c0-5.48 4.46-9.94 9.95-9.94 2.66 0 5.15 1.03 7.03 2.91a9.88 9.88 0 0 1 2.91 7.03c0 5.48-4.47 9.93-9.95 9.93zm5.45-7.44c-.3-.15-1.77-.87-2.04-.97-.28-.1-.48-.15-.68.15-.2.3-.77.97-.95 1.17-.17.2-.35.22-.65.07-.3-.15-1.26-.46-2.4-1.48-.89-.79-1.49-1.77-1.66-2.07-.17-.3-.02-.46.13-.61.14-.13.3-.35.45-.52.15-.17.2-.3.3-.5.1-.2.05-.37-.02-.52-.08-.15-.68-1.64-.93-2.25-.25-.59-.5-.51-.68-.52h-.58c-.2 0-.52.07-.8.37-.27.3-1.04 1.02-1.04 2.48 0 1.46 1.07 2.87 1.21 3.07.15.2 2.1 3.2 5.08 4.49.71.31 1.26.49 1.69.63.71.23 1.36.2 1.87.12.57-.09 1.77-.72 2.02-1.42.25-.7.25-1.3.18-1.42-.08-.13-.27-.2-.57-.35z"/>
+                </svg>
+                <span>WhatsApp</span>
+              </a>
+            ` : ''}
+            <button type="button" class="btn-cancel-visit" data-action="delete-visit" data-id="${escapeHtml(item.id)}" title="Cancelar agendamento e liberar horário">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="3 6 5 6 21 6"></polyline>
+                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+              </svg>
+            </button>
+          </div>
         </div>
+        ${item.telefone ? `
+          <div class="visit-scheduled-phone">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path>
+            </svg>
+            <span>${escapeHtml(item.telefone)}</span>
+          </div>
+        ` : ''}
         <div class="visit-scheduled-address">
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#ffaa33" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0; margin-top:2px;">
             <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
@@ -619,11 +667,19 @@ async function handleVisitRequestSubmit(e) {
   e.preventDefault();
 
   const nome = (inputVisitName ? inputVisitName.value : '').trim();
+  const telefone = (inputVisitPhone ? inputVisitPhone.value : '').trim();
   const endereco = (inputVisitAddress ? inputVisitAddress.value : '').trim();
 
   if (!nome) {
     alert('Por favor, informe o seu nome.');
     if (inputVisitName) inputVisitName.focus();
+    return;
+  }
+
+  const cleanPhone = cleanPhoneNumber(telefone);
+  if (cleanPhone.length < 10) {
+    alert('Por favor, informe um telefone WhatsApp válido com DDD.');
+    if (inputVisitPhone) inputVisitPhone.focus();
     return;
   }
 
@@ -657,6 +713,7 @@ async function handleVisitRequestSubmit(e) {
 
   const newVisit = {
     nome,
+    telefone: formatPhoneDisplay(telefone),
     dataISO: selectedDateISO,
     data: formatISOToBR(selectedDateISO),
     horario: selectedTimeSlot,
@@ -670,6 +727,7 @@ async function handleVisitRequestSubmit(e) {
 
   // Limpa campos do formulário
   if (inputVisitName) inputVisitName.value = '';
+  if (inputVisitPhone) inputVisitPhone.value = '';
   if (inputVisitAddress) inputVisitAddress.value = '';
   selectedDateISO = '';
   selectedTimeSlot = '';
@@ -689,6 +747,7 @@ async function handleVisitRequestSubmit(e) {
     if (db) {
       const docRef = await addDoc(collection(db, 'solicitacoes_visita'), {
         nome: newVisit.nome,
+        telefone: newVisit.telefone,
         dataISO: newVisit.dataISO,
         data: newVisit.data,
         horario: newVisit.horario,
@@ -752,6 +811,7 @@ function subscribeToVisitsAndEvents() {
           dataISO: iso,
           data: data.data || formatISOToBR(iso),
           horario: data.horario || '',
+          telefone: data.telefone || '',
           endereco: data.endereco || '',
           timestamp: Date.now()
         });
@@ -880,7 +940,9 @@ export function initVisits() {
 
   formVisitRequest = document.getElementById('formVisitRequest');
   inputVisitName = document.getElementById('visitRequestName');
+  inputVisitPhone = document.getElementById('visitRequestPhone');
   inputVisitAddress = document.getElementById('visitRequestAddress');
+  attachPhoneMask(inputVisitPhone);
   calendarGridDays = document.getElementById('visitCalendarDays');
   calendarMonthYearLabel = document.getElementById('visitCalMonthYear');
   btnCalPrev = document.getElementById('btnVisitCalPrev');
