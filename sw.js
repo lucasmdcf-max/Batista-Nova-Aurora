@@ -3,7 +3,7 @@
  * Estratégia Network-First resiliente (arquitetura Cristolândia / Cuidar)
  */
 
-const CACHE_NAME = 'nova-aurora-v35';
+const CACHE_NAME = 'nova-aurora-v36';
 
 self.addEventListener('install', (event) => {
   // Ativa imediatamente a nova versão sem esperar fechamento de abas

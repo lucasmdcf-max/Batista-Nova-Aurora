@@ -680,7 +680,7 @@ function handleMemberCodeAuthSubmit(e) {
   } else {
     if (memberCodeAuthErrorMsg) {
       memberCodeAuthErrorMsg.style.display = 'block';
-      memberCodeAuthErrorMsg.textContent = 'Código incorreto. Apenas o membro com seus 6 dígitos ou o administrador (010101) têm acesso.';
+      memberCodeAuthErrorMsg.textContent = 'Código incorreto. Acesso restrito ao próprio membro ou à tesouraria autorizada.';
     }
   }
 }
@@ -713,6 +713,12 @@ function openMemberDetailsModal(member, isAdmin = false) {
         birthFormatted = member.nascimento;
       }
     }
+
+    const contribs = Array.isArray(member.contribuicoes) ? [...member.contribuicoes] : [];
+    // Ordena do mais recente para o mais antigo pela data de envio
+    contribs.sort((a, b) => (b.dataEnvio || '').localeCompare(a.dataEnvio || ''));
+    const totalMemberContrib = contribs.reduce((sum, c) => sum + (Number(c.dizimo) || 0) + (Number(c.oferta) || 0), 0);
+    const todayISO = new Date().toISOString().split('T')[0];
 
     memberDetailsFields.innerHTML = `
       <div class="member-detail-row">
@@ -757,12 +763,86 @@ function openMemberDetailsModal(member, isAdmin = false) {
 
       ${isAdmin ? `
         <div class="member-admin-notice">
-          <span class="badge-admin">🔒 Administrador (010101)</span>
-          <p>Você está visualizando todos os dados autorizados pela liderança.</p>
+          <span class="badge-admin">🔒 Acesso da Tesouraria / ADM</span>
+          <p>Você pode editar dados e registrar dízimos e ofertas deste membro abaixo.</p>
+        </div>
+
+        <!-- Formulário da Tesouraria para Lançamento de Dízimo e Oferta -->
+        <div class="member-treasury-contrib-box">
+          <div class="contrib-box-header">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#7dd3fc" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="12" y1="1" x2="12" y2="23"></line>
+              <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
+            </svg>
+            <span>Lançar Contribuição</span>
+          </div>
+          <p class="contrib-box-hint">Informe os valores de dízimo e oferta com a data do envio:</p>
+          
+          <div class="form-row-2col">
+            <div class="form-group">
+              <label for="inputMemberContribDizimo">Dízimo (R$)</label>
+              <input type="text" id="inputMemberContribDizimo" placeholder="0,00" inputmode="decimal">
+            </div>
+            <div class="form-group">
+              <label for="inputMemberContribOferta">Oferta (R$)</label>
+              <input type="text" id="inputMemberContribOferta" placeholder="0,00" inputmode="decimal">
+            </div>
+          </div>
+
+          <div class="form-group" style="margin-top: 6px;">
+            <label for="inputMemberContribDate">Data do Envio *</label>
+            <input type="date" id="inputMemberContribDate" value="${todayISO}" required>
+          </div>
+
+          <div style="margin-top: 10px; display: flex; justify-content: flex-end;">
+            <button type="button" class="btn-save-member-contrib" id="btnSaveMemberContrib">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
+                <polyline points="17 21 17 13 7 13 7 21"></polyline>
+                <polyline points="7 3 7 8 15 8"></polyline>
+              </svg>
+              Salvar Envio
+            </button>
+          </div>
         </div>
       ` : ''}
+
+      <!-- Histórico de Contribuições do Membro -->
+      <div class="member-contrib-history">
+        <div class="history-title-row">
+          <span class="history-title">Histórico de Envios</span>
+          <span class="history-total">Total: ${formatCurrency(totalMemberContrib)}</span>
+        </div>
+        <div class="history-list">
+          ${contribs.length === 0 ? `
+            <div class="history-empty">Nenhuma contribuição registrada ainda.</div>
+          ` : contribs.map((c) => {
+            const sumRow = (Number(c.dizimo) || 0) + (Number(c.oferta) || 0);
+            let dateStr = c.dataEnvio || '';
+            const p = dateStr.split('-');
+            if (p.length === 3) dateStr = `${p[2]}/${p[1]}/${p[0]}`;
+            return `
+              <div class="history-item">
+                <div class="history-item-date">${escapeHtml(dateStr)}</div>
+                <div class="history-item-details">
+                  <div class="history-item-sub">
+                    ${Number(c.dizimo) > 0 ? `Dízimo: <strong>${formatCurrency(c.dizimo)}</strong>` : ''}
+                    ${Number(c.dizimo) > 0 && Number(c.oferta) > 0 ? ' • ' : ''}
+                    ${Number(c.oferta) > 0 ? `Oferta: <strong>${formatCurrency(c.oferta)}</strong>` : ''}
+                  </div>
+                  <div class="history-item-total">Total: ${formatCurrency(sumRow)}</div>
+                </div>
+                ${isAdmin ? `
+                  <button type="button" class="btn-del-contrib" data-contrib-id="${escapeHtml(c.id)}" title="Excluir este lançamento">✕</button>
+                ` : ''}
+              </div>
+            `;
+          }).join('')}
+        </div>
+      </div>
     `;
 
+    // Toggle para visualizar o código secreto
     const btnToggle = memberDetailsFields.querySelector('#btnToggleSecretCode');
     const spanSecret = memberDetailsFields.querySelector('#detailSecretCode');
     if (btnToggle && spanSecret) {
@@ -773,6 +853,96 @@ function openMemberDetailsModal(member, isAdmin = false) {
         btnToggle.textContent = shown ? 'Ocultar' : 'Ver Código';
       });
     }
+
+    // Ações de Tesouraria (Salvar Contribuição)
+    const btnSaveContrib = memberDetailsFields.querySelector('#btnSaveMemberContrib');
+    if (btnSaveContrib) {
+      const inDizimo = memberDetailsFields.querySelector('#inputMemberContribDizimo');
+      const inOferta = memberDetailsFields.querySelector('#inputMemberContribOferta');
+      const inDate = memberDetailsFields.querySelector('#inputMemberContribDate');
+
+      if (inDizimo) inDizimo.addEventListener('input', (e) => maskCurrencyInput(e.target));
+      if (inOferta) inOferta.addEventListener('input', (e) => maskCurrencyInput(e.target));
+
+      btnSaveContrib.addEventListener('click', async () => {
+        const dizimoVal = parseCurrency(inDizimo ? inDizimo.value : '0');
+        const ofertaVal = parseCurrency(inOferta ? inOferta.value : '0');
+        const dateVal = (inDate && inDate.value) ? inDate.value.trim() : todayISO;
+
+        if (dizimoVal <= 0 && ofertaVal <= 0) {
+          alert('Por favor, informe ao menos o valor do dízimo ou da oferta.');
+          return;
+        }
+
+        const newContrib = {
+          id: 'contrib_' + Date.now(),
+          dizimo: dizimoVal,
+          oferta: ofertaVal,
+          dataEnvio: dateVal,
+          createdAt: new Date().toISOString()
+        };
+
+        const updatedContribs = Array.isArray(member.contribuicoes) ? [...member.contribuicoes, newContrib] : [newContrib];
+        member.contribuicoes = updatedContribs;
+
+        try {
+          const docRef = doc(db, 'membros', member.id);
+          await updateDoc(docRef, {
+            contribuicoes: updatedContribs,
+            updatedAt: serverTimestamp()
+          });
+        } catch (err) {
+          console.warn('Erro ao salvar contribuição no Firestore:', err);
+        }
+
+        const idx = membersList.findIndex((m) => m.id === member.id);
+        if (idx !== -1) {
+          membersList[idx] = { ...membersList[idx], contribuicoes: updatedContribs };
+          try {
+            localStorage.setItem(STORAGE_MEMBERS_KEY, JSON.stringify(membersList));
+          } catch (_) {}
+          currentSelectedMember = membersList[idx];
+        }
+
+        showToastAlert('Contribuição registrada com sucesso!');
+        openMemberDetailsModal(currentSelectedMember, isAdmin);
+      });
+    }
+
+    // Ações de Tesouraria (Excluir Contribuição)
+    const delBtns = memberDetailsFields.querySelectorAll('.btn-del-contrib');
+    delBtns.forEach((btn) => {
+      btn.addEventListener('click', async () => {
+        const contribId = btn.getAttribute('data-contrib-id');
+        if (!contribId) return;
+        if (!confirm('Deseja excluir este registro de contribuição?')) return;
+
+        const updatedContribs = (member.contribuicoes || []).filter((c) => c.id !== contribId);
+        member.contribuicoes = updatedContribs;
+
+        try {
+          const docRef = doc(db, 'membros', member.id);
+          await updateDoc(docRef, {
+            contribuicoes: updatedContribs,
+            updatedAt: serverTimestamp()
+          });
+        } catch (err) {
+          console.warn('Erro ao excluir contribuição no Firestore:', err);
+        }
+
+        const idx = membersList.findIndex((m) => m.id === member.id);
+        if (idx !== -1) {
+          membersList[idx] = { ...membersList[idx], contribuicoes: updatedContribs };
+          try {
+            localStorage.setItem(STORAGE_MEMBERS_KEY, JSON.stringify(membersList));
+          } catch (_) {}
+          currentSelectedMember = membersList[idx];
+        }
+
+        showToastAlert('Lançamento excluído com sucesso.');
+        openMemberDetailsModal(currentSelectedMember, isAdmin);
+      });
+    });
   }
 
   if (modalMemberDetails) {
@@ -978,7 +1148,7 @@ async function handleEditMemberSubmit(e) {
 async function handleDeleteMember() {
   if (!currentSelectedMember) return;
   if (!isAdminUnlocked) {
-    alert('Apenas o administrador (010101) pode excluir registros de membros.');
+    alert('Apenas a administração ou tesouraria autorizada pode excluir registros de membros.');
     return;
   }
 
@@ -1141,7 +1311,7 @@ function handleTreasuryAuthSubmit(e) {
   } else {
     if (treasuryAuthErrorMsg) {
       treasuryAuthErrorMsg.style.display = 'block';
-      treasuryAuthErrorMsg.textContent = 'Código incorreto. Somente o código 010101 libera a edição do relatório financeiro.';
+      treasuryAuthErrorMsg.textContent = 'Código incorreto. Acesso restrito à tesouraria autorizada.';
     }
   }
 }

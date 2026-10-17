@@ -19,7 +19,7 @@
     rel="stylesheet">
 
   <link rel="stylesheet" href="css/lenis.css">
-  <link rel="stylesheet" href="css/style.css?v=33">
+  <link rel="stylesheet" href="css/style.css?v=36">
 </head>
 
 <body>
@@ -1090,7 +1090,7 @@
       </div>
     </div>
 
-    <!-- Modal Autenticação de Código de Membro (6 dígitos ou 010101) -->
+    <!-- Modal Autenticação de Código de Membro -->
     <div class="app-modal" id="modalMemberCodeAuth" aria-hidden="true">
       <div class="app-modal-overlay" id="overlayMemberCodeAuth"></div>
       <div class="app-modal-card">
@@ -1106,7 +1106,7 @@
             <div class="form-group">
               <label for="inputMemberAccessCode">Código de Acesso (6 dígitos)</label>
               <input type="password" id="inputMemberAccessCode" placeholder="Digite os 6 dígitos" maxlength="6" inputmode="numeric" pattern="[0-9]*" autocomplete="off" required>
-              <span class="delete-error-msg" id="memberCodeAuthErrorMsg" style="display: none;">Código incorreto. Acesso restrito ao próprio membro ou administrador (010101).</span>
+              <span class="delete-error-msg" id="memberCodeAuthErrorMsg" style="display: none;">Código incorreto. Acesso restrito ao próprio membro ou à tesouraria autorizada.</span>
             </div>
             <div class="form-actions" style="margin-top: 16px;">
               <button type="button" class="btn-form-cancel" id="btnCancelMemberCodeAuth">Cancelar</button>
@@ -1284,7 +1284,7 @@
       </div>
     </div>
 
-    <!-- Modal Código da Tesouraria (010101) -->
+    <!-- Modal Código da Tesouraria -->
     <div class="app-modal" id="modalTreasuryAuth" aria-hidden="true">
       <div class="app-modal-overlay" id="overlayTreasuryAuth"></div>
       <div class="app-modal-card">
@@ -1300,7 +1300,7 @@
             <div class="form-group">
               <label for="inputTreasuryCode">Código da Tesouraria</label>
               <input type="password" id="inputTreasuryCode" placeholder="Digite o código" maxlength="6" inputmode="numeric" pattern="[0-9]*" autocomplete="off" required>
-              <span class="delete-error-msg" id="treasuryAuthErrorMsg" style="display: none;">Código incorreto. Apenas o código 010101 libera o acesso à edição.</span>
+              <span class="delete-error-msg" id="treasuryAuthErrorMsg" style="display: none;">Código incorreto. Acesso restrito à tesouraria autorizada.</span>
             </div>
             <div class="form-actions" style="margin-top: 16px;">
               <button type="button" class="btn-form-cancel" id="btnCancelTreasuryAuth">Cancelar</button>
@@ -1311,7 +1311,7 @@
       </div>
     </div>
 
-    <!-- Modal Gerenciamento Financeiro da Tesoureira (Código 010101) -->
+    <!-- Modal Gerenciamento Financeiro da Tesoureira -->
     <div class="app-modal" id="modalTreasuryManage" aria-hidden="true">
       <div class="app-modal-overlay" id="overlayTreasuryManage"></div>
       <div class="app-modal-card modal-treasury-card">
@@ -1371,7 +1371,7 @@
   </div>
 
   <script src="js/lenis.min.js"></script>
-  <script type="module" src="js/app.js?v=35"></script>
+  <script type="module" src="js/app.js?v=36"></script>
 </body>
 
 </html>
