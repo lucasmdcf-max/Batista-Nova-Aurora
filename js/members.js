@@ -42,6 +42,7 @@ let currentSelectedMember = null;
 let isTreasuryUnlocked = false;
 let isAdminUnlocked = false;
 let tempEditingSaidas = [];
+let tempEditingOfertasDetalhes = [];
 
 // Filtros do Relatório Financeiro
 const now = new Date();
@@ -174,6 +175,24 @@ let inputTitheMemberVal = null;
 let treasuryTithesMonthBox = null;
 let tithesMonthCount = null;
 let tithesMonthList = null;
+
+// Lançamento de Ofertas com Data (Tesouraria)
+let btnOpenAddOfferModal = null;
+let modalAddOffer = null;
+let overlayAddOffer = null;
+let btnCloseAddOffer = null;
+let btnCancelAddOffer = null;
+let formAddOffer = null;
+let inputOfferDesc = null;
+let inputOfferDate = null;
+let inputOfferVal = null;
+let treasuryOffersMonthBox = null;
+let offersMonthCount = null;
+let offersMonthList = null;
+
+// Botões de Exportação em PDF Detalhado
+let btnFinancePdfDownload = null;
+let btnExportTreasuryPdf = null;
 
 /**
  * Inicializador da Área de Membros
@@ -338,6 +357,23 @@ function cacheElements() {
   treasuryTithesMonthBox = document.getElementById('treasuryTithesMonthBox');
   tithesMonthCount = document.getElementById('tithesMonthCount');
   tithesMonthList = document.getElementById('tithesMonthList');
+
+  // Ofertas com Data e PDF
+  btnOpenAddOfferModal = document.getElementById('btnOpenAddOfferModal');
+  modalAddOffer = document.getElementById('modalAddOffer');
+  overlayAddOffer = document.getElementById('overlayAddOffer');
+  btnCloseAddOffer = document.getElementById('btnCloseAddOffer');
+  btnCancelAddOffer = document.getElementById('btnCancelAddOffer');
+  formAddOffer = document.getElementById('formAddOffer');
+  inputOfferDesc = document.getElementById('inputOfferDesc');
+  inputOfferDate = document.getElementById('inputOfferDate');
+  inputOfferVal = document.getElementById('inputOfferVal');
+  treasuryOffersMonthBox = document.getElementById('treasuryOffersMonthBox');
+  offersMonthCount = document.getElementById('offersMonthCount');
+  offersMonthList = document.getElementById('offersMonthList');
+
+  btnFinancePdfDownload = document.getElementById('btnFinancePdfDownload');
+  btnExportTreasuryPdf = document.getElementById('btnExportTreasuryPdf');
 }
 
 function loadOfflineCaches() {
@@ -567,8 +603,27 @@ function setupEventListeners() {
   if (formAddTitheMember) formAddTitheMember.addEventListener('submit', handleAddTitheMemberSubmit);
   if (inputTitheMemberVal) inputTitheMemberVal.addEventListener('input', (e) => maskCurrencyInput(e.target));
 
-  // Máscaras monetárias
-  if (treasuryInputDizimos) treasuryInputDizimos.addEventListener('input', (e) => maskCurrencyInput(e.target));
+  // Modal Inserir Oferta com Data
+  if (btnOpenAddOfferModal) btnOpenAddOfferModal.addEventListener('click', openAddOfferModal);
+  if (btnCloseAddOffer) btnCloseAddOffer.addEventListener('click', closeAddOfferModal);
+  if (btnCancelAddOffer) btnCancelAddOffer.addEventListener('click', closeAddOfferModal);
+  if (overlayAddOffer) overlayAddOffer.addEventListener('click', closeAddOfferModal);
+  if (formAddOffer) formAddOffer.addEventListener('submit', handleAddOfferSubmit);
+  if (inputOfferVal) inputOfferVal.addEventListener('input', (e) => maskCurrencyInput(e.target));
+
+  // Botões de Gerar PDF Detalhado
+  if (btnFinancePdfDownload) btnFinancePdfDownload.addEventListener('click', generateDetailedPdf);
+  if (btnExportTreasuryPdf) btnExportTreasuryPdf.addEventListener('click', generateDetailedPdf);
+
+  // Máscaras monetárias e recálculo automático do Plano Cooperativo (10% dos dízimos)
+  if (treasuryInputDizimos) {
+    treasuryInputDizimos.addEventListener('input', (e) => {
+      maskCurrencyInput(e.target);
+      const curDizimos = parseCurrency(treasuryInputDizimos.value);
+      syncPlanoCooperativo(curDizimos);
+      renderTempEditingSaidas();
+    });
+  }
   if (treasuryInputOfertas) treasuryInputOfertas.addEventListener('input', (e) => maskCurrencyInput(e.target));
   if (treasuryExitVal) treasuryExitVal.addEventListener('input', (e) => maskCurrencyInput(e.target));
 }
@@ -1257,8 +1312,21 @@ function renderFinancialView() {
     totalEntradas = dizimos + ofertas;
   }
 
-  // Lista de Saídas
-  const saidas = Array.isArray(report.saidas) ? report.saidas : [];
+  // Lista de Saídas (inclui Plano Cooperativo 10% dos dízimos se dízimos > 0)
+  let saidas = Array.isArray(report.saidas) ? JSON.parse(JSON.stringify(report.saidas)) : [];
+  if (dizimos > 0) {
+    const hasPC = saidas.some((s) => s.isPlanoCooperativo || s.id === 's_plano_cooperativo' || (s.descricao || '').toLowerCase().includes('plano cooperativo'));
+    if (!hasPC) {
+      const pcVal = Math.round(dizimos * 0.10 * 100) / 100;
+      saidas.unshift({
+        id: 's_plano_cooperativo',
+        descricao: 'Plano Cooperativo (10% dos Dízimos)',
+        valor: pcVal,
+        isPlanoCooperativo: true
+      });
+    }
+  }
+
   let totalSaidas = 0;
   if (saidas.length > 0) {
     totalSaidas = saidas.reduce((acc, cur) => acc + (Number(cur.valor) || 0), 0);
@@ -1297,10 +1365,14 @@ function renderFinancialView() {
     } else {
       let exitsHtml = '';
       saidas.forEach((item) => {
+        const isPC = item.isPlanoCooperativo || item.id === 's_plano_cooperativo' || (item.descricao || '').toLowerCase().includes('plano cooperativo');
         exitsHtml += `
           <div class="finance-exit-row">
             <span class="finance-exit-bullet">•</span>
-            <span class="finance-exit-desc" title="${escapeHtml(item.descricao)}">${escapeHtml(item.descricao)}</span>
+            <span class="finance-exit-desc" title="${escapeHtml(item.descricao)}">
+              ${escapeHtml(item.descricao)}
+              ${isPC ? '<span class="badge-plano-coop">10% Automático</span>' : ''}
+            </span>
             <span class="finance-exit-val">${formatCurrency(item.valor)}</span>
           </div>
         `;
@@ -1309,9 +1381,12 @@ function renderFinancialView() {
     }
   }
 
-  // Botão discreto no topo direito destaca se tesouraria estiver logada
+  // Botões no topo direito (destaca se tesouraria estiver logada e exibe PDF)
   if (btnTreasuryEdit) {
     btnTreasuryEdit.classList.toggle('is-unlocked', isTreasuryUnlocked);
+  }
+  if (btnFinancePdfDownload) {
+    btnFinancePdfDownload.style.display = isTreasuryUnlocked ? 'inline-flex' : 'none';
   }
 }
 
@@ -1359,6 +1434,34 @@ function handleTreasuryAuthSubmit(e) {
 }
 
 /**
+ * Sincroniza a saída padrão de 10% do total de dízimos referente ao Plano Cooperativo
+ */
+function syncPlanoCooperativo(dizimos) {
+  const pcVal = Math.round((Number(dizimos) || 0) * 0.10 * 100) / 100;
+  const existingIdx = tempEditingSaidas.findIndex(
+    (s) => s.isPlanoCooperativo || s.id === 's_plano_cooperativo' || (s.descricao || '').toLowerCase().includes('plano cooperativo')
+  );
+
+  if (pcVal > 0) {
+    const pcItem = {
+      id: 's_plano_cooperativo',
+      descricao: 'Plano Cooperativo (10% dos Dízimos)',
+      valor: pcVal,
+      isPlanoCooperativo: true
+    };
+    if (existingIdx !== -1) {
+      tempEditingSaidas[existingIdx] = pcItem;
+    } else {
+      tempEditingSaidas.unshift(pcItem);
+    }
+  } else {
+    if (existingIdx !== -1) {
+      tempEditingSaidas.splice(existingIdx, 1);
+    }
+  }
+}
+
+/**
  * Modal de Gerenciamento Financeiro Completo da Tesoureira
  */
 function openTreasuryManageModal() {
@@ -1369,7 +1472,8 @@ function openTreasuryManageModal() {
     mes: selectedFinanceMonth,
     dizimos: 0,
     ofertas: 0,
-    saidas: []
+    saidas: [],
+    ofertasDetalhes: []
   };
 
   if (treasuryManageModalTitle) {
@@ -1390,9 +1494,17 @@ function openTreasuryManageModal() {
       : '';
   }
 
+  // Ofertas detalhadas com data
+  tempEditingOfertasDetalhes = Array.isArray(report.ofertasDetalhes) ? JSON.parse(JSON.stringify(report.ofertasDetalhes)) : [];
+  const sumOffers = tempEditingOfertasDetalhes.reduce((acc, cur) => acc + (Number(cur.valor) || 0), 0);
+  let initialOfertas = Number(report.ofertas) || 0;
+  if (initialOfertas === 0 && sumOffers > 0) {
+    initialOfertas = sumOffers;
+  }
+
   if (treasuryInputOfertas) {
-    treasuryInputOfertas.value = (Number(report.ofertas) || 0) > 0 
-      ? formatCurrency(report.ofertas).replace('R$', '').trim() 
+    treasuryInputOfertas.value = initialOfertas > 0 
+      ? formatCurrency(initialOfertas).replace('R$', '').trim() 
       : '';
   }
 
@@ -1400,8 +1512,10 @@ function openTreasuryManageModal() {
   if (treasuryExitVal) treasuryExitVal.value = '';
 
   tempEditingSaidas = Array.isArray(report.saidas) ? JSON.parse(JSON.stringify(report.saidas)) : [];
+  syncPlanoCooperativo(initialDizimos);
   renderTempEditingSaidas();
   renderTithesMonthList();
+  renderOffersMonthList();
 
   if (modalTreasuryManage) {
     modalTreasuryManage.classList.add('is-open');
@@ -1514,6 +1628,8 @@ function renderTithesMonthList() {
         const currentDizimos = parseCurrency(treasuryInputDizimos.value);
         const newDizimos = Math.max(0, currentDizimos - val);
         treasuryInputDizimos.value = newDizimos > 0 ? formatCurrency(newDizimos).replace('R$', '').trim() : '';
+        syncPlanoCooperativo(newDizimos);
+        renderTempEditingSaidas();
       }
 
       renderTithesMonthList();
@@ -1623,11 +1739,13 @@ async function handleAddTitheMemberSubmit(e) {
     } catch (_) {}
   }
 
-  // Soma ao campo de dízimos do modal da tesouraria
+  // Soma ao campo de dízimos do modal da tesouraria e recalcula Plano Cooperativo (10%)
   if (treasuryInputDizimos) {
     const currentVal = parseCurrency(treasuryInputDizimos.value || '0');
     const newTotal = currentVal + valor;
     treasuryInputDizimos.value = formatCurrency(newTotal).replace('R$', '').trim();
+    syncPlanoCooperativo(newTotal);
+    renderTempEditingSaidas();
   }
 
   renderTithesMonthList();
@@ -1654,12 +1772,20 @@ function renderTempEditingSaidas() {
 
   let html = '';
   tempEditingSaidas.forEach((item, index) => {
+    const isPC = item.isPlanoCooperativo || item.id === 's_plano_cooperativo' || (item.descricao || '').toLowerCase().includes('plano cooperativo');
     html += `
       <div class="treasury-exit-edit-item" data-index="${index}">
-        <span class="treasury-exit-edit-desc">${escapeHtml(item.descricao)}</span>
+        <span class="treasury-exit-edit-desc">
+          ${escapeHtml(item.descricao)}
+          ${isPC ? '<span class="badge-plano-coop">10% Automático</span>' : ''}
+        </span>
         <div style="display: flex; align-items: center; gap: 8px;">
           <strong class="treasury-exit-edit-val">${formatCurrency(item.valor)}</strong>
-          <button type="button" class="btn-remove-temp-exit" data-index="${index}" title="Remover saída">✕</button>
+          ${
+            isPC
+              ? `<button type="button" class="btn-remove-temp-exit is-locked" title="Calculado automaticamente (10% dos dízimos)" disabled style="opacity: 0.35; cursor: not-allowed;">✕</button>`
+              : `<button type="button" class="btn-remove-temp-exit" data-index="${index}" title="Remover saída">✕</button>`
+          }
         </div>
       </div>
     `;
@@ -1667,7 +1793,7 @@ function renderTempEditingSaidas() {
 
   treasuryManageExitsList.innerHTML = html;
 
-  treasuryManageExitsList.querySelectorAll('.btn-remove-temp-exit').forEach((btn) => {
+  treasuryManageExitsList.querySelectorAll('.btn-remove-temp-exit:not([disabled])').forEach((btn) => {
     btn.addEventListener('click', (e) => {
       e.preventDefault();
       const idx = Number(btn.getAttribute('data-index'));
@@ -1727,6 +1853,7 @@ async function handleTreasuryManageSubmit(e) {
     totalSaidas,
     saldoGeral,
     valorTotal: saldoGeral,
+    ofertasDetalhes: tempEditingOfertasDetalhes,
     updatedAt: serverTimestamp()
   };
 
@@ -1737,12 +1864,488 @@ async function handleTreasuryManageSubmit(e) {
     console.warn('Erro ao salvar relatório financeiro no Firestore:', err);
   }
 
-  financialReports[key] = { ...payload, saidas: tempEditingSaidas };
+  financialReports[key] = { ...payload, saidas: tempEditingSaidas, ofertasDetalhes: tempEditingOfertasDetalhes };
   localStorage.setItem(STORAGE_FINANCE_KEY, JSON.stringify(financialReports));
 
   renderFinancialView();
   closeTreasuryManageModal();
   showToastAlert('Relatório financeiro atualizado com sucesso!');
+}
+
+/**
+ * =========================================================================
+ * GESTÃO DE OFERTAS COM DATA (TESOURARIA)
+ * =========================================================================
+ */
+function openAddOfferModal() {
+  const today = new Date();
+  const currentMonthToday = today.getMonth() + 1;
+  const currentYearToday = today.getFullYear();
+  let defaultDate = today.toISOString().split('T')[0];
+  if (selectedFinanceYear !== currentYearToday || selectedFinanceMonth !== currentMonthToday) {
+    defaultDate = `${selectedFinanceYear}-${String(selectedFinanceMonth).padStart(2, '0')}-01`;
+  }
+
+  if (inputOfferDate) inputOfferDate.value = defaultDate;
+  if (inputOfferDesc) inputOfferDesc.value = '';
+  if (inputOfferVal) inputOfferVal.value = '';
+
+  if (modalAddOffer) {
+    modalAddOffer.classList.add('is-open');
+    modalAddOffer.setAttribute('aria-hidden', 'false');
+    setTimeout(() => {
+      if (inputOfferVal) inputOfferVal.focus();
+    }, 150);
+  }
+}
+
+function closeAddOfferModal() {
+  if (modalAddOffer) {
+    modalAddOffer.classList.remove('is-open');
+    modalAddOffer.setAttribute('aria-hidden', 'true');
+  }
+}
+
+function handleAddOfferSubmit(e) {
+  if (e) e.preventDefault();
+  const desc = (inputOfferDesc ? inputOfferDesc.value : '').trim();
+  const dateVal = (inputOfferDate ? inputOfferDate.value : '').trim();
+  const valor = parseCurrency(inputOfferVal ? inputOfferVal.value : '0');
+
+  if (!dateVal) {
+    alert('Por favor, informe a data da oferta.');
+    if (inputOfferDate) inputOfferDate.focus();
+    return;
+  }
+
+  if (isNaN(valor) || valor <= 0) {
+    alert('Por favor, informe um valor válido para a oferta.');
+    if (inputOfferVal) inputOfferVal.focus();
+    return;
+  }
+
+  const newOffer = {
+    id: 'off_' + Date.now(),
+    descricao: desc || 'Oferta dos Cultos',
+    data: dateVal,
+    valor
+  };
+
+  tempEditingOfertasDetalhes.push(newOffer);
+
+  // Recalcula somatório de ofertas e preenche treasuryInputOfertas
+  const totalOffers = tempEditingOfertasDetalhes.reduce((acc, cur) => acc + (Number(cur.valor) || 0), 0);
+  if (treasuryInputOfertas) {
+    treasuryInputOfertas.value = formatCurrency(totalOffers).replace('R$', '').trim();
+  }
+
+  renderOffersMonthList();
+  closeAddOfferModal();
+  showToastAlert('Oferta adicionada com sucesso!');
+}
+
+function renderOffersMonthList() {
+  if (!treasuryOffersMonthBox || !offersMonthList) return;
+
+  if (tempEditingOfertasDetalhes.length === 0) {
+    treasuryOffersMonthBox.style.display = 'none';
+    return;
+  }
+
+  treasuryOffersMonthBox.style.display = 'block';
+  if (offersMonthCount) {
+    offersMonthCount.textContent = `${tempEditingOfertasDetalhes.length} oferta(s)`;
+  }
+
+  let html = '';
+  tempEditingOfertasDetalhes.forEach((item, index) => {
+    let dateStr = item.data || '';
+    const p = dateStr.split('-');
+    if (p.length === 3) dateStr = `${p[2]}/${p[1]}`;
+
+    html += `
+      <div class="offers-month-item" data-index="${index}">
+        <span class="offers-month-item-desc" title="${escapeHtml(item.descricao)}">${escapeHtml(item.descricao)}</span>
+        <span class="offers-month-item-date">${escapeHtml(dateStr)}</span>
+        <span class="offers-month-item-val">${formatCurrency(item.valor)}</span>
+        <button type="button" class="btn-remove-offer-item" data-index="${index}" title="Remover esta oferta">✕</button>
+      </div>
+    `;
+  });
+
+  offersMonthList.innerHTML = html;
+
+  offersMonthList.querySelectorAll('.btn-remove-offer-item').forEach((btn) => {
+    btn.addEventListener('click', (e) => {
+      e.preventDefault();
+      const idx = Number(btn.getAttribute('data-index'));
+      const removed = tempEditingOfertasDetalhes.splice(idx, 1)[0];
+      if (removed && treasuryInputOfertas) {
+        const currentOffers = parseCurrency(treasuryInputOfertas.value);
+        const newTotal = Math.max(0, currentOffers - (Number(removed.valor) || 0));
+        treasuryInputOfertas.value = newTotal > 0 ? formatCurrency(newTotal).replace('R$', '').trim() : '';
+      }
+      renderOffersMonthList();
+      showToastAlert('Oferta removida.');
+    });
+  });
+}
+
+/**
+ * =========================================================================
+ * GERAÇÃO DE RELATÓRIO FINANCEIRO DETALHADO EM PDF COM OS NOMES DOS DIZIMISTAS
+ * =========================================================================
+ */
+async function generateDetailedPdf() {
+  const key = getPeriodKey(selectedFinanceYear, selectedFinanceMonth);
+  const monthName = MONTH_NAMES[selectedFinanceMonth] || '';
+  const report = financialReports[key] || {
+    ano: selectedFinanceYear,
+    mes: selectedFinanceMonth,
+    dizimos: 0,
+    ofertas: 0,
+    saidas: [],
+    ofertasDetalhes: []
+  };
+
+  // Coleta dízimos nominais dos membros
+  const tithesList = getMonthMemberTithes(selectedFinanceYear, selectedFinanceMonth);
+  const totalTithesFromMembers = tithesList.reduce((acc, cur) => acc + cur.valor, 0);
+
+  let finalDizimos = Number(report.dizimos) || 0;
+  if (finalDizimos === 0 && totalTithesFromMembers > 0) {
+    finalDizimos = totalTithesFromMembers;
+  }
+
+  // Coleta ofertas detalhadas
+  const offersList = Array.isArray(report.ofertasDetalhes) && report.ofertasDetalhes.length > 0
+    ? report.ofertasDetalhes
+    : tempEditingOfertasDetalhes;
+  let finalOfertas = Number(report.ofertas) || 0;
+  if (finalOfertas === 0 && offersList.length > 0) {
+    finalOfertas = offersList.reduce((acc, cur) => acc + (Number(cur.valor) || 0), 0);
+  }
+
+  const totalEntradas = finalDizimos + finalOfertas;
+
+  // Saídas com Plano Cooperativo 10%
+  let saidasList = Array.isArray(report.saidas) ? JSON.parse(JSON.stringify(report.saidas)) : [];
+  if (finalDizimos > 0) {
+    const hasPC = saidasList.some((s) => s.isPlanoCooperativo || s.id === 's_plano_cooperativo' || (s.descricao || '').toLowerCase().includes('plano cooperativo'));
+    if (!hasPC) {
+      const pcVal = Math.round(finalDizimos * 0.10 * 100) / 100;
+      saidasList.unshift({
+        id: 's_plano_cooperativo',
+        descricao: 'Plano Cooperativo (10% dos Dízimos)',
+        valor: pcVal,
+        isPlanoCooperativo: true
+      });
+    }
+  }
+
+  const totalSaidas = saidasList.reduce((acc, cur) => acc + (Number(cur.valor) || 0), 0);
+  const saldoGeral = totalEntradas - totalSaidas;
+
+  showToastAlert('Preparando Relatório em PDF...');
+
+  // Montagem do documento para renderização e impressão/download
+  const container = document.createElement('div');
+  container.className = 'pdf-export-document';
+  container.style.cssText = `
+    font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, sans-serif;
+    color: #1e293b;
+    background: #ffffff;
+    padding: 24px 28px;
+    box-sizing: border-box;
+    width: 100%;
+    max-width: 800px;
+    margin: 0 auto;
+    font-size: 11pt;
+    line-height: 1.4;
+  `;
+
+  // Linhas da tabela de dízimos com nomes
+  let tithesRowsHtml = '';
+  if (tithesList.length === 0) {
+    tithesRowsHtml = `
+      <tr>
+        <td colspan="4" style="text-align: center; padding: 12px; color: #64748b; font-style: italic;">
+          Nenhum dízimo nominal individual lançado no sistema para este mês.
+          ${finalDizimos > 0 ? `<br><strong>Total de dízimos consolidado: ${formatCurrency(finalDizimos)}</strong>` : ''}
+        </td>
+      </tr>
+    `;
+  } else {
+    tithesList.forEach((t, i) => {
+      let dateFormatted = t.dataEnvio || '';
+      const p = dateFormatted.split('-');
+      if (p.length === 3) dateFormatted = `${p[2]}/${p[1]}/${p[0]}`;
+
+      tithesRowsHtml += `
+        <tr style="background: ${i % 2 === 0 ? '#ffffff' : '#f8fafc'}; border-bottom: 1px solid #e2e8f0;">
+          <td style="padding: 7px 10px; font-size: 9.5pt; text-align: center; color: #64748b;">${i + 1}</td>
+          <td style="padding: 7px 10px; font-size: 9.5pt; font-weight: 600; color: #0f172a;">${escapeHtml(t.memberName)}</td>
+          <td style="padding: 7px 10px; font-size: 9.5pt; text-align: center; color: #334155;">${escapeHtml(dateFormatted)}</td>
+          <td style="padding: 7px 10px; font-size: 9.5pt; text-align: right; font-weight: 600; color: #047857;">${formatCurrency(t.valor)}</td>
+        </tr>
+      `;
+    });
+  }
+
+  // Linhas das ofertas com data
+  let offersRowsHtml = '';
+  if (offersList.length === 0) {
+    offersRowsHtml = `
+      <tr>
+        <td colspan="4" style="text-align: center; padding: 10px; color: #64748b; font-style: italic;">
+          ${finalOfertas > 0 ? `Ofertas do período consolidadas: <strong>${formatCurrency(finalOfertas)}</strong>` : 'Nenhuma oferta registrada neste mês.'}
+        </td>
+      </tr>
+    `;
+  } else {
+    offersList.forEach((o, i) => {
+      let dateFormatted = o.data || '';
+      const p = dateFormatted.split('-');
+      if (p.length === 3) dateFormatted = `${p[2]}/${p[1]}/${p[0]}`;
+
+      offersRowsHtml += `
+        <tr style="background: ${i % 2 === 0 ? '#ffffff' : '#f8fafc'}; border-bottom: 1px solid #e2e8f0;">
+          <td style="padding: 7px 10px; font-size: 9.5pt; text-align: center; color: #64748b;">${i + 1}</td>
+          <td style="padding: 7px 10px; font-size: 9.5pt; font-weight: 600; color: #0f172a;">${escapeHtml(o.descricao || 'Oferta')}</td>
+          <td style="padding: 7px 10px; font-size: 9.5pt; text-align: center; color: #334155;">${escapeHtml(dateFormatted)}</td>
+          <td style="padding: 7px 10px; font-size: 9.5pt; text-align: right; font-weight: 600; color: #b45309;">${formatCurrency(o.valor)}</td>
+        </tr>
+      `;
+    });
+  }
+
+  // Linhas das saídas
+  let saidasRowsHtml = '';
+  if (saidasList.length === 0) {
+    saidasRowsHtml = `
+      <tr>
+        <td colspan="3" style="text-align: center; padding: 10px; color: #64748b; font-style: italic;">
+          Nenhuma saída registrada para este mês.
+        </td>
+      </tr>
+    `;
+  } else {
+    saidasList.forEach((s, i) => {
+      const isPC = s.isPlanoCooperativo || s.id === 's_plano_cooperativo' || (s.descricao || '').toLowerCase().includes('plano cooperativo');
+      saidasRowsHtml += `
+        <tr style="background: ${i % 2 === 0 ? '#ffffff' : '#f8fafc'}; border-bottom: 1px solid #e2e8f0;">
+          <td style="padding: 7px 10px; font-size: 9.5pt; text-align: center; color: #64748b;">${i + 1}</td>
+          <td style="padding: 7px 10px; font-size: 9.5pt; font-weight: 600; color: #0f172a;">
+            ${escapeHtml(s.descricao)}
+            ${isPC ? '<span style="display: inline-block; margin-left: 6px; padding: 2px 6px; background: #e0f2fe; color: #0284c7; border: 1px solid #bae6fd; border-radius: 4px; font-size: 7.5pt; font-weight: 700;">10% Convenção</span>' : ''}
+          </td>
+          <td style="padding: 7px 10px; font-size: 9.5pt; text-align: right; font-weight: 600; color: #b91c1c;">${formatCurrency(s.valor)}</td>
+        </tr>
+      `;
+    });
+  }
+
+  const dataAtual = new Date().toLocaleDateString('pt-BR');
+  const horaAtual = new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+
+  container.innerHTML = `
+    <!-- Cabeçalho Oficial -->
+    <div style="border-bottom: 3px double #0284c7; padding-bottom: 14px; margin-bottom: 18px; text-align: center; position: relative;">
+      <div style="display: inline-block; padding: 3px 10px; background: #fee2e2; border: 1px solid #fca5a5; border-radius: 20px; font-size: 8pt; font-weight: 700; color: #991b1b; text-transform: uppercase; margin-bottom: 6px; letter-spacing: 0.5px;">
+        🔒 USO EXCLUSIVO DA TESOURARIA E LIDERANÇA • CONFIDENCIAL
+      </div>
+      <h1 style="margin: 0; font-size: 16pt; font-weight: 800; color: #0f172a; letter-spacing: 0.5px; text-transform: uppercase;">
+        CONGREGAÇÃO BATISTA NOVA AURORA
+      </h1>
+      <p style="margin: 4px 0 0 0; font-size: 11pt; font-weight: 700; color: #0284c7;">
+        Relatório Financeiro Mensal Detalhado — Prestação de Contas
+      </p>
+      <p style="margin: 3px 0 0 0; font-size: 9pt; color: #475569;">
+        Período de Referência: <strong>${monthName} de ${selectedFinanceYear}</strong> &bull; Emitido em ${dataAtual} às ${horaAtual}
+      </p>
+    </div>
+
+    <!-- Cards de Resumo Consolidado -->
+    <div style="display: flex; gap: 12px; margin-bottom: 20px;">
+      <div style="flex: 1; border: 1px solid #bbf7d0; background: #f0fdf4; border-radius: 8px; padding: 10px; text-align: center;">
+        <span style="font-size: 8pt; font-weight: 700; color: #166534; text-transform: uppercase;">Total Entradas</span>
+        <div style="font-size: 13pt; font-weight: 800; color: #15803d; margin-top: 2px;">${formatCurrency(totalEntradas)}</div>
+        <div style="font-size: 7.5pt; color: #166534; margin-top: 2px;">Dízimos: ${formatCurrency(finalDizimos)} | Ofertas: ${formatCurrency(finalOfertas)}</div>
+      </div>
+      <div style="flex: 1; border: 1px solid #fecaca; background: #fef2f2; border-radius: 8px; padding: 10px; text-align: center;">
+        <span style="font-size: 8pt; font-weight: 700; color: #991b1b; text-transform: uppercase;">Total Saídas</span>
+        <div style="font-size: 13pt; font-weight: 800; color: #b91c1c; margin-top: 2px;">${formatCurrency(totalSaidas)}</div>
+        <div style="font-size: 7.5pt; color: #991b1b; margin-top: 2px;">Inclui 10% Plano Coop: ${formatCurrency(Math.round(finalDizimos * 0.10 * 100) / 100)}</div>
+      </div>
+      <div style="flex: 1; border: 1px solid ${saldoGeral >= 0 ? '#bae6fd' : '#fecaca'}; background: ${saldoGeral >= 0 ? '#f0f9ff' : '#fef2f2'}; border-radius: 8px; padding: 10px; text-align: center;">
+        <span style="font-size: 8pt; font-weight: 700; color: ${saldoGeral >= 0 ? '#0369a1' : '#991b1b'}; text-transform: uppercase;">Saldo Líquido</span>
+        <div style="font-size: 13pt; font-weight: 800; color: ${saldoGeral >= 0 ? '#0284c7' : '#b91c1c'}; margin-top: 2px;">${formatCurrency(saldoGeral)}</div>
+        <div style="font-size: 7.5pt; color: ${saldoGeral >= 0 ? '#0369a1' : '#991b1b'}; margin-top: 2px;">${saldoGeral >= 0 ? 'Superávit do Período' : 'Déficit do Período'}</div>
+      </div>
+    </div>
+
+    <!-- SEÇÃO 1: DÍZIMOS DETALHADOS (RELAÇÃO NOMINAL) -->
+    <div style="margin-bottom: 22px;">
+      <div style="display: flex; align-items: center; justify-content: space-between; border-left: 4px solid #10b981; padding-left: 8px; margin-bottom: 8px;">
+        <h3 style="margin: 0; font-size: 11pt; font-weight: 700; color: #065f46; text-transform: uppercase;">
+          1. Dízimos — Relação Nominal dos Contribuinte(s)
+        </h3>
+        <span style="font-size: 8.5pt; font-weight: 700; color: #047857; background: #ecfdf5; padding: 2px 8px; border-radius: 12px; border: 1px solid #a7f3d0;">
+          ${tithesList.length} lançamento(s)
+        </span>
+      </div>
+      <table style="width: 100%; border-collapse: collapse; border: 1px solid #cbd5e1; border-radius: 6px; overflow: hidden;">
+        <thead>
+          <tr style="background: #065f46; color: #ffffff;">
+            <th style="padding: 7px 10px; font-size: 8.5pt; font-weight: 700; text-align: center; width: 35px;">#</th>
+            <th style="padding: 7px 10px; font-size: 8.5pt; font-weight: 700; text-align: left;">Nome do Membro / Dizimista</th>
+            <th style="padding: 7px 10px; font-size: 8.5pt; font-weight: 700; text-align: center; width: 100px;">Data do Envio</th>
+            <th style="padding: 7px 10px; font-size: 8.5pt; font-weight: 700; text-align: right; width: 120px;">Valor</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${tithesRowsHtml}
+        </tbody>
+        <tfoot>
+          <tr style="background: #e6f4ea; border-top: 2px solid #065f46; font-weight: 700;">
+            <td colspan="3" style="padding: 8px 10px; font-size: 9pt; text-align: right; color: #065f46; text-transform: uppercase;">Subtotal de Dízimos:</td>
+            <td style="padding: 8px 10px; font-size: 9.5pt; text-align: right; color: #047857;">${formatCurrency(finalDizimos)}</td>
+          </tr>
+        </tfoot>
+      </table>
+    </div>
+
+    <!-- SEÇÃO 2: OFERTAS DETALHADAS -->
+    <div style="margin-bottom: 22px;">
+      <div style="display: flex; align-items: center; justify-content: space-between; border-left: 4px solid #f59e0b; padding-left: 8px; margin-bottom: 8px;">
+        <h3 style="margin: 0; font-size: 11pt; font-weight: 700; color: #92400e; text-transform: uppercase;">
+          2. Ofertas dos Cultos e Ocasiões
+        </h3>
+        <span style="font-size: 8.5pt; font-weight: 700; color: #92400e; background: #fffbeb; padding: 2px 8px; border-radius: 12px; border: 1px solid #fde68a;">
+          ${offersList.length} registro(s)
+        </span>
+      </div>
+      <table style="width: 100%; border-collapse: collapse; border: 1px solid #cbd5e1; border-radius: 6px; overflow: hidden;">
+        <thead>
+          <tr style="background: #b45309; color: #ffffff;">
+            <th style="padding: 7px 10px; font-size: 8.5pt; font-weight: 700; text-align: center; width: 35px;">#</th>
+            <th style="padding: 7px 10px; font-size: 8.5pt; font-weight: 700; text-align: left;">Descrição / Culto</th>
+            <th style="padding: 7px 10px; font-size: 8.5pt; font-weight: 700; text-align: center; width: 100px;">Data</th>
+            <th style="padding: 7px 10px; font-size: 8.5pt; font-weight: 700; text-align: right; width: 120px;">Valor</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${offersRowsHtml}
+        </tbody>
+        <tfoot>
+          <tr style="background: #fef3c7; border-top: 2px solid #b45309; font-weight: 700;">
+            <td colspan="3" style="padding: 8px 10px; font-size: 9pt; text-align: right; color: #92400e; text-transform: uppercase;">Subtotal de Ofertas:</td>
+            <td style="padding: 8px 10px; font-size: 9.5pt; text-align: right; color: #b45309;">${formatCurrency(finalOfertas)}</td>
+          </tr>
+        </tfoot>
+      </table>
+    </div>
+
+    <!-- SEÇÃO 3: SAÍDAS DISCRIMINADAS -->
+    <div style="margin-bottom: 24px;">
+      <div style="display: flex; align-items: center; justify-content: space-between; border-left: 4px solid #ef4444; padding-left: 8px; margin-bottom: 8px;">
+        <h3 style="margin: 0; font-size: 11pt; font-weight: 700; color: #991b1b; text-transform: uppercase;">
+          3. Saídas Discriminadas (Despesas do Mês)
+        </h3>
+        <span style="font-size: 8.5pt; font-weight: 700; color: #991b1b; background: #fef2f2; padding: 2px 8px; border-radius: 12px; border: 1px solid #fecaca;">
+          ${saidasList.length} item(ns)
+        </span>
+      </div>
+      <table style="width: 100%; border-collapse: collapse; border: 1px solid #cbd5e1; border-radius: 6px; overflow: hidden;">
+        <thead>
+          <tr style="background: #991b1b; color: #ffffff;">
+            <th style="padding: 7px 10px; font-size: 8.5pt; font-weight: 700; text-align: center; width: 35px;">#</th>
+            <th style="padding: 7px 10px; font-size: 8.5pt; font-weight: 700; text-align: left;">Descrição da Despesa / Destinação</th>
+            <th style="padding: 7px 10px; font-size: 8.5pt; font-weight: 700; text-align: right; width: 120px;">Valor</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${saidasRowsHtml}
+        </tbody>
+        <tfoot>
+          <tr style="background: #fee2e2; border-top: 2px solid #991b1b; font-weight: 700;">
+            <td colspan="2" style="padding: 8px 10px; font-size: 9pt; text-align: right; color: #991b1b; text-transform: uppercase;">Somatório Total das Saídas:</td>
+            <td style="padding: 8px 10px; font-size: 9.5pt; text-align: right; color: #b91c1c;">${formatCurrency(totalSaidas)}</td>
+          </tr>
+        </tfoot>
+      </table>
+    </div>
+
+    <!-- SEÇÃO 4: ASSINATURAS E CONFORMIDADE -->
+    <div style="margin-top: 36px; padding-top: 20px; border-top: 1px dashed #94a3b8; display: flex; justify-content: space-around; text-align: center;">
+      <div style="width: 42%;">
+        <div style="border-top: 1px solid #1e293b; margin-top: 32px; padding-top: 6px;">
+          <p style="margin: 0; font-size: 9.5pt; font-weight: 700; color: #0f172a;">Tesouraria Responsável</p>
+          <p style="margin: 2px 0 0 0; font-size: 8pt; color: #475569;">Congregação Batista Nova Aurora</p>
+        </div>
+      </div>
+      <div style="width: 42%;">
+        <div style="border-top: 1px solid #1e293b; margin-top: 32px; padding-top: 6px;">
+          <p style="margin: 0; font-size: 9.5pt; font-weight: 700; color: #0f172a;">Pastor / Conselho de Liderança</p>
+          <p style="margin: 2px 0 0 0; font-size: 8pt; color: #475569;">Congregação Batista Nova Aurora</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Rodapé -->
+    <div style="margin-top: 24px; text-align: center; font-size: 7.5pt; color: #94a3b8; font-style: italic;">
+      "Trazei todos os dízimos à casa do tesouro, para que haja mantimento na minha casa..." &bull; Malaquias 3:10
+    </div>
+  `;
+
+  // Executa com html2pdf se disponível
+  if (typeof window.html2pdf === 'function') {
+    const filename = `Relatorio-Financeiro-Detalhado-${monthName}-${selectedFinanceYear}.pdf`;
+    const opt = {
+      margin: [8, 8, 8, 8],
+      filename: filename,
+      image: { type: 'jpeg', quality: 0.98 },
+      html2canvas: { scale: 2, useCORS: true, logging: false },
+      jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+    };
+
+    try {
+      await window.html2pdf().set(opt).from(container).save();
+      showToastAlert('PDF baixado com sucesso!');
+      return;
+    } catch (err) {
+      console.warn('Erro ao gerar via html2pdf, abrindo tela de impressão:', err);
+    }
+  }
+
+  // Fallback: abre janela de impressão nativa
+  const printWin = window.open('', '_blank');
+  if (printWin) {
+    printWin.document.write(`
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <title>Relatório Financeiro Detalhado - ${monthName}/${selectedFinanceYear}</title>
+        <meta charset="utf-8">
+        <style>
+          @page { size: A4; margin: 10mm; }
+          body { margin: 0; padding: 0; }
+        </style>
+      </head>
+      <body>
+        ${container.outerHTML}
+        <script>
+          window.onload = function() {
+            window.print();
+          };
+        </script>
+      </body>
+      </html>
+    `);
+    printWin.document.close();
+  } else {
+    alert('Por favor, permita popups para visualizar e imprimir o relatório em PDF.');
+  }
 }
 
 // =========================================================================

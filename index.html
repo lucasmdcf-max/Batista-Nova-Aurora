@@ -19,7 +19,7 @@
     rel="stylesheet">
 
   <link rel="stylesheet" href="css/lenis.css">
-  <link rel="stylesheet" href="css/style.css?v=37">
+  <link rel="stylesheet" href="css/style.css?v=38">
 </head>
 
 <body>
@@ -647,13 +647,24 @@
               </select>
             </div>
 
-            <!-- Botão simples e discreto para a tesoureira editar -->
-            <button type="button" class="btn-discreet-edit" id="btnTreasuryEdit" title="Área da Tesouraria (Editar)" aria-label="Editar Relatório Financeiro">
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M12 20h9"></path>
-                <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path>
-              </svg>
-            </button>
+            <!-- Botões da Tesouraria: Gerar PDF Detalhado e Editar -->
+            <div style="display: flex; align-items: center; gap: 4px;">
+              <button type="button" class="btn-discreet-pdf" id="btnFinancePdfDownload" title="Baixar Relatório Detalhado em PDF com Dizimistas" aria-label="Baixar Relatório em PDF" style="display: none;">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                  <polyline points="14 2 14 8 20 8"></polyline>
+                  <line x1="16" y1="13" x2="8" y2="13"></line>
+                  <line x1="16" y1="17" x2="8" y2="17"></line>
+                  <polyline points="10 9 9 9 8 9"></polyline>
+                </svg>
+              </button>
+              <button type="button" class="btn-discreet-edit" id="btnTreasuryEdit" title="Área da Tesouraria (Editar)" aria-label="Editar Relatório Financeiro">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M12 20h9"></path>
+                  <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path>
+                </svg>
+              </button>
+            </div>
           </div>
 
           <!-- Bloco 1: ENTRADAS (Dízimos e Ofertas separados) -->
@@ -1324,15 +1335,24 @@
 
             <!-- Entradas: Dízimos e Ofertas -->
             <div class="treasury-manage-section">
-              <div style="display: flex; align-items: center; justify-content: space-between;">
+              <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 6px;">
                 <span class="treasury-section-title tag-green">ENTRADAS DO MÊS</span>
-                <button type="button" class="btn-add-tithe-green" id="btnOpenAddTitheModal" title="Registrar dízimo de membro">
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                    <line x1="12" y1="5" x2="12" y2="19"></line>
-                    <line x1="5" y1="12" x2="19" y2="12"></line>
-                  </svg>
-                  + Inserir Dízimo
-                </button>
+                <div style="display: flex; gap: 5px;">
+                  <button type="button" class="btn-add-tithe-green" id="btnOpenAddTitheModal" title="Registrar dízimo de membro">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                      <line x1="12" y1="5" x2="12" y2="19"></line>
+                      <line x1="5" y1="12" x2="19" y2="12"></line>
+                    </svg>
+                    + Dízimo
+                  </button>
+                  <button type="button" class="btn-add-offer-amber" id="btnOpenAddOfferModal" title="Registrar oferta com data">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                      <line x1="12" y1="5" x2="12" y2="19"></line>
+                      <line x1="5" y1="12" x2="19" y2="12"></line>
+                    </svg>
+                    + Oferta
+                  </button>
+                </div>
               </div>
 
               <div class="form-row-2col" style="margin-top: 8px;">
@@ -1353,6 +1373,17 @@
                   <span id="tithesMonthCount" style="color: #6ee7b7; font-weight: 700;">0 registro(s)</span>
                 </div>
                 <div class="tithes-month-list" id="tithesMonthList">
+                  <!-- Itens gerados dinamicamente via JS -->
+                </div>
+              </div>
+
+              <!-- Lista de ofertas com data lançadas neste mês -->
+              <div class="treasury-offers-month-box" id="treasuryOffersMonthBox" style="display: none;">
+                <div class="offers-month-header">
+                  <span>Ofertas com Data no Mês:</span>
+                  <span id="offersMonthCount" style="color: #fcd34d; font-weight: 700;">0 registro(s)</span>
+                </div>
+                <div class="offers-month-list" id="offersMonthList">
                   <!-- Itens gerados dinamicamente via JS -->
                 </div>
               </div>
@@ -1382,9 +1413,21 @@
               </div>
             </div>
 
-            <div class="form-actions" style="margin-top: 18px; display: flex; justify-content: space-between; align-items: center;">
+            <div class="form-actions" style="margin-top: 18px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
               <button type="button" class="btn-form-cancel" id="btnCancelTreasuryManage">Cancelar</button>
-              <button type="submit" class="btn-form-save">Salvar Relatório</button>
+              <div style="display: flex; gap: 6px;">
+                <button type="button" class="btn-export-pdf" id="btnExportTreasuryPdf" title="Baixar relatório financeiro detalhado em PDF com os nomes dos dizimistas">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                    <polyline points="14 2 14 8 20 8"></polyline>
+                    <line x1="16" y1="13" x2="8" y2="13"></line>
+                    <line x1="16" y1="17" x2="8" y2="17"></line>
+                    <polyline points="10 9 9 9 8 9"></polyline>
+                  </svg>
+                  Gerar PDF
+                </button>
+                <button type="submit" class="btn-form-save">Salvar</button>
+              </div>
             </div>
           </form>
         </div>
@@ -1442,10 +1485,60 @@
       </div>
     </div>
 
+    <!-- Modal Inserir Oferta com Data (Tesouraria) -->
+    <div class="app-modal" id="modalAddOffer" aria-hidden="true">
+      <div class="app-modal-overlay" id="overlayAddOffer"></div>
+      <div class="app-modal-card" style="max-width: 350px;">
+        <div class="app-modal-header">
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <div style="width: 26px; height: 26px; border-radius: 7px; background: rgba(245, 158, 11, 0.2); border: 1px solid rgba(245, 158, 11, 0.5); display: flex; align-items: center; justify-content: center; color: #fbbf24;">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="12" y1="5" x2="12" y2="19"></line>
+                <line x1="5" y1="12" x2="19" y2="12"></line>
+              </svg>
+            </div>
+            <h3 style="font-size: 1.05rem;">Inserir Oferta com Data</h3>
+          </div>
+          <button type="button" class="btn-modal-close" id="btnCloseAddOffer" aria-label="Fechar">✕</button>
+        </div>
+        <div class="app-modal-body">
+          <form id="formAddOffer" class="app-form">
+            <div class="form-group">
+              <label for="inputOfferDesc">Descrição / Culto (Opcional)</label>
+              <input type="text" id="inputOfferDesc" placeholder="Ex: Culto Domingo, Oferta Especial...">
+            </div>
+
+            <div class="form-row-2col">
+              <div class="form-group">
+                <label for="inputOfferDate">Data *</label>
+                <input type="date" id="inputOfferDate" required>
+              </div>
+              <div class="form-group">
+                <label for="inputOfferVal">Valor (R$) *</label>
+                <input type="text" id="inputOfferVal" placeholder="0,00" required inputmode="decimal">
+              </div>
+            </div>
+
+            <p style="font-size: 0.72rem; color: #94a3b8; margin: 4px 0 0 0; line-height: 1.35;">
+              💰 <em>O valor será somado ao total de ofertas do mês e discriminado no relatório financeiro detalhado em PDF.</em>
+            </p>
+
+            <div class="form-actions" style="margin-top: 14px;">
+              <button type="button" class="btn-form-cancel" id="btnCancelAddOffer">Cancelar</button>
+              <button type="submit" class="btn-save-offer-amber" id="btnSubmitAddOffer">
+                Salvar Oferta
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+
   </div>
 
   <script src="js/lenis.min.js"></script>
-  <script type="module" src="js/app.js?v=37"></script>
+  <script src="js/html2pdf.bundle.min.js"></script>
+  <script type="module" src="js/app.js?v=38"></script>
 </body>
 
 </html>

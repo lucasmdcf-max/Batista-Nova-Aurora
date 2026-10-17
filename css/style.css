@@ -4349,6 +4349,200 @@ html::-webkit-scrollbar, body::-webkit-scrollbar {
   color: #ef4444;
 }
 
+/* Botão Âmbar de Inserir Oferta com Data */
+.btn-add-offer-amber {
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+  color: #ffffff;
+  border: none;
+  border-radius: 8px;
+  padding: 4px 10px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  box-shadow: 0 2px 8px rgba(245, 158, 11, 0.35);
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.btn-add-offer-amber:hover {
+  filter: brightness(1.12);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(245, 158, 11, 0.45);
+}
+
+.btn-add-offer-amber:active {
+  transform: scale(0.97);
+}
+
+.btn-save-offer-amber {
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+  color: #ffffff;
+  border: none;
+  border-radius: 10px;
+  padding: 8px 16px;
+  font-size: 0.84rem;
+  font-weight: 700;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  box-shadow: 0 3px 12px rgba(245, 158, 11, 0.4);
+  transition: all 0.2s ease;
+}
+
+.btn-save-offer-amber:hover {
+  filter: brightness(1.12);
+  transform: translateY(-1px);
+}
+
+/* Lista de Ofertas Lançadas com Data no Mês */
+.treasury-offers-month-box {
+  margin-top: 8px;
+  background: rgba(245, 158, 11, 0.08);
+  border: 1px dashed rgba(245, 158, 11, 0.35);
+  border-radius: 10px;
+  padding: 8px 10px;
+  box-sizing: border-box;
+}
+
+.offers-month-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 0.7rem;
+  color: #fcd34d;
+  font-weight: 700;
+  text-transform: uppercase;
+  margin-bottom: 6px;
+}
+
+.offers-month-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  max-height: 100px;
+  overflow-y: auto;
+  box-sizing: border-box;
+}
+
+.offers-month-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  background: rgba(0, 15, 36, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 6px;
+  padding: 4px 7px;
+  font-size: 0.72rem;
+  box-sizing: border-box;
+}
+
+.offers-month-item-desc {
+  color: #ffffff;
+  font-weight: 600;
+  flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.offers-month-item-date {
+  color: #94a3b8;
+  font-size: 0.68rem;
+  white-space: nowrap;
+}
+
+.offers-month-item-val {
+  color: #fbbf24;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.btn-remove-offer-item {
+  background: transparent;
+  border: none;
+  color: #f87171;
+  font-size: 0.85rem;
+  cursor: pointer;
+  padding: 1px 4px;
+  border-radius: 4px;
+  line-height: 1;
+  transition: all 0.2s ease;
+}
+
+.btn-remove-offer-item:hover {
+  background: rgba(239, 68, 68, 0.2);
+  color: #ef4444;
+}
+
+/* Badge do Plano Cooperativo (10% dos Dízimos) */
+.badge-plano-coop {
+  font-size: 0.62rem;
+  background: rgba(56, 189, 248, 0.16);
+  border: 1px solid rgba(56, 189, 248, 0.45);
+  color: #7dd3fc;
+  padding: 1px 5px;
+  border-radius: 5px;
+  font-weight: 700;
+  text-transform: uppercase;
+  margin-left: 6px;
+  display: inline-block;
+  letter-spacing: 0.02em;
+}
+
+/* Botão Exportar PDF no Modal da Tesoureira */
+.btn-export-pdf {
+  background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%);
+  color: #ffffff;
+  border: 1px solid rgba(125, 211, 252, 0.4);
+  border-radius: 10px;
+  padding: 8px 12px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  box-shadow: 0 3px 10px rgba(2, 132, 199, 0.35);
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.btn-export-pdf:hover {
+  background: linear-gradient(135deg, #0369a1 0%, #075985 100%);
+  box-shadow: 0 4px 14px rgba(2, 132, 199, 0.5);
+  transform: translateY(-1px);
+}
+
+/* Botão Discreto de PDF na barra do Relatório Financeiro */
+.btn-discreet-pdf {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: rgba(14, 165, 233, 0.15);
+  border: 1px solid rgba(14, 165, 233, 0.35);
+  color: #38bdf8;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  outline: none;
+  transition: all 0.22s ease;
+  flex-shrink: 0;
+  margin-right: 4px;
+}
+
+.btn-discreet-pdf:hover {
+  background: rgba(14, 165, 233, 0.3);
+  border-color: #38bdf8;
+  color: #ffffff;
+  transform: scale(1.08);
+}
+
 /* Formulário de Saídas 100% Responsivo sem corte horizontal */
 .treasury-add-exit-row {
   display: flex;
