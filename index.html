@@ -509,17 +509,17 @@
         </button>
         <div class="sub-screen-title-wrap">
           <h2 class="sub-screen-title" id="membersScreenTitle">MEMBROS</h2>
-          <div class="prayer-counters visitor-nav-tabs" id="membersNavTabs">
+          <div class="prayer-counters members-nav-tabs" id="membersNavTabs">
             <button type="button" class="counter-tab counter-pending is-active" id="tabMembersHub">
-              Opções
+              Início
             </button>
             <span class="counter-divider">•</span>
             <button type="button" class="counter-tab counter-answered" id="tabMembersList">
-              Lista de Membros <span class="counter-badge" id="countMembersBadge">0</span>
+              Membros <span class="counter-badge" id="countMembersBadge">0</span>
             </button>
             <span class="counter-divider">•</span>
             <button type="button" class="counter-tab counter-answered" id="tabMembersFinance">
-              Relatório Financeiro
+              Financeiro
             </button>
           </div>
         </div>
@@ -610,28 +610,21 @@
           </div>
         </div>
 
-        <!-- Vista 3: Relatório Financeiro -->
-        <div class="members-view-container" id="membersFinanceView" style="display: none;">
-          <!-- Cabeçalho do Relatório com Botão de Edição Discreto no Topo Direito -->
-          <div class="financial-top-bar">
-            <div class="financial-title-area">
-              <span class="offer-badge badge-orange">Prestação de Contas</span>
-              <h3 class="financial-section-heading">RELATÓRIO FINANCEIRO</h3>
-            </div>
-            <!-- Botão de edição simples e discreto para a tesoureira -->
-            <button type="button" class="btn-discreet-edit" id="btnTreasuryEdit" title="Área da Tesouraria" aria-label="Editar Relatório Financeiro">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M12 20h9"></path>
-                <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path>
-              </svg>
-            </button>
-          </div>
-
-          <!-- Filtro por Mês e Ano -->
-          <div class="financial-filters-card">
-            <div class="financial-filter-group">
-              <label for="selectFinanceMonth">Mês:</label>
-              <select id="selectFinanceMonth" class="financial-select">
+        <!-- Vista 3: Relatório Financeiro Encaixado sem Rolagem -->
+        <div class="members-view-container members-finance-container" id="membersFinanceView" style="display: none;">
+          
+          <!-- Topo Compacto: Filtros Mês/Ano e Botão Discreto de Edição da Tesouraria -->
+          <div class="finance-compact-topbar">
+            <div class="finance-period-picker">
+              <span class="finance-picker-icon">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                  <line x1="16" y1="2" x2="16" y2="6"></line>
+                  <line x1="8" y1="2" x2="8" y2="6"></line>
+                  <line x1="3" y1="10" x2="21" y2="10"></line>
+                </svg>
+              </span>
+              <select id="selectFinanceMonth" class="finance-compact-select" aria-label="Mês do Relatório">
                 <option value="1">Janeiro</option>
                 <option value="2">Fevereiro</option>
                 <option value="3">Março</option>
@@ -645,11 +638,7 @@
                 <option value="11">Novembro</option>
                 <option value="12">Dezembro</option>
               </select>
-            </div>
-
-            <div class="financial-filter-group">
-              <label for="selectFinanceYear">Ano:</label>
-              <select id="selectFinanceYear" class="financial-select">
+              <select id="selectFinanceYear" class="finance-compact-select" aria-label="Ano do Relatório">
                 <option value="2024">2024</option>
                 <option value="2025">2025</option>
                 <option value="2026">2026</option>
@@ -657,47 +646,75 @@
                 <option value="2028">2028</option>
               </select>
             </div>
+
+            <!-- Botão simples e discreto para a tesoureira editar -->
+            <button type="button" class="btn-discreet-edit" id="btnTreasuryEdit" title="Área da Tesouraria (Editar)" aria-label="Editar Relatório Financeiro">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M12 20h9"></path>
+                <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path>
+              </svg>
+            </button>
           </div>
 
-          <!-- Card do Valor Total (Visível para todos os membros) -->
-          <div class="financial-total-card">
-            <div class="financial-total-header">
-              <span class="financial-period-label" id="financialPeriodLabel">Outubro / 2026</span>
-              <span class="financial-status-pill">Oficial</span>
+          <!-- Bloco 1: ENTRADAS (Dízimos e Ofertas separados) -->
+          <div class="finance-card finance-card-entries">
+            <div class="finance-card-header">
+              <div class="finance-header-tag tag-green">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                  <polyline points="18 15 12 9 6 15"></polyline>
+                </svg>
+                <span>ENTRADAS</span>
+              </div>
+              <div class="finance-header-subtotal">
+                <span class="subtotal-label">Total:</span>
+                <span class="subtotal-val val-green" id="financeTotalEntries">R$ 0,00</span>
+              </div>
             </div>
-            <div class="financial-total-amount-box">
-              <span class="financial-total-prefix">VALOR TOTAL</span>
-              <div class="financial-total-val" id="financialTotalValue">R$ 0,00</div>
+
+            <div class="finance-items-grid">
+              <div class="finance-item-box">
+                <span class="finance-item-label">Dízimos</span>
+                <span class="finance-item-value" id="financeDizimosValue">R$ 0,00</span>
+              </div>
+              <div class="finance-item-box">
+                <span class="finance-item-label">Ofertas</span>
+                <span class="finance-item-value" id="financeOfertasValue">R$ 0,00</span>
+              </div>
             </div>
-            <p class="financial-total-subtext">Total consolidado pela tesouraria da congregação.</p>
           </div>
 
-          <!-- Painel da Tesoureira (Apenas visível quando desbloqueado com 010101) -->
-          <div class="treasury-management-panel" id="treasuryAdminPanel" style="display: none;">
-            <div class="treasury-panel-header">
-              <div class="treasury-status-badge">
-                <span class="treasury-dot"></span> Modo Tesouraria Ativo (010101)
+          <!-- Bloco 2: SAÍDAS (Descritas separadamente e abaixo o somatório total das saídas) -->
+          <div class="finance-card finance-card-exits">
+            <div class="finance-card-header">
+              <div class="finance-header-tag tag-red">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                  <polyline points="6 9 12 15 18 9"></polyline>
+                </svg>
+                <span>SAÍDAS</span>
               </div>
-              <button type="button" class="btn-treasury-lock" id="btnTreasuryLock" title="Encerrar Edição">
-                Sair da Edição 🔒
-              </button>
+              <span class="finance-header-hint">Discriminadas</span>
             </div>
 
-            <div class="treasury-actions-row">
-              <button type="button" class="btn-treasury-action" id="btnTreasuryAddEntry">
-                + Novo Lançamento
-              </button>
-              <button type="button" class="btn-treasury-action-outline" id="btnTreasuryEditDirectTotal">
-                Ajustar Total Manual
-              </button>
+            <!-- Lista de saídas descritas separadamente -->
+            <div class="finance-exits-scroll-list" id="financeExitsList">
+              <!-- Preenchido dinamicamente via JS -->
             </div>
 
-            <!-- Lista de lançamentos detalhados (exclusivo para a tesoureira) -->
-            <div class="treasury-entries-wrap">
-              <h4 class="treasury-entries-title">Lançamentos do Período (Privado da Tesouraria):</h4>
-              <div class="treasury-entries-list" id="treasuryEntriesList">
-                <!-- Lançamentos renderizados dinamicamente -->
-              </div>
+            <!-- Somatório Total das Saídas Abaixo -->
+            <div class="finance-card-footer-sum">
+              <span class="footer-sum-label">SOMATÓRIO TOTAL DAS SAÍDAS:</span>
+              <span class="footer-sum-val val-red" id="financeTotalExits">R$ 0,00</span>
+            </div>
+          </div>
+
+          <!-- Bloco 3: SALDO DO MÊS / TOTAL GERAL -->
+          <div class="finance-card finance-card-summary">
+            <div class="finance-summary-left">
+              <span class="finance-summary-period" id="financeSummaryPeriod">Outubro de 2026</span>
+              <span class="finance-summary-title">SALDO GERAL (LÍQUIDO)</span>
+            </div>
+            <div class="finance-summary-right">
+              <span class="finance-summary-total" id="financeBalanceValue">R$ 0,00</span>
             </div>
           </div>
 
@@ -1294,84 +1311,67 @@
       </div>
     </div>
 
-    <!-- Modal Novo Lançamento Financeiro -->
-    <div class="app-modal" id="modalTreasuryEntry" aria-hidden="true">
-      <div class="app-modal-overlay" id="overlayTreasuryEntry"></div>
-      <div class="app-modal-card">
+    <!-- Modal Gerenciamento Financeiro da Tesoureira (Código 010101) -->
+    <div class="app-modal" id="modalTreasuryManage" aria-hidden="true">
+      <div class="app-modal-overlay" id="overlayTreasuryManage"></div>
+      <div class="app-modal-card modal-treasury-card">
         <div class="app-modal-header">
-          <h3 id="treasuryEntryModalTitle">Novo Lançamento Financeiro</h3>
-          <button type="button" class="btn-modal-close" id="btnCloseTreasuryEntry" aria-label="Fechar">✕</button>
+          <h3 id="treasuryManageModalTitle">Editar Finanças do Mês</h3>
+          <button type="button" class="btn-modal-close" id="btnCloseTreasuryManage" aria-label="Fechar">✕</button>
         </div>
-        <form id="formTreasuryEntry" class="app-form">
-          <input type="hidden" id="treasuryEntryId">
-          <div class="form-group">
-            <label for="treasuryEntryCategory">Categoria / Tipo *</label>
-            <select id="treasuryEntryCategory" class="financial-select" required>
-              <option value="Dízimos">Dízimos</option>
-              <option value="Ofertas de Culto">Ofertas de Culto</option>
-              <option value="Ofertas de Missões">Ofertas de Missões</option>
-              <option value="Doações Especiais">Doações Especiais</option>
-              <option value="Eventos / Cantina">Eventos / Cantina</option>
-              <option value="Outras Entradas">Outras Entradas</option>
-            </select>
-          </div>
+        <div class="app-modal-body">
+          <form id="formTreasuryManage" class="app-form">
 
-          <div class="form-group">
-            <label for="treasuryEntryDesc">Descrição / Referência *</label>
-            <input type="text" id="treasuryEntryDesc" placeholder="Ex: Culto de Celebração de Domingo" required>
-          </div>
-
-          <div class="form-row-2col">
-            <div class="form-group">
-              <label for="treasuryEntryValue">Valor (R$) *</label>
-              <input type="text" id="treasuryEntryValue" placeholder="0,00" required inputmode="decimal">
+            <!-- Entradas: Dízimos e Ofertas -->
+            <div class="treasury-manage-section">
+              <span class="treasury-section-title tag-green">ENTRADAS DO MÊS</span>
+              <div class="form-row-2col" style="margin-top: 8px;">
+                <div class="form-group">
+                  <label for="treasuryInputDizimos">Dízimos (R$)</label>
+                  <input type="text" id="treasuryInputDizimos" placeholder="0,00" inputmode="decimal">
+                </div>
+                <div class="form-group">
+                  <label for="treasuryInputOfertas">Ofertas (R$)</label>
+                  <input type="text" id="treasuryInputOfertas" placeholder="0,00" inputmode="decimal">
+                </div>
+              </div>
             </div>
-            <div class="form-group">
-              <label for="treasuryEntryDate">Data *</label>
-              <input type="date" id="treasuryEntryDate" required>
+
+            <!-- Saídas Descritas Separadamente -->
+            <div class="treasury-manage-section" style="margin-top: 14px;">
+              <span class="treasury-section-title tag-red">SAÍDAS (DESCRITAS SEPARADAMENTE)</span>
+              
+              <!-- Formulário rápido para adicionar uma saída -->
+              <div class="treasury-add-exit-row">
+                <input type="text" id="treasuryExitDesc" placeholder="Descrição (ex: Água, Luz, Missões...)" class="treasury-mini-input">
+                <input type="text" id="treasuryExitVal" placeholder="R$ 0,00" class="treasury-mini-input-val" inputmode="decimal">
+                <button type="button" class="btn-add-exit" id="btnAddTreasuryExit">+ Inserir</button>
+              </div>
+
+              <!-- Lista das saídas já adicionadas -->
+              <div class="treasury-manage-exits-list" id="treasuryManageExitsList">
+                <!-- Itens gerados dinamicamente via JS -->
+              </div>
+
+              <div class="treasury-manage-exits-sum">
+                <span>Somatório Total das Saídas:</span>
+                <strong id="treasuryManageExitsSum">R$ 0,00</strong>
+              </div>
             </div>
-          </div>
 
-          <div class="form-actions" style="margin-top: 16px;">
-            <button type="button" class="btn-form-cancel" id="btnCancelTreasuryEntry">Cancelar</button>
-            <button type="submit" class="btn-form-save">Salvar Lançamento</button>
-          </div>
-        </form>
-      </div>
-    </div>
-
-    <!-- Modal Ajuste de Total Manual da Tesouraria -->
-    <div class="app-modal" id="modalTreasuryDirectTotal" aria-hidden="true">
-      <div class="app-modal-overlay" id="overlayTreasuryDirectTotal"></div>
-      <div class="app-modal-card">
-        <div class="app-modal-header">
-          <h3>Ajustar Valor Total</h3>
-          <button type="button" class="btn-modal-close" id="btnCloseTreasuryDirectTotal" aria-label="Fechar">✕</button>
+            <div class="form-actions" style="margin-top: 18px; display: flex; justify-content: space-between; align-items: center;">
+              <button type="button" class="btn-form-cancel" id="btnCancelTreasuryManage">Cancelar</button>
+              <button type="submit" class="btn-form-save">Salvar Relatório</button>
+            </div>
+          </form>
         </div>
-        <form id="formTreasuryDirectTotal" class="app-form">
-          <p class="delete-warning-text" style="color: #cbd5e1;">
-            Defina o Valor Total consolidado do mês diretamente para os membros:
-          </p>
-          <div class="form-group" style="margin-top: 10px;">
-            <label for="treasuryDirectTotalValue">Valor Total (R$) *</label>
-            <input type="text" id="treasuryDirectTotalValue" placeholder="0,00" required inputmode="decimal">
-          </div>
-          <div class="form-group">
-            <label for="treasuryDirectTotalNote">Observação (Opcional)</label>
-            <input type="text" id="treasuryDirectTotalNote" placeholder="Ex: Consolidado da Tesouraria">
-          </div>
-          <div class="form-actions" style="margin-top: 16px;">
-            <button type="button" class="btn-form-cancel" id="btnCancelTreasuryDirectTotal">Cancelar</button>
-            <button type="submit" class="btn-form-save">Salvar Total</button>
-          </div>
-        </form>
       </div>
     </div>
 
   </div>
 
   <script src="js/lenis.min.js"></script>
-  <script type="module" src="js/app.js?v=34"></script>
+  <script type="module" src="js/app.js?v=35"></script>
 </body>
 
 </html>

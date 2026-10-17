@@ -5,7 +5,10 @@
  * - Lista de membros em ordem alfabética com busca e botão de novo cadastro no topo
  * - Código de 6 dígitos exclusivo criado e confirmado pelo membro no cadastro
  * - Acesso aos dados do membro liberado por seu código de 6 dígitos ou pelo ADM (código 010101)
- * - Relatório financeiro com filtro por mês e ano (membros visualizam apenas o valor total)
+ * - Relatório financeiro com filtro por mês e ano
+ * - Entradas com Dízimos e Ofertas descritos separadamente
+ * - Saídas descritas separadamente e somatório total das saídas abaixo
+ * - Layout 100% encaixado na tela acima do botão do menu principal sem rolagem
  * - Botão discreto no topo direito para a tesoureira editar via código 010101
  * - Sincronização em tempo real com Firestore e fallback offline (localStorage)
  */
@@ -28,16 +31,17 @@ import { requestMemberAccess } from './visitors.js';
 
 const ADMIN_CODE = '010101';
 const TREASURY_CODE = '010101';
-const STORAGE_MEMBERS_KEY = 'cbna_membros_cache_v1';
-const STORAGE_FINANCE_KEY = 'cbna_financeiro_cache_v1';
+const STORAGE_MEMBERS_KEY = 'cbna_membros_cache_v2';
+const STORAGE_FINANCE_KEY = 'cbna_financeiro_cache_v2';
 
 // Estado local
 let membersList = [];
-let financialReports = {}; // chave: 'YYYY-MM' => { mes, ano, valorTotal, observacao, lancamentos: [] }
+let financialReports = {}; // chave: 'YYYY-MM' => { mes, ano, dizimos, ofertas, totalEntradas, saidas: [], totalSaidas, saldoGeral }
 let currentScreenTab = 'hub'; // 'hub' | 'list' | 'finance'
 let currentSelectedMember = null;
 let isTreasuryUnlocked = false;
 let isAdminUnlocked = false;
+let tempEditingSaidas = [];
 
 // Filtros do Relatório Financeiro
 const now = new Date();
@@ -121,18 +125,19 @@ let editMemberCode = null;
 let editMemberCodeConfirm = null;
 let editMemberCodeErrorMsg = null;
 
-// Financial Elements
+// Financial Elements (Relatório Compacto)
 let btnTreasuryEdit = null;
 let selectFinanceMonth = null;
 let selectFinanceYear = null;
-let financialPeriodLabel = null;
-let financialTotalValue = null;
-let treasuryAdminPanel = null;
-let btnTreasuryLock = null;
-let btnTreasuryAddEntry = null;
-let btnTreasuryEditDirectTotal = null;
-let treasuryEntriesList = null;
+let financeTotalEntries = null;
+let financeDizimosValue = null;
+let financeOfertasValue = null;
+let financeExitsList = null;
+let financeTotalExits = null;
+let financeSummaryPeriod = null;
+let financeBalanceValue = null;
 
+// Modal Senha da Tesouraria
 let modalTreasuryAuth = null;
 let overlayTreasuryAuth = null;
 let btnCloseTreasuryAuth = null;
@@ -141,25 +146,20 @@ let formTreasuryAuth = null;
 let inputTreasuryCode = null;
 let treasuryAuthErrorMsg = null;
 
-let modalTreasuryEntry = null;
-let overlayTreasuryEntry = null;
-let btnCloseTreasuryEntry = null;
-let btnCancelTreasuryEntry = null;
-let formTreasuryEntry = null;
-let treasuryEntryModalTitle = null;
-let treasuryEntryId = null;
-let treasuryEntryCategory = null;
-let treasuryEntryDesc = null;
-let treasuryEntryValue = null;
-let treasuryEntryDate = null;
-
-let modalTreasuryDirectTotal = null;
-let overlayTreasuryDirectTotal = null;
-let btnCloseTreasuryDirectTotal = null;
-let btnCancelTreasuryDirectTotal = null;
-let formTreasuryDirectTotal = null;
-let treasuryDirectTotalValue = null;
-let treasuryDirectTotalNote = null;
+// Modal Gerenciamento Financeiro Completo
+let modalTreasuryManage = null;
+let overlayTreasuryManage = null;
+let btnCloseTreasuryManage = null;
+let btnCancelTreasuryManage = null;
+let formTreasuryManage = null;
+let treasuryManageModalTitle = null;
+let treasuryInputDizimos = null;
+let treasuryInputOfertas = null;
+let treasuryExitDesc = null;
+let treasuryExitVal = null;
+let btnAddTreasuryExit = null;
+let treasuryManageExitsList = null;
+let treasuryManageExitsSum = null;
 
 /**
  * Inicializador da Área de Membros
@@ -170,7 +170,6 @@ export function initMembers() {
   setupEventListeners();
   setupFirestoreListeners();
 
-  // Verifica se já estava desbloqueado a tesouraria na sessão
   try {
     if (sessionStorage.getItem('cbna_treasury_unlocked') === 'true') {
       isTreasuryUnlocked = true;
@@ -276,17 +275,19 @@ function cacheElements() {
   editMemberCodeConfirm = document.getElementById('editMemberCodeConfirm');
   editMemberCodeErrorMsg = document.getElementById('editMemberCodeErrorMsg');
 
+  // Relatório Financeiro
   btnTreasuryEdit = document.getElementById('btnTreasuryEdit');
   selectFinanceMonth = document.getElementById('selectFinanceMonth');
   selectFinanceYear = document.getElementById('selectFinanceYear');
-  financialPeriodLabel = document.getElementById('financialPeriodLabel');
-  financialTotalValue = document.getElementById('financialTotalValue');
-  treasuryAdminPanel = document.getElementById('treasuryAdminPanel');
-  btnTreasuryLock = document.getElementById('btnTreasuryLock');
-  btnTreasuryAddEntry = document.getElementById('btnTreasuryAddEntry');
-  btnTreasuryEditDirectTotal = document.getElementById('btnTreasuryEditDirectTotal');
-  treasuryEntriesList = document.getElementById('treasuryEntriesList');
+  financeTotalEntries = document.getElementById('financeTotalEntries');
+  financeDizimosValue = document.getElementById('financeDizimosValue');
+  financeOfertasValue = document.getElementById('financeOfertasValue');
+  financeExitsList = document.getElementById('financeExitsList');
+  financeTotalExits = document.getElementById('financeTotalExits');
+  financeSummaryPeriod = document.getElementById('financeSummaryPeriod');
+  financeBalanceValue = document.getElementById('financeBalanceValue');
 
+  // Modal Autenticação da Tesouraria
   modalTreasuryAuth = document.getElementById('modalTreasuryAuth');
   overlayTreasuryAuth = document.getElementById('overlayTreasuryAuth');
   btnCloseTreasuryAuth = document.getElementById('btnCloseTreasuryAuth');
@@ -295,25 +296,20 @@ function cacheElements() {
   inputTreasuryCode = document.getElementById('inputTreasuryCode');
   treasuryAuthErrorMsg = document.getElementById('treasuryAuthErrorMsg');
 
-  modalTreasuryEntry = document.getElementById('modalTreasuryEntry');
-  overlayTreasuryEntry = document.getElementById('overlayTreasuryEntry');
-  btnCloseTreasuryEntry = document.getElementById('btnCloseTreasuryEntry');
-  btnCancelTreasuryEntry = document.getElementById('btnCancelTreasuryEntry');
-  formTreasuryEntry = document.getElementById('formTreasuryEntry');
-  treasuryEntryModalTitle = document.getElementById('treasuryEntryModalTitle');
-  treasuryEntryId = document.getElementById('treasuryEntryId');
-  treasuryEntryCategory = document.getElementById('treasuryEntryCategory');
-  treasuryEntryDesc = document.getElementById('treasuryEntryDesc');
-  treasuryEntryValue = document.getElementById('treasuryEntryValue');
-  treasuryEntryDate = document.getElementById('treasuryEntryDate');
-
-  modalTreasuryDirectTotal = document.getElementById('modalTreasuryDirectTotal');
-  overlayTreasuryDirectTotal = document.getElementById('overlayTreasuryDirectTotal');
-  btnCloseTreasuryDirectTotal = document.getElementById('btnCloseTreasuryDirectTotal');
-  btnCancelTreasuryDirectTotal = document.getElementById('btnCancelTreasuryDirectTotal');
-  formTreasuryDirectTotal = document.getElementById('formTreasuryDirectTotal');
-  treasuryDirectTotalValue = document.getElementById('treasuryDirectTotalValue');
-  treasuryDirectTotalNote = document.getElementById('treasuryDirectTotalNote');
+  // Modal Gerenciamento Financeiro
+  modalTreasuryManage = document.getElementById('modalTreasuryManage');
+  overlayTreasuryManage = document.getElementById('overlayTreasuryManage');
+  btnCloseTreasuryManage = document.getElementById('btnCloseTreasuryManage');
+  btnCancelTreasuryManage = document.getElementById('btnCancelTreasuryManage');
+  formTreasuryManage = document.getElementById('formTreasuryManage');
+  treasuryManageModalTitle = document.getElementById('treasuryManageModalTitle');
+  treasuryInputDizimos = document.getElementById('treasuryInputDizimos');
+  treasuryInputOfertas = document.getElementById('treasuryInputOfertas');
+  treasuryExitDesc = document.getElementById('treasuryExitDesc');
+  treasuryExitVal = document.getElementById('treasuryExitVal');
+  btnAddTreasuryExit = document.getElementById('btnAddTreasuryExit');
+  treasuryManageExitsList = document.getElementById('treasuryManageExitsList');
+  treasuryManageExitsSum = document.getElementById('treasuryManageExitsSum');
 }
 
 function loadOfflineCaches() {
@@ -334,7 +330,7 @@ function loadOfflineCaches() {
 }
 
 function setupFirestoreListeners() {
-  // 1. Ouvinte de Membros
+  // 1. Membros
   try {
     const qMembers = query(collection(db, 'membros'), orderBy('nome', 'asc'));
     onSnapshot(qMembers, (snapshot) => {
@@ -354,7 +350,7 @@ function setupFirestoreListeners() {
     console.warn('Erro ao inicializar snapshot de membros:', err);
   }
 
-  // 2. Ouvinte de Relatórios Financeiros
+  // 2. Relatórios Financeiros
   try {
     const qFinance = collection(db, 'relatorios_financeiros');
     onSnapshot(qFinance, (snapshot) => {
@@ -378,7 +374,7 @@ function setupFirestoreListeners() {
 function switchTab(tab) {
   currentScreenTab = tab;
 
-  // Atualiza botões do header
+  // Atualiza botões compactos do header
   if (tabMembersHub) tabMembersHub.classList.toggle('is-active', tab === 'hub');
   if (tabMembersList) tabMembersList.classList.toggle('is-active', tab === 'list');
   if (tabMembersFinance) tabMembersFinance.classList.toggle('is-active', tab === 'finance');
@@ -386,13 +382,23 @@ function switchTab(tab) {
   // Alterna views
   if (membersHubView) membersHubView.style.display = tab === 'hub' ? 'block' : 'none';
   if (membersListView) membersListView.style.display = tab === 'list' ? 'block' : 'none';
-  if (membersFinanceView) membersFinanceView.style.display = tab === 'finance' ? 'block' : 'none';
+  if (membersFinanceView) membersFinanceView.style.display = tab === 'finance' ? 'flex' : 'none';
 
-  // Título
+  // Trava de rolagem quando no financeiro (garantindo que tudo fique 100% encaixado na tela acima do menu)
+  const body = document.querySelector('.members-screen-body');
+  if (body) {
+    if (tab === 'finance') {
+      body.classList.add('finance-screen-locked');
+    } else {
+      body.classList.remove('finance-screen-locked');
+    }
+  }
+
+  // Título limpo e responsivo
   if (membersScreenTitle) {
     if (tab === 'hub') membersScreenTitle.textContent = 'MEMBROS';
-    else if (tab === 'list') membersScreenTitle.textContent = 'LISTA DE MEMBROS';
-    else if (tab === 'finance') membersScreenTitle.textContent = 'RELATÓRIO FINANCEIRO';
+    else if (tab === 'list') membersScreenTitle.textContent = 'MEMBROS';
+    else if (tab === 'finance') membersScreenTitle.textContent = 'FINANCEIRO';
   }
 
   if (tab === 'list') {
@@ -443,10 +449,8 @@ function setupEventListeners() {
     });
   }
 
-  // Novo Cadastro de Membro (Abrir / Fechar)
-  if (btnOpenNewMemberModal) {
-    btnOpenNewMemberModal.addEventListener('click', () => openNewMemberModal());
-  }
+  // Novo Cadastro de Membro
+  if (btnOpenNewMemberModal) btnOpenNewMemberModal.addEventListener('click', () => openNewMemberModal());
   if (btnCloseNewMember) btnCloseNewMember.addEventListener('click', () => closeNewMemberModal());
   if (btnCancelNewMember) btnCancelNewMember.addEventListener('click', () => closeNewMemberModal());
   if (overlayNewMember) overlayNewMember.addEventListener('click', () => closeNewMemberModal());
@@ -465,9 +469,7 @@ function setupEventListeners() {
   });
 
   // Submissão do Novo Cadastro
-  if (formNewMember) {
-    formNewMember.addEventListener('submit', handleNewMemberSubmit);
-  }
+  if (formNewMember) formNewMember.addEventListener('submit', handleNewMemberSubmit);
 
   // Modal Autenticação de Código do Membro
   if (btnCloseMemberCodeAuth) btnCloseMemberCodeAuth.addEventListener('click', closeMemberCodeAuthModal);
@@ -508,11 +510,7 @@ function setupEventListeners() {
   if (btnTreasuryEdit) {
     btnTreasuryEdit.addEventListener('click', () => {
       if (isTreasuryUnlocked) {
-        // Já desbloqueado, rola suavemente para o painel de tesouraria
-        if (treasuryAdminPanel) {
-          treasuryAdminPanel.scrollIntoView({ behavior: 'smooth' });
-          showToastAlert('Modo Tesouraria ativo!');
-        }
+        openTreasuryManageModal();
       } else {
         openTreasuryAuthModal();
       }
@@ -525,43 +523,18 @@ function setupEventListeners() {
   if (overlayTreasuryAuth) overlayTreasuryAuth.addEventListener('click', closeTreasuryAuthModal);
   if (formTreasuryAuth) formTreasuryAuth.addEventListener('submit', handleTreasuryAuthSubmit);
 
-  // Bloquear / Sair da Edição da Tesouraria
-  if (btnTreasuryLock) {
-    btnTreasuryLock.addEventListener('click', () => {
-      isTreasuryUnlocked = false;
-      try {
-        sessionStorage.removeItem('cbna_treasury_unlocked');
-      } catch (_) {}
-      renderFinancialView();
-      showToastAlert('Modo de edição da tesouraria bloqueado.');
-    });
-  }
+  // Modal Gerenciamento Financeiro Completo da Tesouraria
+  if (btnCloseTreasuryManage) btnCloseTreasuryManage.addEventListener('click', closeTreasuryManageModal);
+  if (btnCancelTreasuryManage) btnCancelTreasuryManage.addEventListener('click', closeTreasuryManageModal);
+  if (overlayTreasuryManage) overlayTreasuryManage.addEventListener('click', closeTreasuryManageModal);
+  if (formTreasuryManage) formTreasuryManage.addEventListener('submit', handleTreasuryManageSubmit);
 
-  // Modal Novo Lançamento Financeiro
-  if (btnTreasuryAddEntry) {
-    btnTreasuryAddEntry.addEventListener('click', () => openTreasuryEntryModal());
-  }
-  if (btnCloseTreasuryEntry) btnCloseTreasuryEntry.addEventListener('click', closeTreasuryEntryModal);
-  if (btnCancelTreasuryEntry) btnCancelTreasuryEntry.addEventListener('click', closeTreasuryEntryModal);
-  if (overlayTreasuryEntry) overlayTreasuryEntry.addEventListener('click', closeTreasuryEntryModal);
-  if (formTreasuryEntry) formTreasuryEntry.addEventListener('submit', handleTreasuryEntrySubmit);
+  if (btnAddTreasuryExit) btnAddTreasuryExit.addEventListener('click', handleAddExitFromModal);
 
-  // Modal Ajuste de Total Manual
-  if (btnTreasuryEditDirectTotal) {
-    btnTreasuryEditDirectTotal.addEventListener('click', () => openTreasuryDirectTotalModal());
-  }
-  if (btnCloseTreasuryDirectTotal) btnCloseTreasuryDirectTotal.addEventListener('click', closeTreasuryDirectTotalModal);
-  if (btnCancelTreasuryDirectTotal) btnCancelTreasuryDirectTotal.addEventListener('click', closeTreasuryDirectTotalModal);
-  if (overlayTreasuryDirectTotal) overlayTreasuryDirectTotal.addEventListener('click', closeTreasuryDirectTotalModal);
-  if (formTreasuryDirectTotal) formTreasuryDirectTotal.addEventListener('submit', handleTreasuryDirectTotalSubmit);
-
-  // Máscara monetária nos inputs de valor
-  if (treasuryEntryValue) {
-    treasuryEntryValue.addEventListener('input', (e) => maskCurrencyInput(e.target));
-  }
-  if (treasuryDirectTotalValue) {
-    treasuryDirectTotalValue.addEventListener('input', (e) => maskCurrencyInput(e.target));
-  }
+  // Máscaras monetárias
+  if (treasuryInputDizimos) treasuryInputDizimos.addEventListener('input', (e) => maskCurrencyInput(e.target));
+  if (treasuryInputOfertas) treasuryInputOfertas.addEventListener('input', (e) => maskCurrencyInput(e.target));
+  if (treasuryExitVal) treasuryExitVal.addEventListener('input', (e) => maskCurrencyInput(e.target));
 }
 
 /**
@@ -572,7 +545,6 @@ function renderMembersList() {
 
   const queryTerm = (memberSearchInput ? memberSearchInput.value : '').trim().toLowerCase();
 
-  // Ordenação alfabética (respeitando acentos da língua portuguesa)
   const sorted = [...membersList].sort((a, b) => {
     const nomeA = (a.nome || '').trim();
     const nomeB = (b.nome || '').trim();
@@ -639,16 +611,12 @@ function renderMembersList() {
 
   membersCardsContainer.innerHTML = html;
 
-  // Associa clique para solicitar o código do membro
   membersCardsContainer.querySelectorAll('.member-card-item').forEach((card) => {
     const id = card.getAttribute('data-id');
     const member = membersList.find((m) => m.id === id);
     if (!member) return;
 
-    const handleSelect = () => {
-      openMemberCodeAuthModal(member);
-    };
-
+    const handleSelect = () => openMemberCodeAuthModal(member);
     card.addEventListener('click', handleSelect);
     card.addEventListener('keydown', (e) => {
       if (e.key === 'Enter' || e.key === ' ') {
@@ -702,7 +670,6 @@ function handleMemberCodeAuthSubmit(e) {
   const codeEntered = (inputMemberAccessCode ? inputMemberAccessCode.value : '').trim();
   const memberCode = (currentSelectedMember.codigo || '').trim();
 
-  // Verifica se o código confere com o do próprio membro ou se é o código do ADM (010101)
   const isOwner = codeEntered.length === 6 && codeEntered === memberCode;
   const isAdmin = codeEntered === ADMIN_CODE;
 
@@ -719,23 +686,16 @@ function handleMemberCodeAuthSubmit(e) {
 }
 
 /**
- * Visualização Completa dos Dados do Membro (Acesso Autorizado)
+ * Visualização Completa dos Dados do Membro
  */
 function openMemberDetailsModal(member, isAdmin = false) {
   currentSelectedMember = member;
 
-  if (memberDetailsAvatar) {
-    memberDetailsAvatar.textContent = getInitials(member.nome);
-  }
-  if (memberDetailsName) {
-    memberDetailsName.textContent = member.nome || '';
-  }
-  if (memberDetailsRole) {
-    memberDetailsRole.textContent = member.cargo || 'Membro';
-  }
+  if (memberDetailsAvatar) memberDetailsAvatar.textContent = getInitials(member.nome);
+  if (memberDetailsName) memberDetailsName.textContent = member.nome || '';
+  if (memberDetailsRole) memberDetailsRole.textContent = member.cargo || 'Membro';
 
   if (btnDeleteMember) {
-    // Opção de excluir visível apenas para administrador com o código 010101
     btnDeleteMember.style.display = isAdmin ? 'inline-block' : 'none';
   }
 
@@ -803,7 +763,6 @@ function openMemberDetailsModal(member, isAdmin = false) {
       ` : ''}
     `;
 
-    // Alternar visibilidade do código
     const btnToggle = memberDetailsFields.querySelector('#btnToggleSecretCode');
     const spanSecret = memberDetailsFields.querySelector('#detailSecretCode');
     if (btnToggle && spanSecret) {
@@ -865,7 +824,6 @@ async function handleNewMemberSubmit(e) {
   const code = (newMemberCode ? newMemberCode.value : '').trim();
   const codeConfirm = (newMemberCodeConfirm ? newMemberCodeConfirm.value : '').trim();
 
-  // Validação do código de 6 dígitos
   if (!/^\d{6}$/.test(code)) {
     if (newMemberCodeErrorMsg) {
       newMemberCodeErrorMsg.style.display = 'block';
@@ -898,7 +856,6 @@ async function handleNewMemberSubmit(e) {
 
   try {
     const docRef = await addDoc(collection(db, 'membros'), memberPayload);
-    // Adiciona localmente para resposta instantânea
     const localObj = { id: docRef.id, ...memberPayload, createdAt: new Date().toISOString() };
     membersList.push(localObj);
     localStorage.setItem(STORAGE_MEMBERS_KEY, JSON.stringify(membersList));
@@ -907,7 +864,6 @@ async function handleNewMemberSubmit(e) {
     showToastAlert('Membro cadastrado com sucesso!');
   } catch (err) {
     console.error('Erro ao salvar membro no Firestore:', err);
-    // Salva fallback offline
     const localId = 'm_' + Date.now();
     const localObj = { id: localId, ...memberPayload, createdAt: new Date().toISOString() };
     membersList.push(localObj);
@@ -1003,7 +959,6 @@ async function handleEditMemberSubmit(e) {
     console.warn('Erro ao atualizar membro no Firestore:', err);
   }
 
-  // Atualiza local
   const idx = membersList.findIndex((m) => m.id === id);
   if (idx !== -1) {
     membersList[idx] = { ...membersList[idx], ...updatedData, codigo: finalCode };
@@ -1046,7 +1001,7 @@ async function handleDeleteMember() {
 }
 
 // =========================================================================
-// RELATÓRIO FINANCEIRO (Filtro Mês/Ano, Membros veem apenas Total, Tesouraria edita)
+// RELATÓRIO FINANCEIRO (Dízimos e Ofertas separados, Saídas separadas + Total)
 // =========================================================================
 
 function getPeriodKey(year, month) {
@@ -1060,103 +1015,92 @@ const MONTH_NAMES = [
   'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'
 ];
 
+/**
+ * Renderiza o Relatório Financeiro sem rolagem na tela
+ */
 function renderFinancialView() {
   const key = getPeriodKey(selectedFinanceYear, selectedFinanceMonth);
   const monthName = MONTH_NAMES[selectedFinanceMonth] || '';
 
-  if (financialPeriodLabel) {
-    financialPeriodLabel.textContent = `${monthName} de ${selectedFinanceYear}`;
+  if (financeSummaryPeriod) {
+    financeSummaryPeriod.textContent = `${monthName} de ${selectedFinanceYear}`;
   }
 
   const report = financialReports[key] || {
     ano: selectedFinanceYear,
     mes: selectedFinanceMonth,
-    valorTotal: 0,
-    lancamentos: []
+    dizimos: 0,
+    ofertas: 0,
+    totalEntradas: 0,
+    saidas: [],
+    totalSaidas: 0,
+    saldoGeral: 0
   };
 
-  // Calcula o valor total: se houver lançamentos e não foi forçado um total manual, soma lançamentos
-  let totalCalculated = 0;
-  if (Array.isArray(report.lancamentos) && report.lancamentos.length > 0) {
-    totalCalculated = report.lancamentos.reduce((acc, cur) => acc + (Number(cur.valor) || 0), 0);
-  } else if (report.valorTotal !== undefined) {
-    totalCalculated = Number(report.valorTotal) || 0;
+  // Valores de Entradas (Dízimos e Ofertas separados)
+  const dizimos = Number(report.dizimos) || 0;
+  const ofertas = Number(report.ofertas) || 0;
+  let totalEntradas = report.totalEntradas !== undefined ? Number(report.totalEntradas) : (dizimos + ofertas);
+  if (totalEntradas === 0 && (dizimos > 0 || ofertas > 0)) {
+    totalEntradas = dizimos + ofertas;
   }
 
-  // "Os membros só poderão visualizar o valor total"
-  if (financialTotalValue) {
-    financialTotalValue.textContent = formatCurrency(totalCalculated);
+  // Lista de Saídas
+  const saidas = Array.isArray(report.saidas) ? report.saidas : [];
+  let totalSaidas = 0;
+  if (saidas.length > 0) {
+    totalSaidas = saidas.reduce((acc, cur) => acc + (Number(cur.valor) || 0), 0);
+  } else if (report.totalSaidas !== undefined) {
+    totalSaidas = Number(report.totalSaidas) || 0;
   }
 
-  // Painel de Edição da Tesouraria (Visível apenas se desbloqueado com 010101)
-  if (treasuryAdminPanel) {
-    treasuryAdminPanel.style.display = isTreasuryUnlocked ? 'block' : 'none';
+  // Saldo Geral Líquido
+  const saldoGeral = totalEntradas - totalSaidas;
+
+  // Atualiza elementos no DOM
+  if (financeTotalEntries) financeTotalEntries.textContent = formatCurrency(totalEntradas);
+  if (financeDizimosValue) financeDizimosValue.textContent = formatCurrency(dizimos);
+  if (financeOfertasValue) financeOfertasValue.textContent = formatCurrency(ofertas);
+  if (financeTotalExits) financeTotalExits.textContent = formatCurrency(totalSaidas);
+
+  if (financeBalanceValue) {
+    financeBalanceValue.textContent = formatCurrency(saldoGeral);
+    if (saldoGeral < 0) {
+      financeBalanceValue.classList.add('val-negative');
+      financeBalanceValue.classList.remove('val-positive');
+    } else {
+      financeBalanceValue.classList.add('val-positive');
+      financeBalanceValue.classList.remove('val-negative');
+    }
   }
 
-  // Botão discreto no topo direito destaca sutilmente quando ativo
+  // Renderiza a lista de saídas descritas separadamente
+  if (financeExitsList) {
+    if (saidas.length === 0) {
+      financeExitsList.innerHTML = `
+        <div class="finance-exit-empty">
+          <span>Nenhuma saída registrada neste período.</span>
+        </div>
+      `;
+    } else {
+      let exitsHtml = '';
+      saidas.forEach((item) => {
+        exitsHtml += `
+          <div class="finance-exit-row">
+            <span class="finance-exit-bullet">•</span>
+            <span class="finance-exit-desc" title="${escapeHtml(item.descricao)}">${escapeHtml(item.descricao)}</span>
+            <span class="finance-exit-val">${formatCurrency(item.valor)}</span>
+          </div>
+        `;
+      });
+      financeExitsList.innerHTML = exitsHtml;
+    }
+  }
+
+  // Botão discreto no topo direito destaca se tesouraria estiver logada
   if (btnTreasuryEdit) {
     btnTreasuryEdit.classList.toggle('is-unlocked', isTreasuryUnlocked);
   }
-
-  if (isTreasuryUnlocked) {
-    renderTreasuryEntriesList(report);
-  }
-}
-
-function renderTreasuryEntriesList(report) {
-  if (!treasuryEntriesList) return;
-
-  const lancamentos = Array.isArray(report.lancamentos) ? report.lancamentos : [];
-
-  if (lancamentos.length === 0) {
-    treasuryEntriesList.innerHTML = `
-      <div class="treasury-empty-entries">
-        <p>Nenhum lançamento detalhado cadastrado para este mês.</p>
-        <span class="treasury-empty-hint">Clique em <strong>+ Novo Lançamento</strong> para adicionar dízimos, ofertas e doações ou ajuste o total geral.</span>
-      </div>
-    `;
-    return;
-  }
-
-  let html = '';
-  lancamentos.forEach((item, index) => {
-    let dateStr = item.data || '';
-    if (dateStr.includes('-')) {
-      const parts = dateStr.split('-');
-      if (parts.length === 3) dateStr = `${parts[2]}/${parts[1]}/${parts[0]}`;
-    }
-
-    html += `
-      <div class="treasury-entry-card" data-index="${index}">
-        <div class="treasury-entry-icon">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <polyline points="20 6 9 17 4 12"></polyline>
-          </svg>
-        </div>
-        <div class="treasury-entry-info">
-          <div class="treasury-entry-top">
-            <span class="treasury-entry-category">${escapeHtml(item.tipo || 'Entrada')}</span>
-            <span class="treasury-entry-date">${escapeHtml(dateStr)}</span>
-          </div>
-          <p class="treasury-entry-desc">${escapeHtml(item.descricao || '')}</p>
-        </div>
-        <div class="treasury-entry-right">
-          <span class="treasury-entry-val">${formatCurrency(item.valor || 0)}</span>
-          <button type="button" class="btn-entry-delete" data-index="${index}" title="Remover lançamento">✕</button>
-        </div>
-      </div>
-    `;
-  });
-
-  treasuryEntriesList.innerHTML = html;
-
-  treasuryEntriesList.querySelectorAll('.btn-entry-delete').forEach((btn) => {
-    btn.addEventListener('click', (e) => {
-      e.stopPropagation();
-      const idx = Number(btn.getAttribute('data-index'));
-      deleteTreasuryEntry(idx);
-    });
-  });
 }
 
 /**
@@ -1186,20 +1130,14 @@ function handleTreasuryAuthSubmit(e) {
   if (e) e.preventDefault();
   const entered = (inputTreasuryCode ? inputTreasuryCode.value : '').trim();
 
-  // "ao clicar nele a tesoureira colocará o código 010101 para editar(somente esse código libera o acesso a edição do relatório financeiro)"
   if (entered === TREASURY_CODE) {
     isTreasuryUnlocked = true;
     try {
       sessionStorage.setItem('cbna_treasury_unlocked', 'true');
     } catch (_) {}
     closeTreasuryAuthModal();
-    renderFinancialView();
+    openTreasuryManageModal();
     showToastAlert('Acesso da Tesouraria liberado!');
-    if (treasuryAdminPanel) {
-      setTimeout(() => {
-        treasuryAdminPanel.scrollIntoView({ behavior: 'smooth' });
-      }, 200);
-    }
   } else {
     if (treasuryAuthErrorMsg) {
       treasuryAuthErrorMsg.style.display = 'block';
@@ -1209,182 +1147,146 @@ function handleTreasuryAuthSubmit(e) {
 }
 
 /**
- * Adição de Lançamento pela Tesoureira
+ * Modal de Gerenciamento Financeiro Completo da Tesoureira
  */
-function openTreasuryEntryModal() {
-  if (formTreasuryEntry) formTreasuryEntry.reset();
-  if (treasuryEntryModalTitle) treasuryEntryModalTitle.textContent = 'Novo Lançamento Financeiro';
-  if (treasuryEntryId) treasuryEntryId.value = '';
-
-  if (treasuryEntryDate) {
-    // Define data padrão de acordo com o mês/ano selecionado
-    const today = new Date();
-    const mm = String(selectedFinanceMonth).padStart(2, '0');
-    const dd = String(today.getDate()).padStart(2, '0');
-    treasuryEntryDate.value = `${selectedFinanceYear}-${mm}-${dd}`;
-  }
-
-  if (modalTreasuryEntry) {
-    modalTreasuryEntry.classList.add('is-open');
-    modalTreasuryEntry.setAttribute('aria-hidden', 'false');
-    setTimeout(() => {
-      if (treasuryEntryDesc) treasuryEntryDesc.focus();
-    }, 150);
-  }
-}
-
-function closeTreasuryEntryModal() {
-  if (modalTreasuryEntry) {
-    modalTreasuryEntry.classList.remove('is-open');
-    modalTreasuryEntry.setAttribute('aria-hidden', 'true');
-  }
-}
-
-async function handleTreasuryEntrySubmit(e) {
-  if (e) e.preventDefault();
-
-  const tipo = (treasuryEntryCategory ? treasuryEntryCategory.value : 'Entrada').trim();
-  const descricao = (treasuryEntryDesc ? treasuryEntryDesc.value : '').trim();
-  const rawVal = (treasuryEntryValue ? treasuryEntryValue.value : '').trim();
-  const valor = parseCurrency(rawVal);
-  const data = (treasuryEntryDate ? treasuryEntryDate.value : '').trim();
-
-  if (isNaN(valor) || valor <= 0) {
-    alert('Por favor, informe um valor financeiro válido.');
-    return;
-  }
-
+function openTreasuryManageModal() {
   const key = getPeriodKey(selectedFinanceYear, selectedFinanceMonth);
+  const monthName = MONTH_NAMES[selectedFinanceMonth] || '';
   const report = financialReports[key] || {
     ano: selectedFinanceYear,
     mes: selectedFinanceMonth,
-    valorTotal: 0,
-    lancamentos: []
+    dizimos: 0,
+    ofertas: 0,
+    saidas: []
   };
 
-  const newEntry = {
-    id: 'ent_' + Date.now(),
-    tipo,
-    descricao,
-    valor,
-    data,
-    createdAt: new Date().toISOString()
-  };
-
-  const lancamentos = Array.isArray(report.lancamentos) ? [...report.lancamentos] : [];
-  lancamentos.push(newEntry);
-
-  const novoTotal = lancamentos.reduce((acc, cur) => acc + (Number(cur.valor) || 0), 0);
-
-  const payload = {
-    ano: selectedFinanceYear,
-    mes: selectedFinanceMonth,
-    valorTotal: novoTotal,
-    lancamentos,
-    updatedAt: serverTimestamp()
-  };
-
-  // Salva no Firestore
-  try {
-    const docRef = doc(db, 'relatorios_financeiros', key);
-    await setDoc(docRef, payload, { merge: true });
-  } catch (err) {
-    console.warn('Erro ao salvar lançamento financeiro no Firestore:', err);
+  if (treasuryManageModalTitle) {
+    treasuryManageModalTitle.textContent = `Editar Finanças — ${monthName}/${selectedFinanceYear}`;
   }
 
-  // Atualiza local
-  financialReports[key] = { ...payload, lancamentos };
-  localStorage.setItem(STORAGE_FINANCE_KEY, JSON.stringify(financialReports));
-
-  renderFinancialView();
-  closeTreasuryEntryModal();
-  showToastAlert('Lançamento salvo com sucesso!');
-}
-
-async function deleteTreasuryEntry(index) {
-  const confirmDelete = window.confirm('Deseja realmente remover este lançamento financeiro?');
-  if (!confirmDelete) return;
-
-  const key = getPeriodKey(selectedFinanceYear, selectedFinanceMonth);
-  const report = financialReports[key];
-  if (!report || !Array.isArray(report.lancamentos)) return;
-
-  const updatedLancamentos = report.lancamentos.filter((_, i) => i !== index);
-  const novoTotal = updatedLancamentos.reduce((acc, cur) => acc + (Number(cur.valor) || 0), 0);
-
-  const payload = {
-    ano: selectedFinanceYear,
-    mes: selectedFinanceMonth,
-    valorTotal: novoTotal,
-    lancamentos: updatedLancamentos,
-    updatedAt: serverTimestamp()
-  };
-
-  try {
-    const docRef = doc(db, 'relatorios_financeiros', key);
-    await setDoc(docRef, payload, { merge: true });
-  } catch (err) {
-    console.warn('Erro ao remover lançamento no Firestore:', err);
+  if (treasuryInputDizimos) {
+    treasuryInputDizimos.value = (Number(report.dizimos) || 0) > 0 
+      ? formatCurrency(report.dizimos).replace('R$', '').trim() 
+      : '';
   }
 
-  financialReports[key] = { ...payload, lancamentos: updatedLancamentos };
-  localStorage.setItem(STORAGE_FINANCE_KEY, JSON.stringify(financialReports));
-
-  renderFinancialView();
-  showToastAlert('Lançamento removido.');
-}
-
-/**
- * Ajuste Direto do Valor Total pela Tesoureira
- */
-function openTreasuryDirectTotalModal() {
-  const key = getPeriodKey(selectedFinanceYear, selectedFinanceMonth);
-  const report = financialReports[key] || { valorTotal: 0, observacao: '' };
-
-  if (treasuryDirectTotalValue) {
-    treasuryDirectTotalValue.value = formatCurrency(report.valorTotal || 0).replace('R$', '').trim();
-  }
-  if (treasuryDirectTotalNote) {
-    treasuryDirectTotalNote.value = report.observacao || '';
+  if (treasuryInputOfertas) {
+    treasuryInputOfertas.value = (Number(report.ofertas) || 0) > 0 
+      ? formatCurrency(report.ofertas).replace('R$', '').trim() 
+      : '';
   }
 
-  if (modalTreasuryDirectTotal) {
-    modalTreasuryDirectTotal.classList.add('is-open');
-    modalTreasuryDirectTotal.setAttribute('aria-hidden', 'false');
-    setTimeout(() => {
-      if (treasuryDirectTotalValue) treasuryDirectTotalValue.focus();
-    }, 150);
+  if (treasuryExitDesc) treasuryExitDesc.value = '';
+  if (treasuryExitVal) treasuryExitVal.value = '';
+
+  tempEditingSaidas = Array.isArray(report.saidas) ? JSON.parse(JSON.stringify(report.saidas)) : [];
+  renderTempEditingSaidas();
+
+  if (modalTreasuryManage) {
+    modalTreasuryManage.classList.add('is-open');
+    modalTreasuryManage.setAttribute('aria-hidden', 'false');
   }
 }
 
-function closeTreasuryDirectTotalModal() {
-  if (modalTreasuryDirectTotal) {
-    modalTreasuryDirectTotal.classList.remove('is-open');
-    modalTreasuryDirectTotal.setAttribute('aria-hidden', 'true');
+function closeTreasuryManageModal() {
+  if (modalTreasuryManage) {
+    modalTreasuryManage.classList.remove('is-open');
+    modalTreasuryManage.setAttribute('aria-hidden', 'true');
   }
 }
 
-async function handleTreasuryDirectTotalSubmit(e) {
-  if (e) e.preventDefault();
+function renderTempEditingSaidas() {
+  if (!treasuryManageExitsList) return;
 
-  const rawVal = (treasuryDirectTotalValue ? treasuryDirectTotalValue.value : '').trim();
-  const valorTotal = parseCurrency(rawVal);
-  const observacao = (treasuryDirectTotalNote ? treasuryDirectTotalNote.value : '').trim();
+  const total = tempEditingSaidas.reduce((acc, cur) => acc + (Number(cur.valor) || 0), 0);
+  if (treasuryManageExitsSum) {
+    treasuryManageExitsSum.textContent = formatCurrency(total);
+  }
 
-  if (isNaN(valorTotal) || valorTotal < 0) {
-    alert('Informe um valor total válido.');
+  if (tempEditingSaidas.length === 0) {
+    treasuryManageExitsList.innerHTML = `
+      <div style="padding: 8px; text-align: center; color: #94a3b8; font-size: 0.74rem;">
+        Nenhuma saída adicionada para este mês.
+      </div>
+    `;
     return;
   }
 
+  let html = '';
+  tempEditingSaidas.forEach((item, index) => {
+    html += `
+      <div class="treasury-exit-edit-item" data-index="${index}">
+        <span class="treasury-exit-edit-desc">${escapeHtml(item.descricao)}</span>
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <strong class="treasury-exit-edit-val">${formatCurrency(item.valor)}</strong>
+          <button type="button" class="btn-remove-temp-exit" data-index="${index}" title="Remover saída">✕</button>
+        </div>
+      </div>
+    `;
+  });
+
+  treasuryManageExitsList.innerHTML = html;
+
+  treasuryManageExitsList.querySelectorAll('.btn-remove-temp-exit').forEach((btn) => {
+    btn.addEventListener('click', (e) => {
+      e.preventDefault();
+      const idx = Number(btn.getAttribute('data-index'));
+      tempEditingSaidas.splice(idx, 1);
+      renderTempEditingSaidas();
+    });
+  });
+}
+
+function handleAddExitFromModal() {
+  const desc = (treasuryExitDesc ? treasuryExitDesc.value : '').trim();
+  const rawVal = (treasuryExitVal ? treasuryExitVal.value : '').trim();
+  const valor = parseCurrency(rawVal);
+
+  if (!desc) {
+    alert('Informe a descrição da saída (ex: Energia, Água, Missões...).');
+    if (treasuryExitDesc) treasuryExitDesc.focus();
+    return;
+  }
+
+  if (isNaN(valor) || valor <= 0) {
+    alert('Informe um valor válido para a saída.');
+    if (treasuryExitVal) treasuryExitVal.focus();
+    return;
+  }
+
+  tempEditingSaidas.push({
+    id: 's_' + Date.now(),
+    descricao: desc,
+    valor
+  });
+
+  if (treasuryExitDesc) treasuryExitDesc.value = '';
+  if (treasuryExitVal) treasuryExitVal.value = '';
+  renderTempEditingSaidas();
+  if (treasuryExitDesc) treasuryExitDesc.focus();
+}
+
+async function handleTreasuryManageSubmit(e) {
+  if (e) e.preventDefault();
+
+  const dizimos = parseCurrency(treasuryInputDizimos ? treasuryInputDizimos.value : '0');
+  const ofertas = parseCurrency(treasuryInputOfertas ? treasuryInputOfertas.value : '0');
+  const totalEntradas = dizimos + ofertas;
+  const totalSaidas = tempEditingSaidas.reduce((acc, cur) => acc + (Number(cur.valor) || 0), 0);
+  const saldoGeral = totalEntradas - totalSaidas;
+
   const key = getPeriodKey(selectedFinanceYear, selectedFinanceMonth);
-  const report = financialReports[key] || { lancamentos: [] };
 
   const payload = {
     ano: selectedFinanceYear,
     mes: selectedFinanceMonth,
-    valorTotal,
-    observacao,
-    lancamentos: Array.isArray(report.lancamentos) ? report.lancamentos : [],
+    dizimos,
+    ofertas,
+    totalEntradas,
+    saidas: tempEditingSaidas,
+    totalSaidas,
+    saldoGeral,
+    valorTotal: saldoGeral,
     updatedAt: serverTimestamp()
   };
 
@@ -1392,15 +1294,15 @@ async function handleTreasuryDirectTotalSubmit(e) {
     const docRef = doc(db, 'relatorios_financeiros', key);
     await setDoc(docRef, payload, { merge: true });
   } catch (err) {
-    console.warn('Erro ao atualizar total financeiro no Firestore:', err);
+    console.warn('Erro ao salvar relatório financeiro no Firestore:', err);
   }
 
-  financialReports[key] = payload;
+  financialReports[key] = { ...payload, saidas: tempEditingSaidas };
   localStorage.setItem(STORAGE_FINANCE_KEY, JSON.stringify(financialReports));
 
   renderFinancialView();
-  closeTreasuryDirectTotalModal();
-  showToastAlert('Valor total atualizado com sucesso!');
+  closeTreasuryManageModal();
+  showToastAlert('Relatório financeiro atualizado com sucesso!');
 }
 
 // =========================================================================
@@ -1434,7 +1336,7 @@ function maskCurrencyInput(input) {
   if (!input) return;
   let v = input.value.replace(/\D/g, '');
   if (!v) {
-    input.value = '0,00';
+    input.value = '';
     return;
   }
   const num = (parseInt(v, 10) / 100).toFixed(2);
@@ -1455,7 +1357,7 @@ function formatCurrency(val) {
 
 function parseCurrency(str = '') {
   if (!str) return 0;
-  const clean = str.replace(/[^\d,.-]/g, '').replace(/\./g, '').replace(',', '.');
+  const clean = String(str).replace(/[^\d,.-]/g, '').replace(/\./g, '').replace(',', '.');
   const n = parseFloat(clean);
   return isNaN(n) ? 0 : n;
 }
