@@ -4190,33 +4190,207 @@ html::-webkit-scrollbar, body::-webkit-scrollbar {
 }
 
 /* ==========================================================================
-   MODAL DE EDIÇÃO DA TESOURARIA
+   MODAL DE EDIÇÃO DA TESOURARIA — 100% ENCAIXADO ACIMA DO BOTÃO DE MENU
    ========================================================================== */
+
+#modalTreasuryManage,
+#modalTreasuryAuth,
+#modalAddTitheMember,
+#modalAddOffer {
+  padding-top: max(8px, env(safe-area-inset-top, 8px)) !important;
+  padding-bottom: calc(max(20px, env(safe-area-inset-bottom, 20px)) + 84px) !important; /* Respiro seguro de ~104px para ficar 100% acima do botão de início */
+  padding-left: 10px !important;
+  padding-right: 10px !important;
+  align-items: center !important;
+  justify-content: center !important;
+  box-sizing: border-box !important;
+}
 
 .modal-treasury-card {
   max-width: 360px;
   width: 100%;
+  max-height: 100% !important; /* Trava altura máxima dentro da área livre acima do botão */
   box-sizing: border-box;
-  overflow-x: hidden;
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+  padding: 12px 12px 10px 12px !important;
+  border-radius: 16px !important;
+  display: flex !important;
+  flex-direction: column !important;
+  box-shadow: 0 16px 48px rgba(0, 10, 26, 0.95), 0 0 20px rgba(0, 72, 136, 0.45) !important;
 }
 
-.treasury-manage-section {
-  background: rgba(0, 16, 40, 0.55);
+.modal-treasury-card .app-modal-header {
+  margin-bottom: 6px !important;
+  padding-bottom: 4px !important;
+  border-bottom: 1px solid rgba(145, 210, 255, 0.15) !important;
+  flex-shrink: 0;
+}
+
+.modal-treasury-card .app-modal-header h3 {
+  font-size: 0.98rem !important;
+  letter-spacing: 0.04em !important;
+}
+
+.modal-treasury-card .app-modal-body {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.modal-treasury-card .app-form {
+  gap: 7px !important;
+  display: flex;
+  flex-direction: column;
+}
+
+.modal-treasury-card .treasury-manage-section {
+  background: rgba(0, 16, 40, 0.6);
   border: 1px solid rgba(145, 210, 255, 0.2);
-  border-radius: 12px;
-  padding: 10px;
+  border-radius: 10px;
+  padding: 6px 8px !important;
   box-sizing: border-box;
   width: 100%;
   overflow-x: hidden;
+  margin-top: 0 !important;
 }
 
-.treasury-section-title {
-  font-size: 0.68rem;
+.modal-treasury-card .treasury-manage-exits-section {
+  margin-top: 6px !important;
+}
+
+.modal-treasury-card .treasury-section-title {
+  font-size: 0.65rem !important;
   font-weight: 700;
   letter-spacing: 0.05em;
-  padding: 2px 6px;
-  border-radius: 6px;
+  padding: 2px 5px !important;
+  border-radius: 5px;
   display: inline-block;
+}
+
+.modal-treasury-card .form-row-2col {
+  margin-top: 4px !important;
+  gap: 6px !important;
+}
+
+.modal-treasury-card .form-group {
+  margin-bottom: 0 !important;
+}
+
+.modal-treasury-card .form-group label {
+  font-size: 0.66rem !important;
+  margin-bottom: 2px !important;
+  color: #93c5fd !important;
+  font-weight: 600;
+}
+
+.modal-treasury-card .form-group input {
+  padding: 4px 8px !important;
+  font-size: 0.8rem !important;
+  height: 30px !important;
+  border-radius: 8px !important;
+  box-sizing: border-box !important;
+}
+
+.modal-treasury-card .treasury-tithes-month-box,
+.modal-treasury-card .treasury-offers-month-box {
+  margin-top: 5px !important;
+  padding: 4px 6px !important;
+}
+
+.modal-treasury-card .tithes-month-header,
+.modal-treasury-card .offers-month-header {
+  font-size: 0.66rem !important;
+  margin-bottom: 4px !important;
+}
+
+.modal-treasury-card .tithes-month-list,
+.modal-treasury-card .offers-month-list {
+  max-height: 60px !important;
+  gap: 3px !important;
+}
+
+.modal-treasury-card .treasury-manage-exits-list {
+  max-height: 72px !important;
+  gap: 3px !important;
+  margin-top: 4px !important;
+}
+
+.modal-treasury-card .treasury-exit-edit-item {
+  padding: 3px 6px !important;
+}
+
+.modal-treasury-card .treasury-manage-exits-sum {
+  margin-top: 4px !important;
+  padding-top: 4px !important;
+  font-size: 0.7rem !important;
+}
+
+.modal-treasury-card .treasury-add-exit-row {
+  margin-top: 4px !important;
+  gap: 4px !important;
+}
+
+.modal-treasury-card .treasury-mini-input,
+.modal-treasury-card .treasury-mini-input-val {
+  height: 28px !important;
+  font-size: 0.76rem !important;
+  padding: 3px 7px !important;
+}
+
+.modal-treasury-card .btn-add-exit {
+  height: 28px !important;
+  font-size: 0.7rem !important;
+  padding: 0 8px !important;
+}
+
+.modal-treasury-card .treasury-form-actions {
+  margin-top: 8px !important;
+  padding-top: 6px !important;
+  border-top: 1px solid rgba(145, 210, 255, 0.15) !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  flex-wrap: nowrap !important;
+  gap: 6px !important;
+  flex-shrink: 0;
+}
+
+.modal-treasury-card .treasury-actions-right {
+  display: flex !important;
+  align-items: center !important;
+  gap: 5px !important;
+}
+
+.modal-treasury-card .btn-form-cancel {
+  padding: 6px 10px !important;
+  font-size: 0.76rem !important;
+  border-radius: 8px !important;
+  flex: 0 0 auto;
+}
+
+.modal-treasury-card .btn-export-pdf {
+  padding: 6px 9px !important;
+  font-size: 0.74rem !important;
+  border-radius: 8px !important;
+  flex: 1 1 auto;
+  justify-content: center;
+}
+
+.modal-treasury-card .btn-form-save {
+  padding: 6px 12px !important;
+  font-size: 0.76rem !important;
+  border-radius: 8px !important;
+  flex: 0 0 auto;
+}
+
+#modalAddTitheMember .app-modal-card,
+#modalAddOffer .app-modal-card,
+#modalTreasuryAuth .app-modal-card {
+  max-height: 100% !important;
+  overflow-y: auto !important;
+  padding: 12px 12px 14px 12px !important;
 }
 
 /* Botão Verde de Inserir Dízimo por Membro */

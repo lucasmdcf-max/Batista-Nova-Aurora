@@ -19,7 +19,7 @@
     rel="stylesheet">
 
   <link rel="stylesheet" href="css/lenis.css">
-  <link rel="stylesheet" href="css/style.css?v=38">
+  <link rel="stylesheet" href="css/style.css?v=39">
 </head>
 
 <body>
@@ -1355,7 +1355,7 @@
                 </div>
               </div>
 
-              <div class="form-row-2col" style="margin-top: 8px;">
+              <div class="form-row-2col">
                 <div class="form-group">
                   <label for="treasuryInputDizimos">Dízimos (R$)</label>
                   <input type="text" id="treasuryInputDizimos" placeholder="0,00" inputmode="decimal">
@@ -1390,7 +1390,7 @@
             </div>
 
             <!-- Saídas Descritas Separadamente -->
-            <div class="treasury-manage-section" style="margin-top: 14px;">
+            <div class="treasury-manage-section treasury-manage-exits-section">
               <span class="treasury-section-title tag-red">SAÍDAS (DESCRITAS SEPARADAMENTE)</span>
               
               <!-- Formulário rápido para adicionar uma saída (100% responsivo em 2 linhas) -->
@@ -1413,9 +1413,9 @@
               </div>
             </div>
 
-            <div class="form-actions" style="margin-top: 18px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
+            <div class="form-actions treasury-form-actions">
               <button type="button" class="btn-form-cancel" id="btnCancelTreasuryManage">Cancelar</button>
-              <div style="display: flex; gap: 6px;">
+              <div class="treasury-actions-right">
                 <button type="button" class="btn-export-pdf" id="btnExportTreasuryPdf" title="Baixar relatório financeiro detalhado em PDF com os nomes dos dizimistas">
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
                     <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
@@ -1538,7 +1538,7 @@
 
   <script src="js/lenis.min.js"></script>
   <script src="js/html2pdf.bundle.min.js"></script>
-  <script type="module" src="js/app.js?v=38"></script>
+  <script type="module" src="js/app.js?v=39"></script>
 </body>
 
 </html>
