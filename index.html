@@ -19,7 +19,7 @@
     rel="stylesheet">
 
   <link rel="stylesheet" href="css/lenis.css">
-  <link rel="stylesheet" href="css/style.css?v=36">
+  <link rel="stylesheet" href="css/style.css?v=37">
 </head>
 
 <body>
@@ -1324,7 +1324,17 @@
 
             <!-- Entradas: Dízimos e Ofertas -->
             <div class="treasury-manage-section">
-              <span class="treasury-section-title tag-green">ENTRADAS DO MÊS</span>
+              <div style="display: flex; align-items: center; justify-content: space-between;">
+                <span class="treasury-section-title tag-green">ENTRADAS DO MÊS</span>
+                <button type="button" class="btn-add-tithe-green" id="btnOpenAddTitheModal" title="Registrar dízimo de membro">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="12" y1="5" x2="12" y2="19"></line>
+                    <line x1="5" y1="12" x2="19" y2="12"></line>
+                  </svg>
+                  + Inserir Dízimo
+                </button>
+              </div>
+
               <div class="form-row-2col" style="margin-top: 8px;">
                 <div class="form-group">
                   <label for="treasuryInputDizimos">Dízimos (R$)</label>
@@ -1335,17 +1345,30 @@
                   <input type="text" id="treasuryInputOfertas" placeholder="0,00" inputmode="decimal">
                 </div>
               </div>
+
+              <!-- Lista informativa de dízimos lançados neste mês por membros (acesso exclusivo da tesouraria) -->
+              <div class="treasury-tithes-month-box" id="treasuryTithesMonthBox" style="display: none;">
+                <div class="tithes-month-header">
+                  <span>Dízimos de Membros no Mês:</span>
+                  <span id="tithesMonthCount" style="color: #6ee7b7; font-weight: 700;">0 registro(s)</span>
+                </div>
+                <div class="tithes-month-list" id="tithesMonthList">
+                  <!-- Itens gerados dinamicamente via JS -->
+                </div>
+              </div>
             </div>
 
             <!-- Saídas Descritas Separadamente -->
             <div class="treasury-manage-section" style="margin-top: 14px;">
               <span class="treasury-section-title tag-red">SAÍDAS (DESCRITAS SEPARADAMENTE)</span>
               
-              <!-- Formulário rápido para adicionar uma saída -->
+              <!-- Formulário rápido para adicionar uma saída (100% responsivo em 2 linhas) -->
               <div class="treasury-add-exit-row">
                 <input type="text" id="treasuryExitDesc" placeholder="Descrição (ex: Água, Luz, Missões...)" class="treasury-mini-input">
-                <input type="text" id="treasuryExitVal" placeholder="R$ 0,00" class="treasury-mini-input-val" inputmode="decimal">
-                <button type="button" class="btn-add-exit" id="btnAddTreasuryExit">+ Inserir</button>
+                <div class="treasury-add-exit-subrow">
+                  <input type="text" id="treasuryExitVal" placeholder="R$ 0,00" class="treasury-mini-input-val" inputmode="decimal">
+                  <button type="button" class="btn-add-exit" id="btnAddTreasuryExit">+ Inserir Saída</button>
+                </div>
               </div>
 
               <!-- Lista das saídas já adicionadas -->
@@ -1368,10 +1391,61 @@
       </div>
     </div>
 
+    <!-- Modal Inserir Dízimo por Membro (Tesouraria) -->
+    <div class="app-modal" id="modalAddTitheMember" aria-hidden="true">
+      <div class="app-modal-overlay" id="overlayAddTitheMember"></div>
+      <div class="app-modal-card" style="max-width: 350px;">
+        <div class="app-modal-header">
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <div style="width: 26px; height: 26px; border-radius: 7px; background: rgba(16, 185, 129, 0.2); border: 1px solid rgba(16, 185, 129, 0.5); display: flex; align-items: center; justify-content: center; color: #4ade80;">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="12" y1="5" x2="12" y2="19"></line>
+                <line x1="5" y1="12" x2="19" y2="12"></line>
+              </svg>
+            </div>
+            <h3 style="font-size: 1.05rem;">Inserir Dízimo</h3>
+          </div>
+          <button type="button" class="btn-modal-close" id="btnCloseAddTitheMember" aria-label="Fechar">✕</button>
+        </div>
+        <div class="app-modal-body">
+          <form id="formAddTitheMember" class="app-form">
+            <div class="form-group">
+              <label for="selectTitheMember">Membro Cadastrado *</label>
+              <select id="selectTitheMember" required style="background: rgba(0, 10, 28, 0.85); border: 1px solid rgba(145, 210, 255, 0.3); border-radius: 10px; padding: 9px 10px; color: #ffffff; font-size: 0.88rem; width: 100%; box-sizing: border-box;">
+                <option value="">Selecione o membro...</option>
+              </select>
+            </div>
+
+            <div class="form-row-2col">
+              <div class="form-group">
+                <label for="inputTitheMemberDate">Data do Envio *</label>
+                <input type="date" id="inputTitheMemberDate" required>
+              </div>
+              <div class="form-group">
+                <label for="inputTitheMemberVal">Valor (R$) *</label>
+                <input type="text" id="inputTitheMemberVal" placeholder="0,00" required inputmode="decimal">
+              </div>
+            </div>
+
+            <p style="font-size: 0.72rem; color: #94a3b8; margin: 4px 0 0 0; line-height: 1.35;">
+              🔒 <em>O valor será somado ao total de dízimos do mês (sem expor o nome no relatório público) e ficará registrado no cadastro exclusivo do membro.</em>
+            </p>
+
+            <div class="form-actions" style="margin-top: 14px;">
+              <button type="button" class="btn-form-cancel" id="btnCancelAddTitheMember">Cancelar</button>
+              <button type="submit" class="btn-save-tithe-green" id="btnSubmitAddTitheMember">
+                Salvar Dízimo
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+
   </div>
 
   <script src="js/lenis.min.js"></script>
-  <script type="module" src="js/app.js?v=36"></script>
+  <script type="module" src="js/app.js?v=37"></script>
 </body>
 
 </html>

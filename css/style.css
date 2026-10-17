@@ -4194,7 +4194,10 @@ html::-webkit-scrollbar, body::-webkit-scrollbar {
    ========================================================================== */
 
 .modal-treasury-card {
-  max-width: 440px;
+  max-width: 360px;
+  width: 100%;
+  box-sizing: border-box;
+  overflow-x: hidden;
 }
 
 .treasury-manage-section {
@@ -4202,6 +4205,9 @@ html::-webkit-scrollbar, body::-webkit-scrollbar {
   border: 1px solid rgba(145, 210, 255, 0.2);
   border-radius: 12px;
   padding: 10px;
+  box-sizing: border-box;
+  width: 100%;
+  overflow-x: hidden;
 }
 
 .treasury-section-title {
@@ -4213,31 +4219,176 @@ html::-webkit-scrollbar, body::-webkit-scrollbar {
   display: inline-block;
 }
 
+/* Botão Verde de Inserir Dízimo por Membro */
+.btn-add-tithe-green {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  color: #ffffff;
+  border: none;
+  border-radius: 8px;
+  padding: 4px 10px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  box-shadow: 0 2px 8px rgba(16, 185, 129, 0.35);
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.btn-add-tithe-green:hover {
+  filter: brightness(1.12);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.45);
+}
+
+.btn-add-tithe-green:active {
+  transform: scale(0.97);
+}
+
+.btn-save-tithe-green {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  color: #ffffff;
+  border: none;
+  border-radius: 10px;
+  padding: 8px 16px;
+  font-size: 0.84rem;
+  font-weight: 700;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  box-shadow: 0 3px 12px rgba(16, 185, 129, 0.4);
+  transition: all 0.2s ease;
+}
+
+.btn-save-tithe-green:hover {
+  filter: brightness(1.12);
+  transform: translateY(-1px);
+}
+
+/* Lista de Dízimos Lançados no Mês dentro do Modal da Tesoureira */
+.treasury-tithes-month-box {
+  margin-top: 10px;
+  background: rgba(16, 185, 129, 0.08);
+  border: 1px dashed rgba(16, 185, 129, 0.35);
+  border-radius: 10px;
+  padding: 8px 10px;
+  box-sizing: border-box;
+}
+
+.tithes-month-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 0.7rem;
+  color: #6ee7b7;
+  font-weight: 700;
+  text-transform: uppercase;
+  margin-bottom: 6px;
+}
+
+.tithes-month-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  max-height: 100px;
+  overflow-y: auto;
+  box-sizing: border-box;
+}
+
+.tithes-month-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  background: rgba(0, 15, 36, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 6px;
+  padding: 4px 7px;
+  font-size: 0.72rem;
+  box-sizing: border-box;
+}
+
+.tithes-month-item-name {
+  color: #ffffff;
+  font-weight: 600;
+  flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.tithes-month-item-date {
+  color: #94a3b8;
+  font-size: 0.68rem;
+  white-space: nowrap;
+}
+
+.tithes-month-item-val {
+  color: #34d399;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.btn-remove-tithe-item {
+  background: transparent;
+  border: none;
+  color: #f87171;
+  font-size: 0.85rem;
+  cursor: pointer;
+  padding: 1px 4px;
+  border-radius: 4px;
+  line-height: 1;
+  transition: all 0.2s ease;
+}
+
+.btn-remove-tithe-item:hover {
+  background: rgba(239, 68, 68, 0.2);
+  color: #ef4444;
+}
+
+/* Formulário de Saídas 100% Responsivo sem corte horizontal */
 .treasury-add-exit-row {
   display: flex;
+  flex-direction: column;
   gap: 6px;
   margin-top: 8px;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .treasury-mini-input {
-  flex: 2;
+  width: 100% !important;
+  min-width: 0 !important;
+  box-sizing: border-box !important;
   background: rgba(0, 10, 28, 0.75);
   border: 1px solid rgba(145, 210, 255, 0.25);
   border-radius: 8px;
   color: #ffffff;
-  font-size: 0.78rem;
-  padding: 6px 8px;
+  font-size: 0.8rem;
+  padding: 7px 9px;
   outline: none;
+}
+
+.treasury-add-exit-subrow {
+  display: flex;
+  gap: 6px;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .treasury-mini-input-val {
   flex: 1;
+  min-width: 0 !important;
+  box-sizing: border-box !important;
   background: rgba(0, 10, 28, 0.75);
   border: 1px solid rgba(145, 210, 255, 0.25);
   border-radius: 8px;
   color: #ffffff;
-  font-size: 0.78rem;
-  padding: 6px 8px;
+  font-size: 0.8rem;
+  padding: 7px 9px;
   outline: none;
   text-align: right;
 }
@@ -4247,11 +4398,12 @@ html::-webkit-scrollbar, body::-webkit-scrollbar {
   color: #ffffff;
   border: none;
   border-radius: 8px;
-  padding: 6px 10px;
-  font-size: 0.72rem;
+  padding: 7px 12px;
+  font-size: 0.75rem;
   font-weight: 700;
   cursor: pointer;
   white-space: nowrap;
+  flex-shrink: 0;
   transition: all 0.2s ease;
 }
 

@@ -161,6 +161,20 @@ let btnAddTreasuryExit = null;
 let treasuryManageExitsList = null;
 let treasuryManageExitsSum = null;
 
+// Lançamento de Dízimo por Membro (Tesouraria)
+let btnOpenAddTitheModal = null;
+let modalAddTitheMember = null;
+let overlayAddTitheMember = null;
+let btnCloseAddTitheMember = null;
+let btnCancelAddTitheMember = null;
+let formAddTitheMember = null;
+let selectTitheMember = null;
+let inputTitheMemberDate = null;
+let inputTitheMemberVal = null;
+let treasuryTithesMonthBox = null;
+let tithesMonthCount = null;
+let tithesMonthList = null;
+
 /**
  * Inicializador da Área de Membros
  */
@@ -310,6 +324,20 @@ function cacheElements() {
   btnAddTreasuryExit = document.getElementById('btnAddTreasuryExit');
   treasuryManageExitsList = document.getElementById('treasuryManageExitsList');
   treasuryManageExitsSum = document.getElementById('treasuryManageExitsSum');
+
+  // Modal Inserir Dízimo por Membro
+  btnOpenAddTitheModal = document.getElementById('btnOpenAddTitheModal');
+  modalAddTitheMember = document.getElementById('modalAddTitheMember');
+  overlayAddTitheMember = document.getElementById('overlayAddTitheMember');
+  btnCloseAddTitheMember = document.getElementById('btnCloseAddTitheMember');
+  btnCancelAddTitheMember = document.getElementById('btnCancelAddTitheMember');
+  formAddTitheMember = document.getElementById('formAddTitheMember');
+  selectTitheMember = document.getElementById('selectTitheMember');
+  inputTitheMemberDate = document.getElementById('inputTitheMemberDate');
+  inputTitheMemberVal = document.getElementById('inputTitheMemberVal');
+  treasuryTithesMonthBox = document.getElementById('treasuryTithesMonthBox');
+  tithesMonthCount = document.getElementById('tithesMonthCount');
+  tithesMonthList = document.getElementById('tithesMonthList');
 }
 
 function loadOfflineCaches() {
@@ -530,6 +558,14 @@ function setupEventListeners() {
   if (formTreasuryManage) formTreasuryManage.addEventListener('submit', handleTreasuryManageSubmit);
 
   if (btnAddTreasuryExit) btnAddTreasuryExit.addEventListener('click', handleAddExitFromModal);
+
+  // Modal Inserir Dízimo por Membro
+  if (btnOpenAddTitheModal) btnOpenAddTitheModal.addEventListener('click', openAddTitheMemberModal);
+  if (btnCloseAddTitheMember) btnCloseAddTitheMember.addEventListener('click', closeAddTitheMemberModal);
+  if (btnCancelAddTitheMember) btnCancelAddTitheMember.addEventListener('click', closeAddTitheMemberModal);
+  if (overlayAddTitheMember) overlayAddTitheMember.addEventListener('click', closeAddTitheMemberModal);
+  if (formAddTitheMember) formAddTitheMember.addEventListener('submit', handleAddTitheMemberSubmit);
+  if (inputTitheMemberVal) inputTitheMemberVal.addEventListener('input', (e) => maskCurrencyInput(e.target));
 
   // Máscaras monetárias
   if (treasuryInputDizimos) treasuryInputDizimos.addEventListener('input', (e) => maskCurrencyInput(e.target));
@@ -1208,9 +1244,15 @@ function renderFinancialView() {
   };
 
   // Valores de Entradas (Dízimos e Ofertas separados)
-  const dizimos = Number(report.dizimos) || 0;
+  let dizimos = Number(report.dizimos) || 0;
+  if (dizimos === 0) {
+    const memberTithes = getMonthMemberTithes(selectedFinanceYear, selectedFinanceMonth);
+    dizimos = memberTithes.reduce((acc, cur) => acc + cur.valor, 0);
+  }
   const ofertas = Number(report.ofertas) || 0;
-  let totalEntradas = report.totalEntradas !== undefined ? Number(report.totalEntradas) : (dizimos + ofertas);
+  let totalEntradas = report.totalEntradas !== undefined && Number(report.totalEntradas) > 0 
+    ? Number(report.totalEntradas) 
+    : (dizimos + ofertas);
   if (totalEntradas === 0 && (dizimos > 0 || ofertas > 0)) {
     totalEntradas = dizimos + ofertas;
   }
@@ -1334,9 +1376,17 @@ function openTreasuryManageModal() {
     treasuryManageModalTitle.textContent = `Editar Finanças — ${monthName}/${selectedFinanceYear}`;
   }
 
+  const memberTithesList = getMonthMemberTithes(selectedFinanceYear, selectedFinanceMonth);
+  const totalMemberTithes = memberTithesList.reduce((acc, cur) => acc + cur.valor, 0);
+
+  let initialDizimos = Number(report.dizimos) || 0;
+  if (initialDizimos === 0 && totalMemberTithes > 0) {
+    initialDizimos = totalMemberTithes;
+  }
+
   if (treasuryInputDizimos) {
-    treasuryInputDizimos.value = (Number(report.dizimos) || 0) > 0 
-      ? formatCurrency(report.dizimos).replace('R$', '').trim() 
+    treasuryInputDizimos.value = initialDizimos > 0 
+      ? formatCurrency(initialDizimos).replace('R$', '').trim() 
       : '';
   }
 
@@ -1351,6 +1401,7 @@ function openTreasuryManageModal() {
 
   tempEditingSaidas = Array.isArray(report.saidas) ? JSON.parse(JSON.stringify(report.saidas)) : [];
   renderTempEditingSaidas();
+  renderTithesMonthList();
 
   if (modalTreasuryManage) {
     modalTreasuryManage.classList.add('is-open');
@@ -1363,6 +1414,225 @@ function closeTreasuryManageModal() {
     modalTreasuryManage.classList.remove('is-open');
     modalTreasuryManage.setAttribute('aria-hidden', 'true');
   }
+}
+
+/**
+ * Coleta os dízimos lançados para cada membro no mês e ano selecionados
+ */
+function getMonthMemberTithes(year, month) {
+  const prefix = `${year}-${String(month).padStart(2, '0')}`;
+  const list = [];
+  membersList.forEach((m) => {
+    if (Array.isArray(m.contribuicoes)) {
+      m.contribuicoes.forEach((c) => {
+        if ((c.dataEnvio || '').startsWith(prefix) && Number(c.dizimo) > 0) {
+          list.push({
+            memberId: m.id,
+            memberName: m.nome,
+            contribId: c.id,
+            dataEnvio: c.dataEnvio,
+            valor: Number(c.dizimo)
+          });
+        }
+      });
+    }
+  });
+  list.sort((a, b) => (b.dataEnvio || '').localeCompare(a.dataEnvio || ''));
+  return list;
+}
+
+/**
+ * Renderiza a lista de dízimos lançados no mês dentro do modal de edição da tesoureira
+ */
+function renderTithesMonthList() {
+  if (!treasuryTithesMonthBox || !tithesMonthList) return;
+
+  const items = getMonthMemberTithes(selectedFinanceYear, selectedFinanceMonth);
+
+  if (items.length === 0) {
+    treasuryTithesMonthBox.style.display = 'none';
+    return;
+  }
+
+  treasuryTithesMonthBox.style.display = 'block';
+  if (tithesMonthCount) {
+    tithesMonthCount.textContent = `${items.length} dízimo(s)`;
+  }
+
+  let html = '';
+  items.forEach((item) => {
+    let dateStr = item.dataEnvio || '';
+    const p = dateStr.split('-');
+    if (p.length === 3) dateStr = `${p[2]}/${p[1]}`;
+
+    html += `
+      <div class="tithes-month-item" data-member-id="${item.memberId}" data-contrib-id="${item.contribId}">
+        <span class="tithes-month-item-name" title="${escapeHtml(item.memberName)}">${escapeHtml(item.memberName)}</span>
+        <span class="tithes-month-item-date">${escapeHtml(dateStr)}</span>
+        <span class="tithes-month-item-val">${formatCurrency(item.valor)}</span>
+        <button type="button" class="btn-remove-tithe-item" data-member-id="${item.memberId}" data-contrib-id="${item.contribId}" data-val="${item.valor}" title="Excluir este lançamento de dízimo">✕</button>
+      </div>
+    `;
+  });
+
+  tithesMonthList.innerHTML = html;
+
+  tithesMonthList.querySelectorAll('.btn-remove-tithe-item').forEach((btn) => {
+    btn.addEventListener('click', async (e) => {
+      e.preventDefault();
+      const mId = btn.getAttribute('data-member-id');
+      const cId = btn.getAttribute('data-contrib-id');
+      const val = Number(btn.getAttribute('data-val')) || 0;
+
+      if (!confirm('Deseja realmente remover este lançamento de dízimo do membro?')) return;
+
+      const member = membersList.find((m) => m.id === mId);
+      if (!member) return;
+
+      const updatedContribs = (member.contribuicoes || []).filter((c) => c.id !== cId);
+      member.contribuicoes = updatedContribs;
+
+      try {
+        const docRef = doc(db, 'membros', mId);
+        await updateDoc(docRef, {
+          contribuicoes: updatedContribs,
+          updatedAt: serverTimestamp()
+        });
+      } catch (err) {
+        console.warn('Erro ao remover dízimo no Firestore:', err);
+      }
+
+      const idx = membersList.findIndex((m) => m.id === mId);
+      if (idx !== -1) {
+        membersList[idx] = { ...membersList[idx], contribuicoes: updatedContribs };
+        try {
+          localStorage.setItem(STORAGE_MEMBERS_KEY, JSON.stringify(membersList));
+        } catch (_) {}
+      }
+
+      if (treasuryInputDizimos) {
+        const currentDizimos = parseCurrency(treasuryInputDizimos.value);
+        const newDizimos = Math.max(0, currentDizimos - val);
+        treasuryInputDizimos.value = newDizimos > 0 ? formatCurrency(newDizimos).replace('R$', '').trim() : '';
+      }
+
+      renderTithesMonthList();
+      showToastAlert('Lançamento removido.');
+    });
+  });
+}
+
+/**
+ * Modal Inserir Dízimo por Membro
+ */
+function openAddTitheMemberModal() {
+  if (selectTitheMember) {
+    let opts = '<option value="">Selecione o membro...</option>';
+    const sorted = [...membersList].sort((a, b) => (a.nome || '').localeCompare(b.nome || '', 'pt-BR'));
+    sorted.forEach((m) => {
+      opts += `<option value="${m.id}">${escapeHtml(m.nome)}${m.cargo ? ` (${escapeHtml(m.cargo)})` : ''}</option>`;
+    });
+    selectTitheMember.innerHTML = opts;
+    selectTitheMember.value = '';
+  }
+
+  const today = new Date();
+  const currentMonthToday = today.getMonth() + 1;
+  const currentYearToday = today.getFullYear();
+  let defaultDate = today.toISOString().split('T')[0];
+  if (selectedFinanceYear !== currentYearToday || selectedFinanceMonth !== currentMonthToday) {
+    defaultDate = `${selectedFinanceYear}-${String(selectedFinanceMonth).padStart(2, '0')}-01`;
+  }
+
+  if (inputTitheMemberDate) inputTitheMemberDate.value = defaultDate;
+  if (inputTitheMemberVal) inputTitheMemberVal.value = '';
+
+  if (modalAddTitheMember) {
+    modalAddTitheMember.classList.add('is-open');
+    modalAddTitheMember.setAttribute('aria-hidden', 'false');
+    setTimeout(() => {
+      if (selectTitheMember) selectTitheMember.focus();
+    }, 150);
+  }
+}
+
+function closeAddTitheMemberModal() {
+  if (modalAddTitheMember) {
+    modalAddTitheMember.classList.remove('is-open');
+    modalAddTitheMember.setAttribute('aria-hidden', 'true');
+  }
+}
+
+async function handleAddTitheMemberSubmit(e) {
+  if (e) e.preventDefault();
+
+  const memberId = selectTitheMember ? selectTitheMember.value : '';
+  const dateVal = inputTitheMemberDate ? inputTitheMemberDate.value.trim() : '';
+  const valor = parseCurrency(inputTitheMemberVal ? inputTitheMemberVal.value : '0');
+
+  if (!memberId) {
+    alert('Por favor, selecione o membro que enviou o dízimo.');
+    if (selectTitheMember) selectTitheMember.focus();
+    return;
+  }
+
+  if (!dateVal) {
+    alert('Por favor, informe a data do envio.');
+    if (inputTitheMemberDate) inputTitheMemberDate.focus();
+    return;
+  }
+
+  if (isNaN(valor) || valor <= 0) {
+    alert('Por favor, informe um valor válido para o dízimo.');
+    if (inputTitheMemberVal) inputTitheMemberVal.focus();
+    return;
+  }
+
+  const member = membersList.find((m) => m.id === memberId);
+  if (!member) {
+    alert('Membro não encontrado.');
+    return;
+  }
+
+  const newContrib = {
+    id: 'contrib_' + Date.now(),
+    dizimo: valor,
+    oferta: 0,
+    dataEnvio: dateVal,
+    createdAt: new Date().toISOString()
+  };
+
+  const updatedContribs = Array.isArray(member.contribuicoes) ? [...member.contribuicoes, newContrib] : [newContrib];
+  member.contribuicoes = updatedContribs;
+
+  try {
+    const docRef = doc(db, 'membros', member.id);
+    await updateDoc(docRef, {
+      contribuicoes: updatedContribs,
+      updatedAt: serverTimestamp()
+    });
+  } catch (err) {
+    console.warn('Erro ao salvar dízimo do membro no Firestore:', err);
+  }
+
+  const idx = membersList.findIndex((m) => m.id === member.id);
+  if (idx !== -1) {
+    membersList[idx] = { ...membersList[idx], contribuicoes: updatedContribs };
+    try {
+      localStorage.setItem(STORAGE_MEMBERS_KEY, JSON.stringify(membersList));
+    } catch (_) {}
+  }
+
+  // Soma ao campo de dízimos do modal da tesouraria
+  if (treasuryInputDizimos) {
+    const currentVal = parseCurrency(treasuryInputDizimos.value || '0');
+    const newTotal = currentVal + valor;
+    treasuryInputDizimos.value = formatCurrency(newTotal).replace('R$', '').trim();
+  }
+
+  renderTithesMonthList();
+  closeAddTitheMemberModal();
+  showToastAlert(`Dízimo de ${member.nome.split(' ')[0]} registrado com sucesso!`);
 }
 
 function renderTempEditingSaidas() {
