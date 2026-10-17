@@ -9,6 +9,7 @@ import { initPrayers, openPrayerScreen, closePrayerScreen } from './prayers.js';
 import { initVisitors, requestAccessToVisitors, closeVisitorsScreen } from './visitors.js';
 import { initVisits, openVisitsScreen, closeVisitsScreen } from './visits.js';
 import { initEvents, openEventsScreen, closeEventsScreen } from './events.js';
+import { initMembers, requestAccessToMembers, closeMembersScreen } from './members.js';
 
 (function () {
   'use strict';
@@ -232,8 +233,8 @@ import { initEvents, openEventsScreen, closeEventsScreen } from './events.js';
   // ==========================================
   // Controle de Versão e Atualização Automática PWA
   // ==========================================
-  const APP_VERSION = '1.2.7';
-  const APP_BUILD = 33;
+  const APP_VERSION = '1.2.8';
+  const APP_BUILD = 34;
   let waitingWorker = null;
   let isUpdating = false;
 
@@ -328,6 +329,7 @@ import { initEvents, openEventsScreen, closeEventsScreen } from './events.js';
       closeVisitorsScreen();
       closeVisitsScreen();
       closeEventsScreen();
+      closeMembersScreen();
       scrollToHome();
     });
   }
@@ -364,16 +366,20 @@ import { initEvents, openEventsScreen, closeEventsScreen } from './events.js';
         } else if (href === '#registrar-visitante' || href === '#registrar-visita') {
           e.preventDefault();
           requestAccessToVisitors();
+        } else if (href === '#membros') {
+          e.preventDefault();
+          requestAccessToMembers();
         }
       });
     }
   });
 
-  // Inicializa o sistema de orações, de visitantes, de visitas e de programações
+  // Inicializa o sistema de orações, de visitantes, de visitas, de programações e de membros
   initPrayers();
   initVisitors();
   initVisits();
   initEvents();
+  initMembers();
 
   // PWA Service Worker com detecção em tempo real e atualização transparente
   if ('serviceWorker' in navigator) {

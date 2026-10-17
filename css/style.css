@@ -3090,5 +3090,862 @@ html::-webkit-scrollbar, body::-webkit-scrollbar {
   transform: translateX(-50%) translateY(0);
 }
 
+/* ==========================================================================
+   ÁREA DE MEMBROS & RELATÓRIO FINANCEIRO
+   ========================================================================== */
+
+.members-screen-body {
+  padding: 16px 14px 40px;
+}
+
+.members-view-container {
+  width: 100%;
+  animation: fadeInSlide 0.28s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* Hub Inicial com Opções: Lista de Membros e Relatório Financeiro */
+.members-hub-welcome {
+  text-align: center;
+  margin-bottom: 22px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+
+.members-hub-title {
+  font-family: 'Century Gothic Light', 'Century Gothic', CenturyGothic, 'Questrial', 'Montserrat', sans-serif;
+  font-size: 1.15rem;
+  letter-spacing: 0.12em;
+  color: #ffffff;
+  text-transform: uppercase;
+  margin-top: 4px;
+}
+
+.members-hub-subtitle {
+  font-size: 0.82rem;
+  color: #93c5fd;
+  letter-spacing: 0.04em;
+}
+
+.members-hub-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.members-hub-card {
+  width: 100%;
+  background: rgba(0, 24, 56, 0.65);
+  border: 1px solid rgba(145, 210, 255, 0.25);
+  border-radius: 18px;
+  padding: 18px 16px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  text-align: left;
+  cursor: pointer;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.35);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  color: #ffffff;
+}
+
+.members-hub-card:hover {
+  background: rgba(0, 36, 80, 0.85);
+  border-color: rgba(255, 170, 51, 0.6);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5), 0 0 16px rgba(255, 170, 51, 0.2);
+}
+
+.members-hub-card:active {
+  transform: scale(0.98);
+}
+
+.members-hub-card-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.members-hub-card-info {
+  flex: 1;
+}
+
+.members-hub-card-title {
+  font-size: 0.98rem;
+  font-weight: 600;
+  color: #ffffff;
+  margin-bottom: 4px;
+  letter-spacing: 0.02em;
+}
+
+.members-hub-card-desc {
+  font-size: 0.76rem;
+  color: #cbd5e1;
+  line-height: 1.35;
+}
+
+.members-hub-card-arrow {
+  color: rgba(255, 255, 255, 0.45);
+  flex-shrink: 0;
+  transition: transform 0.2s ease;
+}
+
+.members-hub-card:hover .members-hub-card-arrow {
+  transform: translateX(4px);
+  color: #ffaa33;
+}
+
+/* ==========================================
+   LISTA DE MEMBROS
+   ========================================== */
+
+.members-top-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 12px;
+}
+
+.btn-new-member {
+  background: linear-gradient(135deg, #ffaa33 0%, #ff7700 100%);
+  color: #030816;
+  border: none;
+  border-radius: 14px;
+  padding: 10px 18px;
+  font-size: 0.85rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  box-shadow: 0 4px 16px rgba(255, 119, 0, 0.35);
+  transition: all 0.22s ease;
+}
+
+.btn-new-member:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 22px rgba(255, 119, 0, 0.5);
+  filter: brightness(1.08);
+}
+
+.btn-new-member:active {
+  transform: scale(0.97);
+}
+
+.members-search-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+  margin-bottom: 14px;
+}
+
+.members-search-wrap .search-icon {
+  position: absolute;
+  left: 12px;
+  pointer-events: none;
+}
+
+.members-search-input {
+  width: 100%;
+  background: rgba(0, 20, 48, 0.7);
+  border: 1px solid rgba(145, 210, 255, 0.25);
+  border-radius: 12px;
+  padding: 10px 36px 10px 38px;
+  color: #ffffff;
+  font-size: 0.85rem;
+  font-family: inherit;
+  outline: none;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.members-search-input:focus {
+  border-color: #ffaa33;
+  box-shadow: 0 0 10px rgba(255, 170, 51, 0.3);
+}
+
+.members-search-wrap .btn-search-clear {
+  position: absolute;
+  right: 10px;
+  background: none;
+  border: none;
+  color: #94a3b8;
+  font-size: 12px;
+  cursor: pointer;
+  padding: 4px;
+}
+
+.members-alphabetical-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.member-card-item {
+  background: rgba(0, 24, 54, 0.55);
+  border: 1px solid rgba(145, 210, 255, 0.18);
+  border-radius: 14px;
+  padding: 12px 14px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  cursor: pointer;
+  transition: all 0.22s ease;
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+}
+
+.member-card-item:hover {
+  background: rgba(0, 36, 78, 0.8);
+  border-color: rgba(255, 170, 51, 0.45);
+  transform: translateX(3px);
+}
+
+.member-card-item:active {
+  transform: scale(0.98);
+}
+
+.member-card-avatar {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, rgba(255, 170, 51, 0.25) 0%, rgba(255, 119, 0, 0.4) 100%);
+  border: 1px solid rgba(255, 170, 51, 0.5);
+  color: #ffd088;
+  font-size: 0.82rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  text-transform: uppercase;
+}
+
+.member-card-main {
+  flex: 1;
+  min-width: 0;
+}
+
+.member-card-name {
+  font-size: 0.92rem;
+  font-weight: 600;
+  color: #ffffff;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  letter-spacing: 0.02em;
+}
+
+.member-card-badge-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 3px;
+  flex-wrap: wrap;
+}
+
+.member-badge-protected {
+  font-size: 0.68rem;
+  color: #cbd5e1;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 6px;
+  padding: 1px 6px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.member-badge-role {
+  font-size: 0.68rem;
+  color: #93c5fd;
+  background: rgba(147, 197, 253, 0.12);
+  border: 1px solid rgba(147, 197, 253, 0.25);
+  border-radius: 6px;
+  padding: 1px 6px;
+}
+
+.member-card-arrow {
+  color: rgba(255, 255, 255, 0.35);
+  flex-shrink: 0;
+}
+
+.members-empty-box {
+  text-align: center;
+  padding: 30px 16px;
+  background: rgba(0, 18, 42, 0.45);
+  border: 1px dashed rgba(145, 210, 255, 0.25);
+  border-radius: 16px;
+  color: #94a3b8;
+}
+
+.members-empty-title {
+  font-size: 0.95rem;
+  color: #e2e8f0;
+  font-weight: 600;
+  margin-bottom: 6px;
+}
+
+.members-empty-text {
+  font-size: 0.8rem;
+  line-height: 1.4;
+}
+
+/* ==========================================
+   CADASTRO DE CÓDIGO DE 6 DÍGITOS
+   ========================================== */
+
+.member-code-box {
+  margin-top: 10px;
+  background: rgba(2, 16, 38, 0.65);
+  border: 1px solid rgba(255, 170, 51, 0.3);
+  border-radius: 14px;
+  padding: 14px 12px;
+  box-shadow: inset 0 2px 10px rgba(0, 0, 0, 0.4);
+}
+
+.member-code-box-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: #ffd088;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.member-code-box-hint {
+  font-size: 0.74rem;
+  color: #cbd5e1;
+  margin-top: 4px;
+  margin-bottom: 10px;
+  line-height: 1.35;
+}
+
+/* ==========================================
+   DETALHES DO MEMBRO (Acesso liberado)
+   ========================================== */
+
+.member-details-profile {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+  margin-bottom: 14px;
+}
+
+.member-details-avatar {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #ffaa33 0%, #ff7700 100%);
+  color: #030816;
+  font-size: 1.15rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  box-shadow: 0 4px 14px rgba(255, 119, 0, 0.3);
+}
+
+.member-details-header-info {
+  flex: 1;
+}
+
+.member-details-name {
+  font-size: 1.05rem;
+  color: #ffffff;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+.member-details-role-badge {
+  display: inline-block;
+  margin-top: 4px;
+  font-size: 0.72rem;
+  background: rgba(147, 197, 253, 0.15);
+  border: 1px solid rgba(147, 197, 253, 0.3);
+  color: #93c5fd;
+  border-radius: 8px;
+  padding: 2px 8px;
+}
+
+.member-details-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.member-detail-row {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 10px;
+  padding: 8px 12px;
+}
+
+.detail-label {
+  font-size: 0.7rem;
+  color: #94a3b8;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.detail-val-with-action {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.detail-val {
+  font-size: 0.88rem;
+  color: #ffffff;
+  font-weight: 500;
+}
+
+.btn-detail-whatsapp {
+  background: #25d366;
+  color: #042410;
+  font-size: 0.72rem;
+  font-weight: 700;
+  border-radius: 8px;
+  padding: 4px 8px;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  transition: all 0.2s ease;
+}
+
+.btn-detail-whatsapp:hover {
+  background: #1eb956;
+  transform: translateY(-1px);
+}
+
+.btn-toggle-code {
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: #cbd5e1;
+  font-size: 0.7rem;
+  border-radius: 6px;
+  padding: 3px 7px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-toggle-code:hover {
+  background: rgba(255, 255, 255, 0.2);
+  color: #ffffff;
+}
+
+.member-admin-notice {
+  margin-top: 10px;
+  background: rgba(255, 170, 51, 0.12);
+  border: 1px solid rgba(255, 170, 51, 0.35);
+  border-radius: 10px;
+  padding: 8px 10px;
+  font-size: 0.74rem;
+  color: #ffd088;
+}
+
+.badge-admin {
+  font-weight: 700;
+  display: block;
+  margin-bottom: 2px;
+}
+
+/* ==========================================
+   RELATÓRIO FINANCEIRO (Visualização e Tesouraria)
+   ========================================= */
+
+.financial-top-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 14px;
+}
+
+.financial-title-area {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.financial-section-heading {
+  font-family: 'Century Gothic Light', 'Century Gothic', CenturyGothic, sans-serif;
+  font-size: 0.98rem;
+  color: #ffffff;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+/* Botão de edição simples e discreto no topo direito para a tesoureira */
+.btn-discreet-edit {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  color: rgba(255, 255, 255, 0.45);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  outline: none;
+  transition: all 0.22s ease;
+  flex-shrink: 0;
+}
+
+.btn-discreet-edit:hover {
+  background: rgba(255, 255, 255, 0.15);
+  border-color: rgba(255, 170, 51, 0.4);
+  color: #ffd088;
+}
+
+.btn-discreet-edit.is-unlocked {
+  background: rgba(34, 197, 94, 0.15);
+  border-color: rgba(34, 197, 94, 0.5);
+  color: #4ade80;
+  box-shadow: 0 0 10px rgba(34, 197, 94, 0.3);
+}
+
+.financial-filters-card {
+  display: flex;
+  gap: 10px;
+  background: rgba(0, 24, 56, 0.5);
+  border: 1px solid rgba(145, 210, 255, 0.2);
+  border-radius: 14px;
+  padding: 10px 12px;
+  margin-bottom: 14px;
+}
+
+.financial-filter-group {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.financial-filter-group label {
+  font-size: 0.7rem;
+  color: #94a3b8;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.financial-select {
+  width: 100%;
+  background: rgba(0, 16, 40, 0.85);
+  border: 1px solid rgba(145, 210, 255, 0.25);
+  border-radius: 10px;
+  padding: 7px 10px;
+  color: #ffffff;
+  font-size: 0.82rem;
+  font-family: inherit;
+  outline: none;
+  cursor: pointer;
+}
+
+.financial-select:focus {
+  border-color: #ffaa33;
+}
+
+/* Card do Valor Total exibido aos membros */
+.financial-total-card {
+  background: linear-gradient(135deg, rgba(0, 36, 80, 0.75) 0%, rgba(0, 20, 50, 0.85) 100%);
+  border: 1px solid rgba(145, 210, 255, 0.35);
+  border-radius: 20px;
+  padding: 22px 16px;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.45), 0 0 20px rgba(34, 197, 94, 0.12);
+  text-align: center;
+  margin-bottom: 18px;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+.financial-total-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 14px;
+}
+
+.financial-period-label {
+  font-size: 0.84rem;
+  font-weight: 700;
+  color: #93c5fd;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.financial-status-pill {
+  font-size: 0.66rem;
+  font-weight: 700;
+  color: #22c55e;
+  background: rgba(34, 197, 94, 0.14);
+  border: 1px solid rgba(34, 197, 94, 0.35);
+  border-radius: 12px;
+  padding: 2px 8px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.financial-total-amount-box {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 0;
+}
+
+.financial-total-prefix {
+  font-size: 0.75rem;
+  letter-spacing: 0.14em;
+  color: #cbd5e1;
+  text-transform: uppercase;
+  font-weight: 600;
+}
+
+.financial-total-val {
+  font-size: clamp(1.8rem, 7vw, 2.3rem);
+  font-weight: 800;
+  color: #4ade80;
+  text-shadow: 0 0 20px rgba(74, 222, 128, 0.35), 0 2px 10px rgba(0, 0, 0, 0.8);
+  font-family: 'Century Gothic', CenturyGothic, sans-serif;
+  letter-spacing: 0.02em;
+}
+
+.financial-total-subtext {
+  font-size: 0.74rem;
+  color: #94a3b8;
+  margin-top: 10px;
+  line-height: 1.35;
+}
+
+/* ==========================================
+   PAINEL DA TESOUREIRA (Visível após código 010101)
+   ========================================== */
+
+.treasury-management-panel {
+  background: rgba(2, 18, 42, 0.75);
+  border: 1px solid rgba(34, 197, 94, 0.35);
+  border-radius: 16px;
+  padding: 16px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+  animation: fadeInSlide 0.25s ease-out forwards;
+}
+
+.treasury-panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 14px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.treasury-status-badge {
+  font-size: 0.76rem;
+  font-weight: 700;
+  color: #4ade80;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.treasury-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #22c55e;
+  box-shadow: 0 0 8px #22c55e;
+}
+
+.btn-treasury-lock {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: #cbd5e1;
+  font-size: 0.72rem;
+  padding: 4px 8px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-treasury-lock:hover {
+  background: rgba(239, 68, 68, 0.2);
+  border-color: #ef4444;
+  color: #fca5a5;
+}
+
+.treasury-actions-row {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+
+.btn-treasury-action {
+  flex: 1;
+  background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+  color: #031808;
+  border: none;
+  border-radius: 10px;
+  padding: 9px 8px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 10px rgba(34, 197, 94, 0.3);
+}
+
+.btn-treasury-action:hover {
+  filter: brightness(1.1);
+  transform: translateY(-1px);
+}
+
+.btn-treasury-action-outline {
+  flex: 1;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  color: #ffffff;
+  border-radius: 10px;
+  padding: 9px 8px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-treasury-action-outline:hover {
+  background: rgba(255, 255, 255, 0.12);
+  border-color: #ffaa33;
+}
+
+.treasury-entries-title {
+  font-size: 0.76rem;
+  color: #cbd5e1;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin-bottom: 8px;
+}
+
+.treasury-entries-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.treasury-empty-entries {
+  text-align: center;
+  padding: 16px 10px;
+  background: rgba(0, 0, 0, 0.25);
+  border-radius: 10px;
+  color: #94a3b8;
+  font-size: 0.78rem;
+}
+
+.treasury-empty-hint {
+  display: block;
+  margin-top: 4px;
+  font-size: 0.72rem;
+  color: #64748b;
+}
+
+.treasury-entry-card {
+  background: rgba(0, 24, 52, 0.6);
+  border: 1px solid rgba(145, 210, 255, 0.18);
+  border-radius: 10px;
+  padding: 8px 10px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.treasury-entry-icon {
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  background: rgba(34, 197, 94, 0.15);
+  color: #4ade80;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.treasury-entry-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.treasury-entry-top {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.treasury-entry-category {
+  font-size: 0.76rem;
+  font-weight: 700;
+  color: #ffffff;
+}
+
+.treasury-entry-date {
+  font-size: 0.68rem;
+  color: #94a3b8;
+}
+
+.treasury-entry-desc {
+  font-size: 0.72rem;
+  color: #cbd5e1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin-top: 1px;
+}
+
+.treasury-entry-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.treasury-entry-val {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: #4ade80;
+}
+
+.btn-entry-delete {
+  background: none;
+  border: none;
+  color: #f87171;
+  font-size: 13px;
+  cursor: pointer;
+  padding: 3px 6px;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+}
+
+.btn-entry-delete:hover {
+  background: rgba(239, 68, 68, 0.2);
+}
+
+
 
 

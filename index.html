@@ -497,6 +497,215 @@
       </div>
     </section>
 
+    <!-- Tela / Painel de Membros -->
+    <section class="sub-screen" id="membersScreen" aria-hidden="true">
+      <div class="sub-screen-header">
+        <button type="button" class="btn-sub-back" id="btnMembersBack" aria-label="Voltar">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2.2"
+            stroke-linecap="round" stroke-linejoin="round">
+            <line x1="19" y1="12" x2="5" y2="12"></line>
+            <polyline points="12 19 5 12 12 5"></polyline>
+          </svg>
+        </button>
+        <div class="sub-screen-title-wrap">
+          <h2 class="sub-screen-title" id="membersScreenTitle">MEMBROS</h2>
+          <div class="prayer-counters visitor-nav-tabs" id="membersNavTabs">
+            <button type="button" class="counter-tab counter-pending is-active" id="tabMembersHub">
+              Opções
+            </button>
+            <span class="counter-divider">•</span>
+            <button type="button" class="counter-tab counter-answered" id="tabMembersList">
+              Lista de Membros <span class="counter-badge" id="countMembersBadge">0</span>
+            </button>
+            <span class="counter-divider">•</span>
+            <button type="button" class="counter-tab counter-answered" id="tabMembersFinance">
+              Relatório Financeiro
+            </button>
+          </div>
+        </div>
+        <div class="sub-screen-header-spacer" aria-hidden="true"></div>
+      </div>
+
+      <div class="sub-screen-body members-screen-body">
+        
+        <!-- Vista 1: Hub de Opções de Membros -->
+        <div class="members-view-container" id="membersHubView">
+          <div class="members-hub-welcome">
+            <span class="offer-badge badge-orange">Comunhão</span>
+            <h3 class="members-hub-title">ÁREA DE MEMBROS</h3>
+            <p class="members-hub-subtitle">Congregação Batista Nova Aurora</p>
+          </div>
+
+          <div class="members-hub-grid">
+            <!-- Opção 1: Lista de Membros -->
+            <button type="button" class="members-hub-card" id="btnHubGoMembers">
+              <div class="members-hub-card-icon">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#ffaa33" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                  <circle cx="9" cy="7" r="4"></circle>
+                  <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                  <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                </svg>
+              </div>
+              <div class="members-hub-card-info">
+                <h4 class="members-hub-card-title">Lista de Membros</h4>
+                <p class="members-hub-card-desc">Consulte os membros cadastrados em ordem alfabética e acesse seus dados com seu código exclusivo.</p>
+              </div>
+              <div class="members-hub-card-arrow">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+                  <polyline points="9 18 15 12 9 6"></polyline>
+                </svg>
+              </div>
+            </button>
+
+            <!-- Opção 2: Relatório Financeiro -->
+            <button type="button" class="members-hub-card" id="btnHubGoFinance">
+              <div class="members-hub-card-icon">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                  <line x1="12" y1="1" x2="12" y2="23"></line>
+                  <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
+                </svg>
+              </div>
+              <div class="members-hub-card-info">
+                <h4 class="members-hub-card-title">Relatório Financeiro</h4>
+                <p class="members-hub-card-desc">Prestação de contas mensal e valor total consolidado pela tesouraria da congregação.</p>
+              </div>
+              <div class="members-hub-card-arrow">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+                  <polyline points="9 18 15 12 9 6"></polyline>
+                </svg>
+              </div>
+            </button>
+          </div>
+        </div>
+
+        <!-- Vista 2: Lista de Membros -->
+        <div class="members-view-container" id="membersListView" style="display: none;">
+          <!-- Topo: Botão de Novo Cadastro -->
+          <div class="members-top-actions">
+            <button type="button" class="btn-new-member" id="btnOpenNewMemberModal">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                <circle cx="9" cy="7" r="4"></circle>
+                <line x1="20" y1="8" x2="20" y2="14"></line>
+                <line x1="23" y1="11" x2="17" y2="11"></line>
+              </svg>
+              Novo Cadastro
+            </button>
+          </div>
+
+          <!-- Barra de Busca de Membros -->
+          <div class="members-search-wrap">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#93c5fd" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="search-icon">
+              <circle cx="11" cy="11" r="8"></circle>
+              <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+            </svg>
+            <input type="text" id="memberSearchInput" class="members-search-input" placeholder="Buscar membro por nome...">
+            <button type="button" id="btnMemberSearchClear" class="btn-search-clear" style="display: none;">✕</button>
+          </div>
+
+          <!-- Lista de Membros em Ordem Alfabética -->
+          <div class="members-alphabetical-list" id="membersCardsContainer">
+            <!-- Cards gerados dinamicamente via JS -->
+          </div>
+        </div>
+
+        <!-- Vista 3: Relatório Financeiro -->
+        <div class="members-view-container" id="membersFinanceView" style="display: none;">
+          <!-- Cabeçalho do Relatório com Botão de Edição Discreto no Topo Direito -->
+          <div class="financial-top-bar">
+            <div class="financial-title-area">
+              <span class="offer-badge badge-orange">Prestação de Contas</span>
+              <h3 class="financial-section-heading">RELATÓRIO FINANCEIRO</h3>
+            </div>
+            <!-- Botão de edição simples e discreto para a tesoureira -->
+            <button type="button" class="btn-discreet-edit" id="btnTreasuryEdit" title="Área da Tesouraria" aria-label="Editar Relatório Financeiro">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M12 20h9"></path>
+                <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path>
+              </svg>
+            </button>
+          </div>
+
+          <!-- Filtro por Mês e Ano -->
+          <div class="financial-filters-card">
+            <div class="financial-filter-group">
+              <label for="selectFinanceMonth">Mês:</label>
+              <select id="selectFinanceMonth" class="financial-select">
+                <option value="1">Janeiro</option>
+                <option value="2">Fevereiro</option>
+                <option value="3">Março</option>
+                <option value="4">Abril</option>
+                <option value="5">Maio</option>
+                <option value="6">Junho</option>
+                <option value="7">Julho</option>
+                <option value="8">Agosto</option>
+                <option value="9">Setembro</option>
+                <option value="10">Outubro</option>
+                <option value="11">Novembro</option>
+                <option value="12">Dezembro</option>
+              </select>
+            </div>
+
+            <div class="financial-filter-group">
+              <label for="selectFinanceYear">Ano:</label>
+              <select id="selectFinanceYear" class="financial-select">
+                <option value="2024">2024</option>
+                <option value="2025">2025</option>
+                <option value="2026">2026</option>
+                <option value="2027">2027</option>
+                <option value="2028">2028</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Card do Valor Total (Visível para todos os membros) -->
+          <div class="financial-total-card">
+            <div class="financial-total-header">
+              <span class="financial-period-label" id="financialPeriodLabel">Outubro / 2026</span>
+              <span class="financial-status-pill">Oficial</span>
+            </div>
+            <div class="financial-total-amount-box">
+              <span class="financial-total-prefix">VALOR TOTAL</span>
+              <div class="financial-total-val" id="financialTotalValue">R$ 0,00</div>
+            </div>
+            <p class="financial-total-subtext">Total consolidado pela tesouraria da congregação.</p>
+          </div>
+
+          <!-- Painel da Tesoureira (Apenas visível quando desbloqueado com 010101) -->
+          <div class="treasury-management-panel" id="treasuryAdminPanel" style="display: none;">
+            <div class="treasury-panel-header">
+              <div class="treasury-status-badge">
+                <span class="treasury-dot"></span> Modo Tesouraria Ativo (010101)
+              </div>
+              <button type="button" class="btn-treasury-lock" id="btnTreasuryLock" title="Encerrar Edição">
+                Sair da Edição 🔒
+              </button>
+            </div>
+
+            <div class="treasury-actions-row">
+              <button type="button" class="btn-treasury-action" id="btnTreasuryAddEntry">
+                + Novo Lançamento
+              </button>
+              <button type="button" class="btn-treasury-action-outline" id="btnTreasuryEditDirectTotal">
+                Ajustar Total Manual
+              </button>
+            </div>
+
+            <!-- Lista de lançamentos detalhados (exclusivo para a tesoureira) -->
+            <div class="treasury-entries-wrap">
+              <h4 class="treasury-entries-title">Lançamentos do Período (Privado da Tesouraria):</h4>
+              <div class="treasury-entries-list" id="treasuryEntriesList">
+                <!-- Lançamentos renderizados dinamicamente -->
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+    </section>
+
     <!-- Modal Novo Pedido de Oração -->
     <div class="app-modal" id="modalNewPrayer" aria-hidden="true">
       <div class="app-modal-overlay" id="overlayNewPrayer"></div>
@@ -864,10 +1073,305 @@
       </div>
     </div>
 
+    <!-- Modal Autenticação de Código de Membro (6 dígitos ou 010101) -->
+    <div class="app-modal" id="modalMemberCodeAuth" aria-hidden="true">
+      <div class="app-modal-overlay" id="overlayMemberCodeAuth"></div>
+      <div class="app-modal-card">
+        <div class="app-modal-header">
+          <h3 id="memberCodeAuthTitle">Acesso aos Dados</h3>
+          <button type="button" class="btn-modal-close" id="btnCloseMemberCodeAuth" aria-label="Fechar">✕</button>
+        </div>
+        <div class="app-modal-body">
+          <p class="delete-warning-text" style="color: #cbd5e1;" id="memberCodeAuthDesc">
+            Digite o código de 6 dígitos cadastrado para acessar os dados deste membro:
+          </p>
+          <form id="formMemberCodeAuth" class="app-form" style="margin-top: 14px;">
+            <div class="form-group">
+              <label for="inputMemberAccessCode">Código de Acesso (6 dígitos)</label>
+              <input type="password" id="inputMemberAccessCode" placeholder="Digite os 6 dígitos" maxlength="6" inputmode="numeric" pattern="[0-9]*" autocomplete="off" required>
+              <span class="delete-error-msg" id="memberCodeAuthErrorMsg" style="display: none;">Código incorreto. Acesso restrito ao próprio membro ou administrador (010101).</span>
+            </div>
+            <div class="form-actions" style="margin-top: 16px;">
+              <button type="button" class="btn-form-cancel" id="btnCancelMemberCodeAuth">Cancelar</button>
+              <button type="submit" class="btn-form-save" id="btnSubmitMemberCodeAuth">Acessar</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal Novo Cadastro de Membro -->
+    <div class="app-modal" id="modalNewMember" aria-hidden="true">
+      <div class="app-modal-overlay" id="overlayNewMember"></div>
+      <div class="app-modal-card">
+        <div class="app-modal-header">
+          <h3>Novo Membro</h3>
+          <button type="button" class="btn-modal-close" id="btnCloseNewMember" aria-label="Fechar">✕</button>
+        </div>
+        <form id="formNewMember" class="app-form">
+          <div class="form-group">
+            <label for="newMemberName">Nome Completo *</label>
+            <input type="text" id="newMemberName" placeholder="Nome completo do membro" required autocomplete="name">
+          </div>
+
+          <div class="form-row-2col">
+            <div class="form-group">
+              <label for="newMemberPhone">Telefone (WhatsApp) *</label>
+              <input type="tel" id="newMemberPhone" placeholder="(XX) XXXXX-XXXX" required inputmode="numeric">
+            </div>
+            <div class="form-group">
+              <label for="newMemberBirth">Data de Nascimento *</label>
+              <input type="date" id="newMemberBirth" required>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="newMemberAddress">Endereço / Bairro</label>
+            <input type="text" id="newMemberAddress" placeholder="Rua, número e bairro">
+          </div>
+
+          <div class="form-group">
+            <label for="newMemberEmail">E-mail</label>
+            <input type="email" id="newMemberEmail" placeholder="exemplo@email.com" autocomplete="email">
+          </div>
+
+          <div class="form-group">
+            <label for="newMemberRole">Função / Ministério</label>
+            <input type="text" id="newMemberRole" placeholder="Ex: Membro, Diácono, Louvor, etc." value="Membro">
+          </div>
+
+          <!-- Código de 6 dígitos exclusivo criado pelo próprio membro, digitado e confirmado -->
+          <div class="member-code-box">
+            <div class="member-code-box-header">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#ffaa33" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+              </svg>
+              <span>Código Exclusivo de Acesso</span>
+            </div>
+            <p class="member-code-box-hint">Crie um código numérico de 6 dígitos para acessar seus dados exclusivos no aplicativo.</p>
+
+            <div class="form-row-2col">
+              <div class="form-group">
+                <label for="newMemberCode">Código (6 dígitos) *</label>
+                <input type="password" id="newMemberCode" placeholder="000000" maxlength="6" inputmode="numeric" pattern="[0-9]{6}" required autocomplete="new-password">
+              </div>
+              <div class="form-group">
+                <label for="newMemberCodeConfirm">Confirmar Código *</label>
+                <input type="password" id="newMemberCodeConfirm" placeholder="000000" maxlength="6" inputmode="numeric" pattern="[0-9]{6}" required autocomplete="new-password">
+              </div>
+            </div>
+            <span class="delete-error-msg" id="newMemberCodeErrorMsg" style="display: none;">Os códigos não coincidem ou não possuem 6 dígitos.</span>
+          </div>
+
+          <div class="form-actions" style="margin-top: 16px;">
+            <button type="button" class="btn-form-cancel" id="btnCancelNewMember">Cancelar</button>
+            <button type="submit" class="btn-form-save">Cadastrar Membro</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Modal Visualização dos Dados do Membro -->
+    <div class="app-modal" id="modalMemberDetails" aria-hidden="true">
+      <div class="app-modal-overlay" id="overlayMemberDetails"></div>
+      <div class="app-modal-card">
+        <div class="app-modal-header">
+          <h3 id="memberDetailsTitle">Dados do Membro</h3>
+          <button type="button" class="btn-modal-close" id="btnCloseMemberDetails" aria-label="Fechar">✕</button>
+        </div>
+        <div class="app-modal-body">
+          <div class="member-details-profile">
+            <div class="member-details-avatar" id="memberDetailsAvatar">M</div>
+            <div class="member-details-header-info">
+              <h4 id="memberDetailsName" class="member-details-name">Nome do Membro</h4>
+              <span id="memberDetailsRole" class="member-details-role-badge">Membro</span>
+            </div>
+          </div>
+
+          <div class="member-details-fields" id="memberDetailsFields">
+            <!-- Renderizado dinamicamente via JS -->
+          </div>
+
+          <div class="form-actions member-details-actions" style="margin-top: 20px; display: flex; justify-content: space-between; align-items: center;">
+            <button type="button" class="btn-delete-confirm" id="btnDeleteMember" style="display: none;">Excluir Membro</button>
+            <button type="button" class="btn-form-save" id="btnEditMemberOpen">Editar Dados</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal Edição do Membro -->
+    <div class="app-modal" id="modalEditMember" aria-hidden="true">
+      <div class="app-modal-overlay" id="overlayEditMember"></div>
+      <div class="app-modal-card">
+        <div class="app-modal-header">
+          <h3>Editar Membro</h3>
+          <button type="button" class="btn-modal-close" id="btnCloseEditMember" aria-label="Fechar">✕</button>
+        </div>
+        <form id="formEditMember" class="app-form">
+          <input type="hidden" id="editMemberId">
+          <div class="form-group">
+            <label for="editMemberName">Nome Completo *</label>
+            <input type="text" id="editMemberName" required autocomplete="name">
+          </div>
+
+          <div class="form-row-2col">
+            <div class="form-group">
+              <label for="editMemberPhone">Telefone (WhatsApp) *</label>
+              <input type="tel" id="editMemberPhone" required inputmode="numeric">
+            </div>
+            <div class="form-group">
+              <label for="editMemberBirth">Data de Nascimento *</label>
+              <input type="date" id="editMemberBirth" required>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="editMemberAddress">Endereço / Bairro</label>
+            <input type="text" id="editMemberAddress">
+          </div>
+
+          <div class="form-group">
+            <label for="editMemberEmail">E-mail</label>
+            <input type="email" id="editMemberEmail" autocomplete="email">
+          </div>
+
+          <div class="form-group">
+            <label for="editMemberRole">Função / Ministério</label>
+            <input type="text" id="editMemberRole">
+          </div>
+
+          <div class="member-code-box">
+            <div class="member-code-box-header">
+              <span>Alterar Código de 6 dígitos (Opcional)</span>
+            </div>
+            <div class="form-row-2col">
+              <div class="form-group">
+                <label for="editMemberCode">Novo Código</label>
+                <input type="password" id="editMemberCode" placeholder="Manter atual" maxlength="6" inputmode="numeric">
+              </div>
+              <div class="form-group">
+                <label for="editMemberCodeConfirm">Confirmar</label>
+                <input type="password" id="editMemberCodeConfirm" placeholder="Repetir código" maxlength="6" inputmode="numeric">
+              </div>
+            </div>
+            <span class="delete-error-msg" id="editMemberCodeErrorMsg" style="display: none;">Os códigos não coincidem ou não possuem 6 dígitos.</span>
+          </div>
+
+          <div class="form-actions" style="margin-top: 16px;">
+            <button type="button" class="btn-form-cancel" id="btnCancelEditMember">Cancelar</button>
+            <button type="submit" class="btn-form-save">Salvar Alterações</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Modal Código da Tesouraria (010101) -->
+    <div class="app-modal" id="modalTreasuryAuth" aria-hidden="true">
+      <div class="app-modal-overlay" id="overlayTreasuryAuth"></div>
+      <div class="app-modal-card">
+        <div class="app-modal-header">
+          <h3>Acesso da Tesouraria</h3>
+          <button type="button" class="btn-modal-close" id="btnCloseTreasuryAuth" aria-label="Fechar">✕</button>
+        </div>
+        <div class="app-modal-body">
+          <p class="delete-warning-text" style="color: #cbd5e1;">
+            Área de edição restrita à tesouraria. Digite o código de autorização para liberar a edição:
+          </p>
+          <form id="formTreasuryAuth" class="app-form" style="margin-top: 14px;">
+            <div class="form-group">
+              <label for="inputTreasuryCode">Código da Tesouraria</label>
+              <input type="password" id="inputTreasuryCode" placeholder="Digite o código" maxlength="6" inputmode="numeric" pattern="[0-9]*" autocomplete="off" required>
+              <span class="delete-error-msg" id="treasuryAuthErrorMsg" style="display: none;">Código incorreto. Apenas o código 010101 libera o acesso à edição.</span>
+            </div>
+            <div class="form-actions" style="margin-top: 16px;">
+              <button type="button" class="btn-form-cancel" id="btnCancelTreasuryAuth">Cancelar</button>
+              <button type="submit" class="btn-form-save" id="btnSubmitTreasuryAuth">Liberar Edição</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal Novo Lançamento Financeiro -->
+    <div class="app-modal" id="modalTreasuryEntry" aria-hidden="true">
+      <div class="app-modal-overlay" id="overlayTreasuryEntry"></div>
+      <div class="app-modal-card">
+        <div class="app-modal-header">
+          <h3 id="treasuryEntryModalTitle">Novo Lançamento Financeiro</h3>
+          <button type="button" class="btn-modal-close" id="btnCloseTreasuryEntry" aria-label="Fechar">✕</button>
+        </div>
+        <form id="formTreasuryEntry" class="app-form">
+          <input type="hidden" id="treasuryEntryId">
+          <div class="form-group">
+            <label for="treasuryEntryCategory">Categoria / Tipo *</label>
+            <select id="treasuryEntryCategory" class="financial-select" required>
+              <option value="Dízimos">Dízimos</option>
+              <option value="Ofertas de Culto">Ofertas de Culto</option>
+              <option value="Ofertas de Missões">Ofertas de Missões</option>
+              <option value="Doações Especiais">Doações Especiais</option>
+              <option value="Eventos / Cantina">Eventos / Cantina</option>
+              <option value="Outras Entradas">Outras Entradas</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="treasuryEntryDesc">Descrição / Referência *</label>
+            <input type="text" id="treasuryEntryDesc" placeholder="Ex: Culto de Celebração de Domingo" required>
+          </div>
+
+          <div class="form-row-2col">
+            <div class="form-group">
+              <label for="treasuryEntryValue">Valor (R$) *</label>
+              <input type="text" id="treasuryEntryValue" placeholder="0,00" required inputmode="decimal">
+            </div>
+            <div class="form-group">
+              <label for="treasuryEntryDate">Data *</label>
+              <input type="date" id="treasuryEntryDate" required>
+            </div>
+          </div>
+
+          <div class="form-actions" style="margin-top: 16px;">
+            <button type="button" class="btn-form-cancel" id="btnCancelTreasuryEntry">Cancelar</button>
+            <button type="submit" class="btn-form-save">Salvar Lançamento</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Modal Ajuste de Total Manual da Tesouraria -->
+    <div class="app-modal" id="modalTreasuryDirectTotal" aria-hidden="true">
+      <div class="app-modal-overlay" id="overlayTreasuryDirectTotal"></div>
+      <div class="app-modal-card">
+        <div class="app-modal-header">
+          <h3>Ajustar Valor Total</h3>
+          <button type="button" class="btn-modal-close" id="btnCloseTreasuryDirectTotal" aria-label="Fechar">✕</button>
+        </div>
+        <form id="formTreasuryDirectTotal" class="app-form">
+          <p class="delete-warning-text" style="color: #cbd5e1;">
+            Defina o Valor Total consolidado do mês diretamente para os membros:
+          </p>
+          <div class="form-group" style="margin-top: 10px;">
+            <label for="treasuryDirectTotalValue">Valor Total (R$) *</label>
+            <input type="text" id="treasuryDirectTotalValue" placeholder="0,00" required inputmode="decimal">
+          </div>
+          <div class="form-group">
+            <label for="treasuryDirectTotalNote">Observação (Opcional)</label>
+            <input type="text" id="treasuryDirectTotalNote" placeholder="Ex: Consolidado da Tesouraria">
+          </div>
+          <div class="form-actions" style="margin-top: 16px;">
+            <button type="button" class="btn-form-cancel" id="btnCancelTreasuryDirectTotal">Cancelar</button>
+            <button type="submit" class="btn-form-save">Salvar Total</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
   </div>
 
   <script src="js/lenis.min.js"></script>
-  <script type="module" src="js/app.js?v=33"></script>
+  <script type="module" src="js/app.js?v=34"></script>
 </body>
 
 </html>
