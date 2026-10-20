@@ -26,6 +26,9 @@ import { requestMemberAccess, isMemberAuthenticated } from './visitors.js';
 const STORAGE_KEY_PROG = 'nova_aurora_programacoes_v1';
 const STORAGE_KEY_EVENTS_COMPAT = 'nova_aurora_eventos_v1';
 
+// Arte padrão (fallback leve) para eventos sem arte própria ou após a data do evento passar
+const DEFAULT_EVENT_ART = 'icons/dia-das-criancas.jpg';
+
 const MONTH_NAMES = [
   'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
   'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'
@@ -44,15 +47,16 @@ const DEFAULT_INITIAL_EVENT = {
   dataISO: '2026-10-17',
   horario: '14:00',
   local: 'Congregação Nova Aurora',
-  arteUrl: 'icons/dia-das-criancas.jpg',
+  arteUrl: DEFAULT_EVENT_ART,
   arteBase64: '',
   descricao: 'Culto Especial Dia das Crianças — Um dia de bênçãos e diversão'
 };
 
+const _nowInit = new Date();
 let eventsList = [];
-let currentCalendarMonth = 9; // Outubro (0-indexed: 9)
-let currentCalendarYear = 2026;
-let selectedDateISO = '2026-10-17';
+let currentCalendarMonth = _nowInit.getMonth();
+let currentCalendarYear = _nowInit.getFullYear();
+let selectedDateISO = toISODateString(_nowInit.getFullYear(), _nowInit.getMonth(), _nowInit.getDate());
 let currentActiveEvent = null;
 let currentEditingEvent = null;
 
@@ -176,6 +180,49 @@ function formatISOTODateFull(isoStr) {
 function getTodayISO() {
   const now = new Date();
   return toISODateString(now.getFullYear(), now.getMonth(), now.getDate());
+}
+
+/**
+ * Verifica eventos cuja data já passou e remove a arte pesada (Base64) do banco de dados (Firestore)
+ * e do armazenamento local para economizar espaço e manter o banco leve, preservando todas as
+ * demais informações do evento intactas para histórico e registro.
+ */
+async function cleanExpiredEventArts(items) {
+  if (!Array.isArray(items) || items.length === 0) return;
+  const todayISO = getTodayISO();
+
+  for (const ev of items) {
+    if (!ev || !ev.id) continue;
+    const evIso = normalizeDateToISO(ev.dataISO || ev.data);
+    if (!evIso) continue;
+
+    // Se a data do evento for estritamente anterior a hoje (data já passou)
+    if (evIso < todayISO) {
+      const hasHeavyArt = Boolean(ev.arteBase64 && ev.arteBase64.trim());
+      const hasCustomUrl = Boolean(ev.arteUrl && ev.arteUrl.trim() && ev.arteUrl !== DEFAULT_EVENT_ART);
+
+      if (hasHeavyArt || hasCustomUrl) {
+        console.log(`[Programações] Evento "${ev.titulo}" (${evIso}) já passou. Removendo arte do banco para manter leve...`);
+
+        // Atualiza no Firestore se não for id local/temporário
+        if (!String(ev.id).startsWith('local-') && !String(ev.id).startsWith('fallback-')) {
+          try {
+            await updateDoc(doc(db, 'programacoes', ev.id), {
+              arteBase64: '',
+              arteUrl: '',
+              artCleanedAt: serverTimestamp()
+            });
+          } catch (err) {
+            console.warn(`[Programações] Não foi possível atualizar remoção de arte no Firestore para evento ${ev.id}:`, err);
+          }
+        }
+
+        // Limpa na memória do objeto
+        ev.arteBase64 = '';
+        ev.arteUrl = '';
+      }
+    }
+  }
 }
 
 /**
@@ -320,7 +367,7 @@ function updateHeroBanner(eventsForDay, targetDateISO = '') {
     if (ev.horario) metaParts.push(ev.horario);
     if (ev.local) metaParts.push(ev.local);
 
-    const imgSrc = ev.arteUrl || ev.arteBase64 || 'icons/dia-das-criancas.jpg';
+    const imgSrc = ev.arteUrl || ev.arteBase64 || DEFAULT_EVENT_ART;
     const counterBadgeHtml = currentDayEvents.length > 1
       ? `<div class="prog-hero-slide-counter"><span>${idx + 1}/${currentDayEvents.length}</span></div>`
       : '';
@@ -438,7 +485,7 @@ function openArtPreview(eventsOrSrc, initialIndex = 0) {
 
   if (Array.isArray(eventsOrSrc)) {
     currentPreviewArts = eventsOrSrc.map((ev) => ({
-      src: ev.arteUrl || ev.arteBase64 || 'icons/dia-das-criancas.jpg',
+      src: ev.arteUrl || ev.arteBase64 || DEFAULT_EVENT_ART,
       title: ev.titulo || 'Arte da Programação'
     }));
   } else if (typeof eventsOrSrc === 'string' && eventsOrSrc.trim()) {
@@ -448,14 +495,14 @@ function openArtPreview(eventsOrSrc, initialIndex = 0) {
     }];
   } else {
     currentPreviewArts = [{
-      src: 'icons/dia-das-criancas.jpg',
+      src: DEFAULT_EVENT_ART,
       title: 'Arte da Programação'
     }];
   }
 
   if (currentPreviewArts.length === 0) {
     currentPreviewArts = [{
-      src: 'icons/dia-das-criancas.jpg',
+      src: DEFAULT_EVENT_ART,
       title: 'Arte da Programação'
     }];
   }
@@ -694,7 +741,7 @@ async function handleAddEventSubmit(e) {
         horario: horario,
         local: local,
         arteBase64: currentUploadedArtBase64 || '',
-        arteUrl: currentUploadedArtBase64 ? '' : 'icons/dia-das-criancas.jpg',
+        arteUrl: currentUploadedArtBase64 ? '' : DEFAULT_EVENT_ART,
         createdAt: serverTimestamp(),
         timestamp: Date.now()
       };
@@ -817,7 +864,7 @@ async function handleEditEventSubmit(e) {
     horario: horario,
     local: local,
     arteBase64: currentEditArtBase64 || '',
-    arteUrl: currentEditArtBase64 ? '' : (currentEditingEvent.arteUrl || 'icons/dia-das-criancas.jpg'),
+    arteUrl: currentEditArtBase64 ? '' : (currentEditingEvent.arteUrl || DEFAULT_EVENT_ART),
     updatedAt: serverTimestamp()
   };
 
@@ -913,7 +960,7 @@ function showNotification(msg) {
  */
 function subscribeToEvents() {
   try {
-    onSnapshot(collection(db, 'programacoes'), (snapshot) => {
+    onSnapshot(collection(db, 'programacoes'), async (snapshot) => {
       const items = [];
       snapshot.forEach((docSnap) => {
         const data = docSnap.data();
@@ -927,7 +974,7 @@ function subscribeToEvents() {
             horario: data.horario || '',
             local: data.local || '',
             arteBase64: data.arteBase64 || '',
-            arteUrl: data.arteUrl || (data.arteBase64 ? '' : 'icons/dia-das-criancas.jpg'),
+            arteUrl: data.arteUrl || '',
             descricao: data.descricao || '',
             timestamp: data.timestamp || Date.now()
           });
@@ -935,6 +982,9 @@ function subscribeToEvents() {
       });
 
       if (items.length > 0) {
+        // Exclui a arte do banco e da memória caso a data do evento já tenha passado
+        await cleanExpiredEventArts(items);
+
         eventsList = items;
         saveLocalEvents(items);
         renderEventsCalendar();
@@ -956,9 +1006,10 @@ export function openEventsScreen() {
     programacoesScreen.classList.add('is-active');
     programacoesScreen.setAttribute('aria-hidden', 'false');
 
-    selectedDateISO = '2026-10-17';
-    currentCalendarMonth = 9; // Outubro
-    currentCalendarYear = 2026;
+    const now = new Date();
+    currentCalendarMonth = now.getMonth();
+    currentCalendarYear = now.getFullYear();
+    selectedDateISO = getTodayISO();
 
     renderEventsCalendar();
 
@@ -1277,5 +1328,11 @@ export function initEvents() {
   const initialDayEvents = eventsList.filter((e) => normalizeDateToISO(e.dataISO || e.data) === selectedDateISO);
   updateHeroBanner(initialDayEvents.length > 0 ? initialDayEvents : (eventsList[0] ? [eventsList[0]] : [DEFAULT_INITIAL_EVENT]), selectedDateISO);
   renderEventsCalendar();
+
+  // Executa verificação inicial de artes expiradas também no cache local
+  cleanExpiredEventArts(eventsList).then(() => {
+    saveLocalEvents(eventsList);
+  }).catch(() => {});
+
   subscribeToEvents();
 }
