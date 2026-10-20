@@ -7,11 +7,16 @@
     content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <title>Nova Aurora</title>
 
-  <meta name="theme-color" content="#060a17">
+  <meta name="theme-color" content="#ffffff">
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <link rel="manifest" href="manifest.json">
+
+  <!-- Ícones do Aplicativo (Logo 3D) -->
+  <link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32x32.png?v=43">
+  <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png?v=43">
+  <link rel="apple-touch-icon" sizes="180x180" href="icons/apple-touch-icon.png?v=43">
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -19,10 +24,20 @@
     rel="stylesheet">
 
   <link rel="stylesheet" href="css/lenis.css">
-  <link rel="stylesheet" href="css/style.css?v=42">
+  <link rel="stylesheet" href="css/style.css?v=43">
 </head>
 
 <body>
+
+  <!-- Tela de Abertura / Splash Screen Oficial (Fundo Branco & Logo 3D) -->
+  <div class="app-splash-screen" id="appSplashScreen" aria-hidden="false">
+    <div class="app-splash-content">
+      <picture>
+        <source srcset="icons/splash-logo.webp?v=43" type="image/webp">
+        <img src="icons/splash-logo.png?v=43" alt="Congregação Batista Nova Aurora" class="app-splash-logo" loading="eager" decoding="sync">
+      </picture>
+    </div>
+  </div>
 
   <!-- Moldura de celular vertical -->
   <div class="mobile-frame" id="mobileFrame">
@@ -1538,7 +1553,7 @@
 
   <script src="js/lenis.min.js"></script>
   <script src="js/html2pdf.bundle.min.js"></script>
-  <script type="module" src="js/app.js?v=42"></script>
+  <script type="module" src="js/app.js?v=43"></script>
 </body>
 
 </html>

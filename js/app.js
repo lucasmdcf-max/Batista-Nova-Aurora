@@ -231,10 +231,46 @@ import { initMembers, requestAccessToMembers, closeMembersScreen } from './membe
   }
 
   // ==========================================
+  // Splash Screen de Abertura (Logo 3D em Fundo Branco)
+  // ==========================================
+  const appSplashScreen = document.getElementById('appSplashScreen');
+  let splashDismissed = false;
+
+  function dismissSplashScreen() {
+    if (splashDismissed || !appSplashScreen) return;
+    splashDismissed = true;
+    appSplashScreen.classList.add('is-hidden');
+
+    // Atualiza a meta theme-color para o tema do aplicativo após a saída da splash branca
+    const themeColorMeta = document.querySelector('meta[name="theme-color"]');
+    if (themeColorMeta) {
+      themeColorMeta.setAttribute('content', '#060a17');
+    }
+
+    setTimeout(() => {
+      if (appSplashScreen && appSplashScreen.parentNode) {
+        appSplashScreen.style.display = 'none';
+      }
+    }, 600);
+  }
+
+  // Toque ou clique dispensa imediatamente se o usuário desejar
+  if (appSplashScreen) {
+    appSplashScreen.addEventListener('click', dismissSplashScreen, { passive: true });
+  }
+
+  // Mantém a tela de abertura por 1.2s para exibição nítida da logo 3D e faz fade suave
+  window.addEventListener('load', () => {
+    setTimeout(dismissSplashScreen, 1200);
+  });
+  // Timeout de segurança
+  setTimeout(dismissSplashScreen, 2200);
+
+  // ==========================================
   // Controle de Versão e Atualização Automática PWA
   // ==========================================
-  const APP_VERSION = '1.3.6';
-  const APP_BUILD = 42;
+  const APP_VERSION = '1.3.7';
+  const APP_BUILD = 43;
   let waitingWorker = null;
   let isUpdating = false;
 
