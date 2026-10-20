@@ -7,7 +7,7 @@
     "public": ".",
     "headers": [
       {
-        "source": "**/*.@(html|json)",
+        "source": "**/*.@(html|json|js|css)",
         "headers": [
           {
             "key": "Cache-Control",

@@ -233,8 +233,8 @@ import { initMembers, requestAccessToMembers, closeMembersScreen } from './membe
   // ==========================================
   // Controle de Versão e Atualização Automática PWA
   // ==========================================
-  const APP_VERSION = '1.3.4';
-  const APP_BUILD = 40;
+  const APP_VERSION = '1.3.5';
+  const APP_BUILD = 41;
   let waitingWorker = null;
   let isUpdating = false;
 
