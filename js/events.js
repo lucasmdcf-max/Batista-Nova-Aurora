@@ -26,9 +26,6 @@ import { requestMemberAccess, isMemberAuthenticated } from './visitors.js';
 const STORAGE_KEY_PROG = 'nova_aurora_programacoes_v1';
 const STORAGE_KEY_EVENTS_COMPAT = 'nova_aurora_eventos_v1';
 
-// Arte padrão (fallback leve) para eventos sem arte própria ou após a data do evento passar
-const DEFAULT_EVENT_ART = 'icons/dia-das-criancas.jpg';
-
 const MONTH_NAMES = [
   'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
   'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'
@@ -38,19 +35,6 @@ const WEEKDAY_NAMES_FULL = [
   'Domingo', 'Segunda-feira', 'Terça-feira', 'Quarta-feira',
   'Quinta-feira', 'Sexta-feira', 'Sábado'
 ];
-
-// Evento oficial solicitado pelo usuário
-const DEFAULT_INITIAL_EVENT = {
-  id: 'evento-dia-das-criancas-2026',
-  titulo: 'Dia das crianças Nova Aurora',
-  data: '17/10/2026',
-  dataISO: '2026-10-17',
-  horario: '14:00',
-  local: 'Congregação Nova Aurora',
-  arteUrl: DEFAULT_EVENT_ART,
-  arteBase64: '',
-  descricao: 'Culto Especial Dia das Crianças — Um dia de bênçãos e diversão'
-};
 
 const _nowInit = new Date();
 let eventsList = [];
@@ -199,7 +183,7 @@ async function cleanExpiredEventArts(items) {
     // Se a data do evento for estritamente anterior a hoje (data já passou)
     if (evIso < todayISO) {
       const hasHeavyArt = Boolean(ev.arteBase64 && ev.arteBase64.trim());
-      const hasCustomUrl = Boolean(ev.arteUrl && ev.arteUrl.trim() && ev.arteUrl !== DEFAULT_EVENT_ART);
+      const hasCustomUrl = Boolean(ev.arteUrl && ev.arteUrl.trim());
 
       if (hasHeavyArt || hasCustomUrl) {
         console.log(`[Programações] Evento "${ev.titulo}" (${evIso}) já passou. Removendo arte do banco para manter leve...`);
@@ -236,7 +220,7 @@ function loadLocalEvents() {
       if (Array.isArray(parsed) && parsed.length > 0) {
         // Remove eventos mock antigos que o usuário não conseguia excluir
         const cleaned = parsed.filter(
-          (e) => !String(e.id || '').startsWith('fallback-')
+          (e) => !String(e.id || '').startsWith('fallback-') && e.id !== 'evento-dia-das-criancas-2026'
         );
         if (cleaned.length > 0) {
           return cleaned;
@@ -246,7 +230,7 @@ function loadLocalEvents() {
   } catch (e) {
     console.warn('Erro ao ler cache de programações:', e);
   }
-  return [DEFAULT_INITIAL_EVENT];
+  return [];
 }
 
 function saveLocalEvents(list) {
@@ -367,16 +351,13 @@ function updateHeroBanner(eventsForDay, targetDateISO = '') {
     if (ev.horario) metaParts.push(ev.horario);
     if (ev.local) metaParts.push(ev.local);
 
-    const imgSrc = ev.arteUrl || ev.arteBase64 || DEFAULT_EVENT_ART;
+    const imgSrc = ev.arteUrl || ev.arteBase64 || '';
+    const hasArt = Boolean(imgSrc);
     const counterBadgeHtml = currentDayEvents.length > 1
       ? `<div class="prog-hero-slide-counter"><span>${idx + 1}/${currentDayEvents.length}</span></div>`
       : '';
-
-    return `
-      <div class="prog-hero-slide" data-slide-index="${idx}" data-event-id="${escapeHtml(ev.id || '')}">
-        <img src="${escapeHtml(imgSrc)}" alt="${escapeHtml(ev.titulo || 'Arte da Programação')}" class="prog-hero-img" loading="lazy">
-        ${counterBadgeHtml}
-        <div class="prog-hero-zoom-badge">
+    const zoomBadgeHtml = hasArt
+      ? `<div class="prog-hero-zoom-badge">
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
             <circle cx="11" cy="11" r="8"></circle>
             <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
@@ -384,7 +365,17 @@ function updateHeroBanner(eventsForDay, targetDateISO = '') {
             <line x1="8" y1="11" x2="14" y2="11"></line>
           </svg>
           <span>Toque para ver</span>
-        </div>
+        </div>`
+      : '';
+    const visualContentHtml = hasArt
+      ? `<img src="${escapeHtml(imgSrc)}" alt="${escapeHtml(ev.titulo || 'Arte da Programação')}" class="prog-hero-img" loading="lazy">`
+      : `<div class="prog-hero-empty-backdrop prog-hero-text-backdrop"></div>`;
+
+    return `
+      <div class="prog-hero-slide ${hasArt ? 'has-art' : 'is-no-art'}" data-slide-index="${idx}" data-event-id="${escapeHtml(ev.id || '')}" data-has-art="${hasArt ? 'true' : 'false'}">
+        ${visualContentHtml}
+        ${counterBadgeHtml}
+        ${zoomBadgeHtml}
         <div class="prog-hero-overlay">
           <div class="prog-hero-info">
             <span class="prog-hero-title">${escapeHtml(ev.titulo || 'Programação da Congregação')}</span>
@@ -484,27 +475,24 @@ function openArtPreview(eventsOrSrc, initialIndex = 0) {
   if (!modalArtPreview || !modalArtTrack) return;
 
   if (Array.isArray(eventsOrSrc)) {
-    currentPreviewArts = eventsOrSrc.map((ev) => ({
-      src: ev.arteUrl || ev.arteBase64 || DEFAULT_EVENT_ART,
-      title: ev.titulo || 'Arte da Programação'
-    }));
+    currentPreviewArts = eventsOrSrc
+      .map((ev) => ({
+        src: ev.arteUrl || ev.arteBase64 || '',
+        title: ev.titulo || 'Arte da Programação'
+      }))
+      .filter((item) => Boolean(item.src));
   } else if (typeof eventsOrSrc === 'string' && eventsOrSrc.trim()) {
     currentPreviewArts = [{
       src: eventsOrSrc,
       title: 'Arte da Programação'
     }];
   } else {
-    currentPreviewArts = [{
-      src: DEFAULT_EVENT_ART,
-      title: 'Arte da Programação'
-    }];
+    currentPreviewArts = [];
   }
 
+  // Se o evento não possui arte cadastrada ou ela foi excluída, não abre modal vazio
   if (currentPreviewArts.length === 0) {
-    currentPreviewArts = [{
-      src: DEFAULT_EVENT_ART,
-      title: 'Arte da Programação'
-    }];
+    return;
   }
 
   currentPreviewIndex = Math.max(0, Math.min(initialIndex, currentPreviewArts.length - 1));
@@ -741,7 +729,7 @@ async function handleAddEventSubmit(e) {
         horario: horario,
         local: local,
         arteBase64: currentUploadedArtBase64 || '',
-        arteUrl: currentUploadedArtBase64 ? '' : DEFAULT_EVENT_ART,
+        arteUrl: '',
         createdAt: serverTimestamp(),
         timestamp: Date.now()
       };
@@ -864,7 +852,7 @@ async function handleEditEventSubmit(e) {
     horario: horario,
     local: local,
     arteBase64: currentEditArtBase64 || '',
-    arteUrl: currentEditArtBase64 ? '' : (currentEditingEvent.arteUrl || DEFAULT_EVENT_ART),
+    arteUrl: currentEditArtBase64 ? '' : (currentEditingEvent.arteUrl || ''),
     updatedAt: serverTimestamp()
   };
 
@@ -1014,7 +1002,7 @@ export function openEventsScreen() {
     renderEventsCalendar();
 
     const evOnDate = eventsList.filter((e) => normalizeDateToISO(e.dataISO || e.data) === selectedDateISO);
-    updateHeroBanner(evOnDate.length > 0 ? evOnDate : (eventsList[0] ? [eventsList[0]] : [DEFAULT_INITIAL_EVENT]), selectedDateISO);
+    updateHeroBanner(evOnDate.length > 0 ? evOnDate : (eventsList[0] ? [eventsList[0]] : []), selectedDateISO);
   }
 }
 
@@ -1122,7 +1110,7 @@ export function initEvents() {
       }
 
       const slide = e.target.closest('.prog-hero-slide');
-      if (slide && !slide.classList.contains('is-empty-day')) {
+      if (slide && !slide.classList.contains('is-empty-day') && slide.getAttribute('data-has-art') === 'true') {
         const slideIdx = parseInt(slide.getAttribute('data-slide-index') || '0', 10);
         openArtPreview(currentDayEvents, slideIdx);
       }
@@ -1326,7 +1314,7 @@ export function initEvents() {
 
   // Inicia exibição com os eventos do dia inicial
   const initialDayEvents = eventsList.filter((e) => normalizeDateToISO(e.dataISO || e.data) === selectedDateISO);
-  updateHeroBanner(initialDayEvents.length > 0 ? initialDayEvents : (eventsList[0] ? [eventsList[0]] : [DEFAULT_INITIAL_EVENT]), selectedDateISO);
+  updateHeroBanner(initialDayEvents.length > 0 ? initialDayEvents : (eventsList[0] ? [eventsList[0]] : []), selectedDateISO);
   renderEventsCalendar();
 
   // Executa verificação inicial de artes expiradas também no cache local
