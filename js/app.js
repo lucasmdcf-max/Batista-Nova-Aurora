@@ -233,8 +233,8 @@ import { initMembers, requestAccessToMembers, closeMembersScreen } from './membe
   // ==========================================
   // Controle de Versão e Atualização Automática PWA
   // ==========================================
-  const APP_VERSION = '1.3.3';
-  const APP_BUILD = 39;
+  const APP_VERSION = '1.3.4';
+  const APP_BUILD = 40;
   let waitingWorker = null;
   let isUpdating = false;
 
@@ -291,29 +291,29 @@ import { initMembers, requestAccessToMembers, closeMembersScreen } from './membe
         waitingWorker.postMessage({ type: 'SKIP_WAITING' });
       }
 
-      // 2. Limpa caches antigos do navegador para evitar persistência de versão anterior
+      // 2. Limpa todos os caches locais do navegador
       if ('caches' in window) {
         const cacheKeys = await caches.keys();
         await Promise.all(cacheKeys.map((key) => caches.delete(key)));
       }
 
-      // 3. Atualiza os registros do Service Worker
+      // 3. Desregistra service workers para garantir instalação limpa do novo
       if ('serviceWorker' in navigator) {
         const registrations = await navigator.serviceWorker.getRegistrations();
         for (const reg of registrations) {
-          await reg.update().catch(() => {});
+          await reg.unregister().catch(() => {});
         }
       }
     } catch (err) {
       console.warn('[App Update] Erro durante renovação de cache:', err);
     }
 
-    // 4. Força reload com timestamp limpo garantindo arquivos novos do servidor/github
+    // 4. Força reload direto do servidor com parâmetro de sincronização
     setTimeout(() => {
       const targetUrl = new URL(window.location.href);
       targetUrl.searchParams.set('v_sync', Date.now().toString());
       window.location.replace(targetUrl.toString());
-    }, 250);
+    }, 150);
   }
 
   if (btnHome) {
