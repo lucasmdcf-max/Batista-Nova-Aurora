@@ -1,8 +1,9 @@
 {
+  "id": "cbna-nova-aurora-app",
   "name": "Congregação Nova Aurora",
   "short_name": "Nova Aurora",
   "description": "Aplicativo oficial da Congregação Nova Aurora com fundo imersivo em parallax",
-  "start_url": "./index.html",
+  "start_url": "./index.html?v=45",
   "scope": "./",
   "display": "standalone",
   "orientation": "portrait-primary",
@@ -10,37 +11,42 @@
   "theme_color": "#ffffff",
   "icons": [
     {
-      "src": "icons/cbna-logo-192.png?v=44",
+      "src": "favicon.ico?v=45",
+      "sizes": "16x16 32x32 48x48 64x64 128x128 256x256",
+      "type": "image/x-icon"
+    },
+    {
+      "src": "icons/cbna-logo-192.png?v=45",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "icons/cbna-logo-512.png?v=44",
+      "src": "icons/cbna-logo-512.png?v=45",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "icons/cbna-logo-maskable.png?v=44",
+      "src": "icons/cbna-logo-maskable.png?v=45",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "maskable"
     },
     {
-      "src": "icons/icon-192.png?v=44",
+      "src": "icons/icon-192.png?v=45",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "icons/icon-512.png?v=44",
+      "src": "icons/icon-512.png?v=45",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "icons/favicon-32x32.png?v=44",
+      "src": "icons/favicon-32x32.png?v=45",
       "sizes": "32x32",
       "type": "image/png"
     }
